@@ -5,13 +5,15 @@ import mime from "mime-types";
 import multer from "multer";
 import fs from "fs";
 
-import "./torrent";
-
-import { checkMagnetExists, downloadTorrentVideo, saveMagnet } from "./torrent";
+import {
+  checkMagnetExists,
+  torrentDownloadHandler,
+  saveMagnet,
+} from "./torrent";
 import { getNyaaMagnets } from "./nyaa";
 import { Season, Series } from "@prisma/client";
 import { IUploadInfo } from "./interfaces";
-import { prismaClient } from "./util/client";
+import { extractEpisodeNumber, prismaClient } from "./util/client";
 import dotenv from "dotenv";
 import { readAutoList } from "./util/server";
 dotenv.config();
@@ -164,25 +166,20 @@ app.listen(PORT, () => {
   console.log(`server listen http://localhost:${PORT}`);
 });
 
-/* (async () => {
-   
-
- 
-
-magnets.forEach((magnet) => {
-    downloadTorrentVideo(magnet);
-  }); 
-})(); */
 (async () => {
   const autoList = readAutoList();
-  console.log(autoList);
 
-  const magnets = await getNyaaMagnets(
-    "https://nyaa.si/?f=0&c=0_0&q=%5BEMBER%5D+Sousou+no+Frieren+S01"
-  );
-  magnets.slice(0, 1).forEach((magnet) => {
+  autoList.forEach(async (item) => {
+    const magnets = await getNyaaMagnets(item.nyaaQuery);
+    const magnet = magnets[magnets.length - 1];
     if (checkMagnetExists(magnet)) return;
-    //downloadTorrentVideo(magnet);
-    //saveMagnet(magnet);
+    torrentDownloadHandler({
+      torrentId: magnet,
+      tmdbId: item.tmdbId,
+      seasonId: +item.seasonId,
+      seasonNumber: item.seasonNumber,
+      seriesId: +item.seriesId,
+    });
+    saveMagnet(magnet);
   });
 })();

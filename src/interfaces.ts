@@ -5,4 +5,5 @@ export interface IUploadInfo {
   seriesId: number;
   endDate: string;
   anissiaId: string;
+  seasonNumber: number;
 }

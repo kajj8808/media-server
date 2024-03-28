@@ -1,11 +1,26 @@
 import fs from "fs";
 import WebTorrent from "webtorrent";
 import crypto from "crypto";
+import { extractEpisodeNumber, prismaClient } from "./util/client";
 
 const torrentClient = new WebTorrent();
 const FILE_DIR = `${__dirname}/public/json/magnet_hash_list.json`;
 
-export function downloadTorrentVideo(torrentId: string) {
+interface ITorrentDownloadHandler {
+  torrentId: string;
+  tmdbId: string;
+  seriesId: number;
+  seasonId: number;
+  seasonNumber: number;
+}
+
+export function torrentDownloadHandler({
+  torrentId,
+  tmdbId,
+  seriesId,
+  seasonId,
+  seasonNumber,
+}: ITorrentDownloadHandler) {
   torrentClient.add(torrentId, (torrent) => {
     const file = torrent.files.find(
       (file) => file.name.endsWith(".mkv") || file.name.endsWith(".mp4")
@@ -18,8 +33,40 @@ export function downloadTorrentVideo(torrentId: string) {
     const destination = fs.createWriteStream(
       `${__dirname}/public/video/${filename}`
     );
-    source.pipe(destination).on("finish", () => {
-      console.log(file.name);
+    source.pipe(destination).on("finish", async () => {
+      const episodeNumber = extractEpisodeNumber(file.name);
+      const url = `https://api.themoviedb.org/3/tv/${tmdbId}/season/${seasonNumber}/episode/${episodeNumber}?language=ko-KR`;
+
+      const options = {
+        method: "GET",
+        headers: {
+          accept: "application/json",
+          Authorization:
+            "Bearer eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiJhYmMyOTk3MTYyZDNiNzQ3NTNjY2Q4M2IxY2Q0NjVmZCIsInN1YiI6IjYwMWNlNTdlNjg5MjljMDAzZTgwYWJkMCIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.oaYxWt36eqXHhkxgr4NeHQN4bWGyZj1bpGtTUHgLjCc",
+        },
+      };
+
+      const { runtime, name, overview } = await (
+        await fetch(url, options)
+      ).json();
+
+      await prismaClient.episode.create({
+        data: {
+          title: name,
+          description: overview,
+          videoId: filename + "",
+          runtime: runtime,
+          seasonId: seasonId,
+          seriesId: seriesId,
+        },
+      });
+
+      await prismaClient.series.update({
+        where: { id: seriesId },
+        data: {
+          updatedAt: new Date(),
+        },
+      });
     });
   });
 }

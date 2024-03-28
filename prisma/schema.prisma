@@ -19,16 +19,17 @@ model User {
 }
 
 model Series {
-  id           Int      @id @default(autoincrement())
+  id           Int       @id @default(autoincrement())
   title        String
-  description  String   @db.Text
+  description  String    @db.Text
   coverImage   String
   previewVideo String?
   poster       String
   logo         String
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
   seasons      Season[]
+  Episode      Episode[]
 }
 
 model Season {
@@ -46,13 +47,15 @@ model Episode {
   id             Int             @id @default(autoincrement())
   title          String
   description    String
-  duration       Int
   videoId        String
   subtitleId     String?
+  runtime        Int
   createdAt      DateTime        @default(now())
   updatedAt      DateTime        @updatedAt
   seasonId       Int
+  seriesId       Int
   season         Season          @relation(fields: [seasonId], references: [id])
+  series         Series          @relation(fields: [seriesId], references: [id])
   viewedEpisodes ViewedEpisode[]
 }
 
