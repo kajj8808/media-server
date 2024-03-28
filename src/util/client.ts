@@ -7,7 +7,7 @@ export function extractEpisodeNumber(filename: string) {
   const match = filename.match(/(?:^|\D)(\d+)(?=\D|$)/);
   if (match) {
     const episodeNumber = match[1];
-    return episodeNumber;
+    return Number(episodeNumber);
   } else {
     return null;
   }

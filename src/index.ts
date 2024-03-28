@@ -18,7 +18,7 @@ import dotenv from "dotenv";
 import { readAutoList } from "./util/server";
 dotenv.config();
 
-const PORT = 8080;
+const PORT = 8060;
 
 const upload = multer({ dest: "./src/chunks/" });
 
