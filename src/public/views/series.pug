@@ -1,0 +1,18 @@
+html 
+    head 
+        title "nyaa auto uploader"
+        link(rel="stylesheet", href="/css/basic.css")
+    body 
+        form
+            input(type="text" placeholder="title" id="title" required)
+            input(type="text" placeholder="description" id="description" required)
+            input(type="text" placeholder="coverImage" id="coverImage" required)
+            input(type="text" placeholder="previewVideo" id="previewVideo")
+            input(type="text" placeholder="poster" id="poster" required)
+            input(type="text" placeholder="logo" id="logo" required)
+            button submit
+            div
+                <span>https://www.themoviedb.org/t/p/original/</span>
+                <span>https://drive.google.com/uc?export=view&id=</span>
+
+script(src="/js/series.js") 

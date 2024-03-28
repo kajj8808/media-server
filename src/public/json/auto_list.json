@@ -1,0 +1,16 @@
+[
+  {
+    "seriesId": "1",
+    "seasonId": "1",
+    "nyaaId": "123",
+    "tmdbId": "123",
+    "endDate": "123"
+  },
+  {
+    "seriesId": "1",
+    "seasonId": "1",
+    "nyaaQuery": "1233",
+    "tmdbId": "1233",
+    "endDate": "213"
+  }
+]

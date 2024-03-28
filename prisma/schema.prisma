@@ -1,3 +1,5 @@
+// prisma/schema.prisma
+
 generator client {
   provider = "prisma-client-js"
 }
@@ -7,8 +9,60 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model user {
-  id    Int     @id @default(autoincrement())
-  email String  @unique(map: "User_email_key")
-  name  String?
+model User {
+  id             Int             @id @default(autoincrement())
+  email          String          @unique
+  password       String
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  viewedEpisodes ViewedEpisode[]
+}
+
+model Series {
+  id           Int      @id @default(autoincrement())
+  title        String
+  description  String
+  coverImage   String
+  previewVideo String?
+  poster       String
+  logo         String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  seasons      Season[]
+}
+
+model Season {
+  id        Int       @id @default(autoincrement())
+  name      String
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  seriesId  Int
+  series    Series    @relation(fields: [seriesId], references: [id])
+  episodes  Episode[]
+}
+
+model Episode {
+  id             Int             @id @default(autoincrement())
+  title          String
+  description    String
+  duration       Int
+  videoId        String
+  subtitleId     String?
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  seasonId       Int
+  season         Season          @relation(fields: [seasonId], references: [id])
+  viewedEpisodes ViewedEpisode[]
+}
+
+model ViewedEpisode {
+  id        Int      @id @default(autoincrement())
+  viewed    Boolean
+  progress  Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id])
+  episodeId Int
+  episode   Episode  @relation(fields: [episodeId], references: [id])
 }
