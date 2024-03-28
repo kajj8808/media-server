@@ -171,15 +171,16 @@ app.listen(PORT, () => {
 
   autoList.forEach(async (item) => {
     const magnets = await getNyaaMagnets(item.nyaaQuery);
-    const magnet = magnets[magnets.length - 1];
-    if (checkMagnetExists(magnet)) return;
-    torrentDownloadHandler({
-      torrentId: magnet,
-      tmdbId: item.tmdbId,
-      seasonId: +item.seasonId,
-      seasonNumber: item.seasonNumber,
-      seriesId: +item.seriesId,
+    magnets.forEach(async (magnet) => {
+      if (checkMagnetExists(magnet)) return;
+      torrentDownloadHandler({
+        torrentId: magnet,
+        tmdbId: item.tmdbId,
+        seasonId: +item.seasonId,
+        seasonNumber: item.seasonNumber,
+        seriesId: +item.seriesId,
+      });
+      saveMagnet(magnet);
     });
-    saveMagnet(magnet);
   });
 })();
