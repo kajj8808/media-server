@@ -1,5 +1,6 @@
 const form = document.querySelector("form");
-const input = document.querySelector("input");
+const nameInput = document.getElementById("name");
+const numberInput = document.getElementById("number");
 const select = document.querySelector("select");
 const serverAddress = window.location.origin;
 
@@ -11,7 +12,8 @@ form.addEventListener("submit", async (event) => {
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      name: input.value,
+      name: nameInput.value,
+      number: numberInput.value,
       seriesId: select.value,
     }),
   });

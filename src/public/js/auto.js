@@ -5,6 +5,7 @@ const seasonSelect = document.getElementById("season");
 const nyaaInput = document.getElementById("nyaa_query");
 const tmdbInput = document.getElementById("tmdb_id");
 const endDate = document.getElementById("end_date");
+const anissiaId = document.getElementById("anissia_id");
 const serverAddress = window.location.origin;
 
 form.addEventListener("submit", async (event) => {
@@ -20,6 +21,7 @@ form.addEventListener("submit", async (event) => {
       nyaaQuery: nyaaInput.value,
       tmdbId: tmdbInput.value,
       endDate: endDate.value,
+      anissiaId: anissiaId.value,
     }),
   });
   window.history.back();
@@ -37,9 +39,13 @@ form.addEventListener("submit", async (event) => {
 })();
 
 const onChange = async () => {
+  seasonSelect.innerText = "";
   const season = await (
     await fetch(`${serverAddress}/get-season`, {
       method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
       body: JSON.stringify({
         seriesId: seriesSelect.value,
       }),

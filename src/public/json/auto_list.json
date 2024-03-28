@@ -2,15 +2,10 @@
   {
     "seriesId": "1",
     "seasonId": "1",
-    "nyaaId": "123",
-    "tmdbId": "123",
-    "endDate": "123"
-  },
-  {
-    "seriesId": "1",
-    "seasonId": "1",
-    "nyaaQuery": "1233",
-    "tmdbId": "1233",
-    "endDate": "213"
+    "nyaaQuery": "https://nyaa.si/?q=+%5BEMBER%5D+Sousou+no+Frieren+&f=0&c=0_0",
+    "tmdbId": "209867",
+    "endDate": "2024-04-05",
+    "anissiaId": "2517",
+    "seasonNumber": 1
   }
 ]

@@ -5,6 +5,17 @@ import mime from "mime-types";
 import multer from "multer";
 import fs from "fs";
 
+import "./torrent";
+
+import { checkMagnetExists, downloadTorrentVideo, saveMagnet } from "./torrent";
+import { getNyaaMagnets } from "./nyaa";
+import { Season, Series } from "@prisma/client";
+import { IUploadInfo } from "./interfaces";
+import { prismaClient } from "./util/client";
+import dotenv from "dotenv";
+import { readAutoList } from "./util/server";
+dotenv.config();
+
 const PORT = 8080;
 
 const upload = multer({ dest: "./src/chunks/" });
@@ -25,6 +36,7 @@ app.post("/create-series", async (req, res) => {
   await prismaClient.series.create({
     data: series,
   });
+  res.send(true);
 });
 
 app.get("/create-season", (_, res) => res.render("season"));
@@ -34,18 +46,16 @@ app.post("/create-season", async (req, res) => {
     data: {
       name: season.name,
       seriesId: +season.seriesId,
+      number: +season.number,
     },
   });
+  res.send(true);
 });
 
 app.get("/auto-episode", (_, res) => res.render("auto"));
-app.post("/auto-episode", (req, res) => {
-  const filePath = `${__dirname}/public/json/auto_list.json`;
-
+app.post("/auto-episode", async (req, res) => {
   const autoInfo = req.body as IUploadInfo;
-
-  const readData = fs.readFileSync(filePath, { encoding: "utf-8" });
-  const arrayData = JSON.parse(readData) as IUploadInfo[];
+  const arrayData = readAutoList();
 
   let exits = false;
   arrayData.forEach((item) => {
@@ -56,11 +66,22 @@ app.post("/auto-episode", (req, res) => {
       exits = true;
     }
   });
+
+  const seasonNumber = await prismaClient.season.findUnique({
+    where: {
+      id: autoInfo.seasonId,
+    },
+    select: {
+      number: true,
+    },
+  });
+
   if (exits) return;
   fs.writeFileSync(
     `${__dirname}/public/json/auto_list.json`,
-    JSON.stringify([...arrayData, autoInfo])
+    JSON.stringify([...arrayData, { ...autoInfo, seasonNumber }])
   );
+  res.send(true);
 });
 
 app.get("/get-series", async (_, res) => {
@@ -70,10 +91,9 @@ app.get("/get-series", async (_, res) => {
 
 app.post("/get-season", async (req, res) => {
   const seriesId = req.body.seriesId;
-
   const season = await prismaClient.season.findMany({
     where: {
-      seriesId,
+      seriesId: +seriesId,
     },
   });
   res.send(season);
@@ -120,30 +140,23 @@ app.post("/upload/video", upload.single("chuck"), async (req, res) => {
   const chunk = req.file;
   const uploadId = req.body.uploadId;
   if (!chunk) return;
-
   fs.appendFileSync(
     `${__dirname}/public/video/${uploadId}`,
     fs.readFileSync(chunk?.path)
   );
-
   fs.unlinkSync(chunk.path);
-
   res.status(200).send("ok");
 });
 
 app.post("/upload/smi", upload.single("chuck"), async (req, res) => {
   const chunk = req.file;
   const uploadId = req.body.uploadId;
-
   if (!chunk) return;
-
   fs.appendFileSync(
     `${__dirname}/public/smi/${uploadId}`,
     fs.readFileSync(chunk?.path)
   );
-
   fs.unlinkSync(chunk.path);
-
   res.status(200).send("ok");
 });
 
@@ -151,27 +164,25 @@ app.listen(PORT, () => {
   console.log(`server listen http://localhost:${PORT}`);
 });
 
-import "./torrent";
-
-import { checkMagnetExists, downloadTorrentVideo, saveMagnet } from "./torrent";
-import { getNyaaMagnets } from "./nyaa";
-import { Season, Series } from "@prisma/client";
-import { IUploadInfo } from "./interfaces";
-import { prismaClient } from "./util/client";
-
 /* (async () => {
-   const magnets = await getNyaaMagnets(
-    "https://nyaa.si/?f=0&c=0_0&q=%5BEMBER%5D+Sousou+no+Frieren+S01"
-  ); 
+   
 
-  //magnets.slice(0, 1).forEach((magnet) => {
-    // if (checkMagnetExists(magnet)) return;
-    // console.log(magnet);
-    // downloadTorrentVideo(magnet);
-    saveMagnet(magnet); 
-  //});
+ 
 
 magnets.forEach((magnet) => {
     downloadTorrentVideo(magnet);
   }); 
 })(); */
+(async () => {
+  const autoList = readAutoList();
+  console.log(autoList);
+
+  const magnets = await getNyaaMagnets(
+    "https://nyaa.si/?f=0&c=0_0&q=%5BEMBER%5D+Sousou+no+Frieren+S01"
+  );
+  magnets.slice(0, 1).forEach((magnet) => {
+    if (checkMagnetExists(magnet)) return;
+    //downloadTorrentVideo(magnet);
+    //saveMagnet(magnet);
+  });
+})();

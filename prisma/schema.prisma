@@ -21,7 +21,7 @@ model User {
 model Series {
   id           Int      @id @default(autoincrement())
   title        String
-  description  String
+  description  String   @db.Text
   coverImage   String
   previewVideo String?
   poster       String
@@ -33,6 +33,7 @@ model Series {
 
 model Season {
   id        Int       @id @default(autoincrement())
+  number    Int
   name      String
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
