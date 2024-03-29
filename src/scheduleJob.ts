@@ -33,6 +33,7 @@ export function autoAnimationDownload() {
 }
 
 export function startSchduleJob() {
+  autoAnimationDownload();
   // 스케줄링된 작업을 저장할 객체 선언 typescript 환경이므로..
   let scheduledJobs: { [jobName: string]: schedule.Job } = {};
 
