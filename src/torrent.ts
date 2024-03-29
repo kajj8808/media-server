@@ -32,10 +32,11 @@ export function torrentDownloadHandler({
     torrentId,
     { path: `${__dirname}/public/video` },
     async (torrent) => {
-      const videoFile = torrent.files.find(
+      const videoFiles = torrent.files.filter(
         (file) => file.name.endsWith(".mkv") || file.name.endsWith(".mp4")
       );
-      if (!videoFile || videoFile.length > 1) return;
+      if (!videoFiles || videoFiles.length > 1) return;
+      const videoFile = videoFiles[0];
 
       torrent.on("done", async () => {
         const episodeNumber = extractEpisodeNumber(videoFile.name);
