@@ -37,36 +37,7 @@ export function torrentDownloadHandler({
     const filename = `${new Date().getTime()}`;
     const destination = path.join(__dirname, "public", "video", filename);
 
-    try {
-      await new Promise<void>((resolve, reject) => {
-        let ended = false;
-        const readStream = new Readable({
-          read() {
-            if (ended) return;
-            videoFile
-              .createReadStream()
-              .on("data", (chunk) => {
-                const result = this.push(chunk);
-                if (!result) {
-                  readStream.once("drain", () => readStream.resume());
-                }
-              })
-              .on("end", () => {
-                ended = true;
-                this.push(null);
-              })
-              .on("error", reject);
-          },
-        });
-
-        const writeStream = fs.createWriteStream(destination);
-        readStream.setMaxListeners(Infinity);
-        readStream.pipe(writeStream);
-
-        writeStream.on("error", reject);
-        writeStream.on("close", resolve);
-      });
-
+    torrent.on("done", async () => {
       const episodeNumber = extractEpisodeNumber(videoFile.name);
       if (!episodeNumber) return console.error("not found episode number...");
 
@@ -83,9 +54,7 @@ export function torrentDownloadHandler({
         where: { id: seriesId },
         data: { updatedAt: new Date() },
       });
-    } catch (error) {
-      console.error(`error saving torrent file : ${error}`);
-    }
+    });
   });
 }
 
