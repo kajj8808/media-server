@@ -5,6 +5,7 @@ import { extractEpisodeNumber, prismaClient } from "./util/client";
 import path from "path";
 import { IDetail } from "./interfaces";
 import { Readable } from "stream";
+import { hevcToHvc1 } from "./ffmpeg";
 
 const torrentClient = new WebTorrent({
   maxConns: 50, // 동시 연결 수 제한
@@ -58,8 +59,12 @@ export function torrentDownloadHandler({
         writeStream.on("error", reject);
         writeStream.on("close", resolve);
       });
+
       const episodeNumber = extractEpisodeNumber(videoFile.name);
       if (!episodeNumber) return console.error("not found episode number...");
+
+      hevcToHvc1(destination);
+
       const episodeDetails = (await fetchEpisodeDetails(
         tmdbId,
         seasonNumber,
