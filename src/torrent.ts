@@ -60,7 +60,7 @@ export function torrentDownloadHandler({
         });
 
         const writeStream = fs.createWriteStream(destination);
-        readStream.setMaxListeners(80);
+        readStream.setMaxListeners(Infinity);
         readStream.pipe(writeStream);
 
         writeStream.on("error", reject);
