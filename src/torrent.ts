@@ -39,14 +39,19 @@ export function torrentDownloadHandler({
 
     try {
       await new Promise<void>((resolve, reject) => {
+        let ended = false;
         const readStream = new Readable({
           read() {
+            if (ended) return;
             videoFile
               .createReadStream()
               .on("data", (chunk) => {
-                this.push(chunk);
+                if (!this.push(chunk)) {
+                  this.once("drain", () => readStream.resume());
+                }
               })
               .on("end", () => {
+                ended = true;
                 this.push(null);
               })
               .on("error", reject);
@@ -70,6 +75,7 @@ export function torrentDownloadHandler({
         seasonNumber,
         episodeNumber
       )) as IDetail;
+
       await saveEpisodeDetails(episodeDetails, filename, seasonId, seriesId);
       await prismaClient.series.update({
         where: { id: seriesId },
