@@ -1,13 +1,14 @@
 import ffmpegPath from "ffmpeg-static";
 import { spawn } from "child_process";
 
-export function hevcToHvc1(filePath: string) {
+export function hevcToHvc1(filePath: string, tempPath: string) {
   return new Promise<void>((resolve, reject) => {
-    const command = `${ffmpegPath} -i ${filePath} -c:v copy -c:a copy -tag:v hvc1 ${filePath}`;
+    const command = `${ffmpegPath} -y -i "${filePath}" -c:v copy -c:a copy -tag:v hvc1 "${tempPath}"`;
 
-    const process = spawn(command, { shell: true });
+    const process = spawn(command, { shell: true, stdio: "pipe" });
 
     process.on("error", (error) => {
+      console.error("Failed to start process:", error);
       reject(error);
     });
 

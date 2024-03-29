@@ -48,13 +48,13 @@ export function torrentDownloadHandler({
           videoFile.name
         );
 
-        // 자동으로 받는 h265 파일의 tag를 변경
-        await hevcToHvc1(videoFilePath);
-
         const filename = `${new Date().getTime()}`;
         const newPath = path.join(__dirname, "public", "video", filename);
+        const tempPath = newPath + ".mkv";
+        await hevcToHvc1(videoFilePath, tempPath);
 
-        fs.renameSync(videoFilePath, newPath);
+        fs.renameSync(tempPath, newPath);
+        fs.unlinkSync(videoFilePath);
 
         const episodeDetails = (await fetchEpisodeDetails(
           tmdbId,
