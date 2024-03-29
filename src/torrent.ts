@@ -35,7 +35,7 @@ export function torrentDownloadHandler({
       const videoFile = torrent.files.find(
         (file) => file.name.endsWith(".mkv") || file.name.endsWith(".mp4")
       );
-      if (!videoFile) return;
+      if (!videoFile || videoFile.length > 1) return;
 
       torrent.on("done", async () => {
         const episodeNumber = extractEpisodeNumber(videoFile.name);
