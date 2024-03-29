@@ -17,7 +17,7 @@ export function autoAnimationDownload() {
     if (isAfterDate(nowDate, endDate)) return;
 
     const magnets = await getNyaaMagnets(item.nyaaQuery);
-    magnets.slice(0, 1).forEach(async (magnet) => {
+    magnets.forEach(async (magnet) => {
       if (checkMagnetExists(magnet)) return;
       torrentDownloadHandler({
         torrentId: magnet,
