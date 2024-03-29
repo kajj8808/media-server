@@ -2,3 +2,5 @@
 package-lock.json
 /src/public/video/*
 .env
+
+/src/public/*
