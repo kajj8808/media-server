@@ -28,34 +28,48 @@ export function torrentDownloadHandler({
   seasonId,
   seasonNumber,
 }: ITorrentDownloadHandler) {
-  torrentClient.add(torrentId, async (torrent) => {
-    const videoFile = torrent.files.find(
-      (file) => file.name.endsWith(".mkv") || file.name.endsWith(".mp4")
-    );
-    if (!videoFile) return;
+  torrentClient.add(
+    torrentId,
+    { path: `${__dirname}/public/video` },
+    async (torrent) => {
+      const videoFile = torrent.files.find(
+        (file) => file.name.endsWith(".mkv") || file.name.endsWith(".mp4")
+      );
+      if (!videoFile) return;
 
-    const filename = `${new Date().getTime()}`;
-    const destination = path.join(__dirname, "public", "video", filename);
+      torrent.on("done", async () => {
+        const episodeNumber = extractEpisodeNumber(videoFile.name);
+        if (!episodeNumber) return console.error("not found episode number...");
+        // video file이 저장 되어있는 위치.
+        const videoFilePath = path.join(
+          __dirname,
+          "public",
+          "video",
+          videoFile.name
+        );
 
-    torrent.on("done", async () => {
-      const episodeNumber = extractEpisodeNumber(videoFile.name);
-      if (!episodeNumber) return console.error("not found episode number...");
+        // 자동으로 받는 h265 파일의 tag를 변경
+        await hevcToHvc1(videoFilePath);
 
-      hevcToHvc1(destination);
+        const filename = `${new Date().getTime()}`;
+        const newPath = path.join(__dirname, "public", "video", filename);
 
-      const episodeDetails = (await fetchEpisodeDetails(
-        tmdbId,
-        seasonNumber,
-        episodeNumber
-      )) as IDetail;
+        fs.renameSync(videoFilePath, newPath);
 
-      await saveEpisodeDetails(episodeDetails, filename, seasonId, seriesId);
-      await prismaClient.series.update({
-        where: { id: seriesId },
-        data: { updatedAt: new Date() },
+        const episodeDetails = (await fetchEpisodeDetails(
+          tmdbId,
+          seasonNumber,
+          episodeNumber
+        )) as IDetail;
+
+        await saveEpisodeDetails(episodeDetails, filename, seasonId, seriesId);
+        await prismaClient.series.update({
+          where: { id: seriesId },
+          data: { updatedAt: new Date() },
+        });
       });
-    });
-  });
+    }
+  );
 }
 
 async function fetchEpisodeDetails(
