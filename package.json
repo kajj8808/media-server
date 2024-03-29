@@ -25,6 +25,7 @@
     "prisma": "^5.11.0",
     "pug": "^3.0.2",
     "puppeteer": "^22.6.0",
+    "smi2srt": "^1.2.6",
     "webtorrent-hybrid": "^5.0.2"
   },
   "devDependencies": {

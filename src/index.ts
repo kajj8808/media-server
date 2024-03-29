@@ -1,4 +1,4 @@
-import express from "express";
+/* import express from "express";
 import bodyParser from "body-parser";
 import cors from "cors";
 import mime from "mime-types";
@@ -10,12 +10,15 @@ import {
   torrentDownloadHandler,
   saveMagnet,
 } from "./torrent";
+
 import { getNyaaMagnets } from "./nyaa";
 import { Season, Series } from "@prisma/client";
 import { IUploadInfo } from "./interfaces";
 import { extractEpisodeNumber, prismaClient } from "./util/client";
-import dotenv from "dotenv";
 import { readAutoList } from "./util/server";
+import smi2srt from "smi2srt";
+
+import dotenv from "dotenv";
 dotenv.config();
 
 const PORT = 8060;
@@ -138,6 +141,10 @@ app.get("/video/:videoId", async (req, res) => {
   }
 });
 
+app.get("/vtt/:smiId", async (req, res) => {
+  await smi2srt();
+});
+
 app.post("/upload/video", upload.single("chuck"), async (req, res) => {
   const chunk = req.file;
   const uploadId = req.body.uploadId;
@@ -184,3 +191,4 @@ app.listen(PORT, () => {
     });
   });
 })();
+ */
