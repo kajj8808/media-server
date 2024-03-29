@@ -1,7 +1,7 @@
 /node_modules
 package-lock.json
 /src/public/video/*
-.env
-
 /src/public/json/*
 /src/public/smi/*
+.env
+

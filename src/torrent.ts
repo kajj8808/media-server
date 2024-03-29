@@ -51,7 +51,11 @@ export function torrentDownloadHandler({
         const filename = `${new Date().getTime()}`;
         const newPath = path.join(__dirname, "public", "video", filename);
         const tempPath = newPath + ".mkv";
-        await hevcToHvc1(videoFilePath, tempPath);
+        try {
+          await hevcToHvc1(videoFilePath, tempPath);
+        } catch (error) {
+          console.log(error);
+        }
 
         fs.renameSync(tempPath, newPath);
         fs.unlinkSync(videoFilePath);
