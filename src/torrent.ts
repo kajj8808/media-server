@@ -35,7 +35,18 @@ export function torrentDownloadHandler({
       const videoFiles = torrent.files.filter(
         (file) => file.name.endsWith(".mkv") || file.name.endsWith(".mp4")
       );
-      if (!videoFiles || videoFiles.length > 1) return;
+      if (!videoFiles || videoFiles.length > 1) {
+        const deletePath = path.join(
+          __dirname,
+          "public",
+          "video",
+          torrent.name
+        );
+        torrent.destroy();
+        fs.rmdirSync(deletePath);
+        return;
+      }
+
       const videoFile = videoFiles[0];
 
       torrent.on("done", async () => {
