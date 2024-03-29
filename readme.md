@@ -7,7 +7,7 @@
 - [] discord ( discord notification )
 - [x] nyaa ( auto downloader )
 - [] anissia ( auto downloader )
-- [] node ( scheduler )
+- [x] node ( scheduler )
 
 ### Memo
 
