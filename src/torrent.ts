@@ -4,6 +4,7 @@ import crypto from "crypto";
 import { extractEpisodeNumber, prismaClient } from "./util/client";
 import path from "path";
 import { IDetail } from "./interfaces";
+import { Readable } from "stream";
 
 const torrentClient = new WebTorrent({
   maxConns: 50, // 동시 연결 수 제한
@@ -37,24 +38,25 @@ export function torrentDownloadHandler({
 
     try {
       await new Promise<void>((resolve, reject) => {
-        const source = videoFile.createReadStream();
-        const dest = fs.createWriteStream(destination);
-
-        source.on("data", (chunk) => {
-          const result = dest.write(chunk);
-          if (!result) {
-            source.pause();
-          }
+        const readStream = new Readable({
+          read() {
+            videoFile
+              .createReadStream()
+              .on("data", (chunk) => {
+                this.push(chunk);
+              })
+              .on("end", () => {
+                this.push(null);
+              })
+              .on("error", reject);
+          },
         });
 
-        dest.on("drain", () => {
-          source.resume();
-        });
+        const writeStream = fs.createWriteStream(destination);
+        readStream.pipe(writeStream);
 
-        source.on("error", reject);
-        dest.on("error", reject);
-        source.on("end", resolve);
-        dest.on("close", resolve);
+        writeStream.on("error", reject);
+        writeStream.on("close", resolve);
       });
       const episodeNumber = extractEpisodeNumber(videoFile.name);
       if (!episodeNumber) return console.error("not found episode number...");

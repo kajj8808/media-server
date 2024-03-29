@@ -15,10 +15,9 @@ export function autoAnimationDownload() {
     const endDate = new Date(item.endDate);
 
     if (isAfterDate(nowDate, endDate)) return;
-    console.log("안넘었으니까 작업할게!");
 
     const magnets = await getNyaaMagnets(item.nyaaQuery);
-    magnets.slice(0, 1).forEach(async (magnet) => {
+    magnets.forEach(async (magnet) => {
       if (checkMagnetExists(magnet)) return;
       torrentDownloadHandler({
         torrentId: magnet,
@@ -27,6 +26,7 @@ export function autoAnimationDownload() {
         seasonNumber: item.seasonNumber,
         seriesId: +item.seriesId,
       });
+      /* 다운이 완료 되지 않아도 중복 추가를 막기위해 마그넷 저장 */
       saveMagnet(magnet);
     });
   });
