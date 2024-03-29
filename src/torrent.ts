@@ -46,8 +46,9 @@ export function torrentDownloadHandler({
             videoFile
               .createReadStream()
               .on("data", (chunk) => {
-                if (!this.push(chunk)) {
-                  this.once("drain", () => readStream.resume());
+                const result = this.push(chunk);
+                if (!result) {
+                  readStream.once("drain", () => readStream.resume());
                 }
               })
               .on("end", () => {
@@ -59,6 +60,7 @@ export function torrentDownloadHandler({
         });
 
         const writeStream = fs.createWriteStream(destination);
+        readStream.setMaxListeners(80);
         readStream.pipe(writeStream);
 
         writeStream.on("error", reject);
