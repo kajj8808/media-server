@@ -171,7 +171,7 @@ app.listen(PORT, () => {
 
   autoList.forEach(async (item) => {
     const magnets = await getNyaaMagnets(item.nyaaQuery);
-    magnets.forEach(async (magnet) => {
+    magnets.slice(0, 1).forEach(async (magnet) => {
       if (checkMagnetExists(magnet)) return;
       torrentDownloadHandler({
         torrentId: magnet,

@@ -2,8 +2,13 @@ import fs from "fs";
 import WebTorrent from "webtorrent";
 import crypto from "crypto";
 import { extractEpisodeNumber, prismaClient } from "./util/client";
+import path from "path";
+import { IDetail } from "./interfaces";
 
-const torrentClient = new WebTorrent();
+const torrentClient = new WebTorrent({
+  maxConns: 50, // 동시 연결 수 제한
+});
+
 const FILE_DIR = `${__dirname}/public/json/magnet_hash_list.json`;
 
 interface ITorrentDownloadHandler {
@@ -21,54 +26,98 @@ export function torrentDownloadHandler({
   seasonId,
   seasonNumber,
 }: ITorrentDownloadHandler) {
-  torrentClient.add(torrentId, (torrent) => {
-    const file = torrent.files.find(
+  torrentClient.add(torrentId, async (torrent) => {
+    const videoFile = torrent.files.find(
       (file) => file.name.endsWith(".mkv") || file.name.endsWith(".mp4")
     );
-    if (!file) return;
+    if (!videoFile) return;
 
-    const filename = new Date().getTime();
+    const filename = `${new Date().getTime()}`;
+    const destination = path.join(__dirname, "public", "video", filename);
 
-    const source = file.createReadStream();
-    const destination = fs.createWriteStream(
-      `${__dirname}/public/video/${filename}`
-    );
-    source.pipe(destination).on("finish", async () => {
-      const episodeNumber = extractEpisodeNumber(file.name);
-      const url = `https://api.themoviedb.org/3/tv/${tmdbId}/season/${seasonNumber}/episode/${episodeNumber}?language=ko-KR`;
+    try {
+      await new Promise<void>((resolve, reject) => {
+        const source = videoFile.createReadStream();
+        const dest = fs.createWriteStream(destination);
 
-      const options = {
-        method: "GET",
-        headers: {
-          accept: "application/json",
-          Authorization:
-            "Bearer eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiJhYmMyOTk3MTYyZDNiNzQ3NTNjY2Q4M2IxY2Q0NjVmZCIsInN1YiI6IjYwMWNlNTdlNjg5MjljMDAzZTgwYWJkMCIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.oaYxWt36eqXHhkxgr4NeHQN4bWGyZj1bpGtTUHgLjCc",
-        },
-      };
+        source.on("data", (chunk) => {
+          const result = dest.write(chunk);
+          if (!result) {
+            source.pause();
+          }
+        });
 
-      const { runtime, name, overview } = await (
-        await fetch(url, options)
-      ).json();
+        dest.on("drain", () => {
+          source.resume();
+        });
 
-      await prismaClient.episode.create({
-        data: {
-          title: name,
-          description: overview,
-          videoId: filename + "",
-          runtime: runtime,
-          seasonId: seasonId,
-          seriesId: seriesId,
-        },
+        source.on("error", reject);
+        dest.on("error", reject);
+        source.on("end", resolve);
+        dest.on("close", resolve);
       });
-
+      const episodeNumber = extractEpisodeNumber(videoFile.name);
+      if (!episodeNumber) return console.error("not found episode number...");
+      const episodeDetails = (await fetchEpisodeDetails(
+        tmdbId,
+        seasonNumber,
+        episodeNumber
+      )) as IDetail;
+      await saveEpisodeDetails(episodeDetails, filename, seasonId, seriesId);
       await prismaClient.series.update({
         where: { id: seriesId },
-        data: {
-          updatedAt: new Date(),
-        },
+        data: { updatedAt: new Date() },
       });
-    });
+    } catch (error) {
+      console.error(`error saving torrent file : ${error}`);
+    }
   });
+}
+
+async function fetchEpisodeDetails(
+  tmdbId: string,
+  seasonNumber: number,
+  episodeNumber: number
+) {
+  const url = `https://api.themoviedb.org/3/tv/${tmdbId}/season/${seasonNumber}/episode/${episodeNumber}?language=ko-KR`;
+  const options = {
+    headers: {
+      accept: "application/json",
+      Authorization: `Bearer ${process.env.TMDB_API_KEY}`,
+    },
+  };
+
+  try {
+    const response = await fetch(url, options);
+    return await response.json();
+  } catch (error) {
+    console.error("Error fetching episode details:", error);
+    throw error;
+  }
+}
+
+async function saveEpisodeDetails(
+  details: IDetail,
+  filename: string,
+  seasonId: number,
+  seriesId: number
+) {
+  try {
+    await prismaClient.episode.create({
+      data: {
+        title: details.name,
+        description: details.overview,
+        videoId: filename,
+        runtime: details.runtime,
+        episodeNumber: details.episode_number,
+        seasonId,
+        seriesId,
+      },
+    });
+  } catch (error) {
+    console.error("Error saving episode details:", error);
+    throw error;
+  }
 }
 
 function parseMagnetHashFile(): string[] {
@@ -101,20 +150,3 @@ export function checkMagnetExists(magnet: string) {
     console.error(error);
   }
 }
-
-/* downloadTorrentVideo(
-  "magnet:?xt=urn:btih:32bf2b8245c4eb5782c3f22f574680eaa5c6da35&dn=%5BJudas%5D%20Sousou%20no%20Frieren%20%28Frieren%3A%20Beyond%20Journey%27s%20End%29%20-%20S01E27%20%5B1080p%5D%5BHEVC%20x265%2010bit%5D%5BMulti-Subs%5D%20%28Weekly%29&tr=http%3A%2F%2Fnyaa.tracker.wf%3A7777%2Fannounce&tr=udp%3A%2F%2Fopen.stealth.si%3A80%2Fannounce&tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337%2Fannounce&tr=udp%3A%2F%2Fexodus.desync.com%3A6969%2Fannounce&tr=udp%3A%2F%2Ftracker.torrent.eu.org%3A451%2Fannounce"
-);
-downloadTorrentVideo(
-  "magnet:?xt=urn:btih:b33100a0b655eeb5f4985d9bbd456c7a3d9f7b1e&dn=%5BErai-raws%5D%20Sousou%20no%20Frieren%20-%2027%20%5B1080p%5D%5BHEVC%5D%5BMultiple%20Subtitle%5D%20%5BENG%5D%5BPOR-BR%5D%5BSPA-LA%5D%5BSPA%5D%5BARA%5D%5BFRE%5D%5BGER%5D%5BITA%5D%5BRUS%5D&tr=http%3A%2F%2Fnyaa.tracker.wf%3A7777%2Fannounce&tr=udp%3A%2F%2Fopen.stealth.si%3A80%2Fannounce&tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337%2Fannounce&tr=udp%3A%2F%2Fexodus.desync.com%3A6969%2Fannounce&tr=udp%3A%2F%2Ftracker.torrent.eu.org%3A451%2Fannounce"
-);
-downloadTorrentVideo(
-  "magnet:?xt=urn:btih:119a2d5844d05e66fcaa8cf22bdb360e5806abc2&dn=%5BASW%5D%20Sousou%20no%20Frieren%20-%2027%20%5B1080p%20HEVC%20x265%2010Bit%5D%5BAAC%5D&tr=http%3A%2F%2Fnyaa.tracker.wf%3A7777%2Fannounce&tr=udp%3A%2F%2Fopen.stealth.si%3A80%2Fannounce&tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337%2Fannounce&tr=udp%3A%2F%2Fexodus.desync.com%3A6969%2Fannounce&tr=udp%3A%2F%2Ftracker.torrent.eu.org%3A451%2Fannounce"
-);
-downloadTorrentVideo(
-  "magnet:?xt=urn:btih:5b56b1135d4cfe8bee36170bc3ad403ee53bee71&dn=%5BEMBER%5D%20Sousou%20no%20Frieren%20S01E27%20%5B1080p%5D%20%5BHEVC%20WEBRip%5D%20%28Frieren%3A%20Beyond%20Journey%60s%20End%29&tr=http%3A%2F%2Fnyaa.tracker.wf%3A7777%2Fannounce&tr=udp%3A%2F%2Fopen.stealth.si%3A80%2Fannounce&tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337%2Fannounce&tr=udp%3A%2F%2Fexodus.desync.com%3A6969%2Fannounce&tr=udp%3A%2F%2Ftracker.torrent.eu.org%3A451%2Fannounce"
-);
-downloadTorrentVideo(
-  "magnet:?xt=urn:btih:baa9f9d5fc9d46e39fedf90c157540eb3a63cebe&dn=%5BKoi-Raws%5D%20Sousou%20no%20Frieren%20-%2027%20%E3%80%8C%E4%BA%BA%E9%96%93%E3%81%AE%E6%99%82%E4%BB%A3%E3%80%8D%20%28NTV%201920x1080%20x264%20AAC%29.mkv&tr=http%3A%2F%2Fnyaa.tracker.wf%3A7777%2Fannounce&tr=udp%3A%2F%2Fopen.stealth.si%3A80%2Fannounce&tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337%2Fannounce&tr=udp%3A%2F%2Fexodus.desync.com%3A6969%2Fannounce&tr=udp%3A%2F%2Ftracker.torrent.eu.org%3A451%2Fannounce"
-);
- */

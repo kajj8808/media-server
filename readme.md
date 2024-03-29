@@ -8,3 +8,7 @@
 - [x] nyaa ( auto downloader )
 - [] anissia ( auto downloader )
 - [] node ( scheduler )
+
+### Memo
+
+- 다운 받은 magnet을 local이 아닌 DB에 저장해도 문제 없을거 같음.

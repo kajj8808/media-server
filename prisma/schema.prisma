@@ -46,7 +46,7 @@ model Season {
 model Episode {
   id             Int             @id @default(autoincrement())
   title          String
-  description    String
+  description    String          @db.Text
   videoId        String
   subtitleId     String?
   runtime        Int
@@ -54,6 +54,7 @@ model Episode {
   updatedAt      DateTime        @updatedAt
   seasonId       Int
   seriesId       Int
+  episodeNumber  Int
   season         Season          @relation(fields: [seasonId], references: [id])
   series         Series          @relation(fields: [seriesId], references: [id])
   viewedEpisodes ViewedEpisode[]
