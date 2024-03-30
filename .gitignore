@@ -5,4 +5,4 @@ package-lock.json
 /src/public/smi/*
 .env
 
-keys
+/src/keys
