@@ -7,6 +7,8 @@ import { Season, Series } from "@prisma/client";
 import { prismaClient } from "./util/client";
 import { readAutoList } from "./util/server";
 import { IUploadInfo } from "./interfaces";
+import path from "path";
+import rangeParser, { Ranges, Result } from "range-parser";
 
 const router = express.Router();
 const upload = multer({ dest: "./src/chunks/" });
@@ -84,40 +86,47 @@ router.post("/get-season", async (req, res) => {
 });
 
 router.get("/video/:videoId", async (req, res) => {
-  const { videoId } = req.params;
-  const currentVideoPath = `${__dirname}/public/video/${videoId}`;
-  try {
-    const stat = await fs.statSync(currentVideoPath);
-    const fileSize = stat.size;
-    const range = req.headers.range;
-    const contentType = mime.lookup(currentVideoPath);
+  const videoId = req.params.videoId;
+  const videoPath = path.join(__dirname, "src", "video", videoId);
 
-    if (range) {
-      const parts = range.replace(/bytes=/, "").split("-");
-
-      const start = parseInt(parts[0], 10);
-      const end = parts[1] ? parseInt(parts[1], 10) : fileSize - 1;
-      const chunksize = end - start + 1;
-      const file = fs.createReadStream(currentVideoPath, { start, end });
-      const headers = {
-        "Content-Range": `bytes ${start}-${end}/${fileSize}`,
-        "Accept-Ranges": "bytes",
-        "Content-Length": chunksize,
-      };
-      res.writeHead(206, headers);
-      file.pipe(res);
-    } else {
-      const headers = {
-        "Content-Length": fileSize,
-        "Content-Type": contentType + "",
-      };
-
-      res.writeHead(206, headers);
-      fs.createReadStream(currentVideoPath).pipe(res);
+  fs.access(videoPath, fs.constants.F_OK, (error) => {
+    if (error) {
+      res.status(404).send("video not found");
+      return;
     }
-  } catch (error) {
-    res.status(404);
-  }
+
+    const range = req.headers.range;
+    if (!range) {
+      res.status(400).send("range header required");
+      return;
+    }
+
+    const videoSize = fs.statSync(videoPath).size;
+    const chuckSize = 10 ** 6;
+
+    const rangeResult = rangeParser(videoSize, range);
+    if (Array.isArray(rangeResult)) {
+      const start = rangeResult[0].start;
+      const end = Math.min(start + chuckSize, videoSize - 1);
+      const contentLength = end - start + 1;
+      res.status(206).header({
+        "Content-Range": `bytes ${start}-${end}/${videoSize}`,
+        "Accept-Ranges": "bytes",
+        "Content-Length": contentLength,
+        "Content-Type": "video/mp4",
+      });
+
+      const stream = fs.createReadStream(videoPath, { start, end });
+      stream.on("open", () => {
+        stream.pipe(res);
+      });
+
+      stream.on("error", (error) => {
+        res.status(500).send("error streaming video");
+        console.error(`stream error: ${error}`);
+      });
+    }
+  });
 });
 
 router.get("/vtt/:smiId", async (req, res) => {});
