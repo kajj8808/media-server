@@ -26,7 +26,7 @@ export function torrentDownloadHandler({
 }: ITorrentDownloadHandler) {
   try {
     const torrentClient = new WebTorrent({
-      maxConns: 20, // 동시 연결 수 제한
+      maxConns: 10, // 동시 연결 수 제한
     });
     torrentClient.add(
       torrentId,
