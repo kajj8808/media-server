@@ -7,10 +7,6 @@ import { IDetail } from "./interfaces";
 import { Readable } from "stream";
 import { hevcToHvc1 } from "./ffmpeg";
 
-const torrentClient = new WebTorrent({
-  maxConns: 50, // 동시 연결 수 제한
-});
-
 const FILE_DIR = `${__dirname}/public/json/magnet_hash_list.json`;
 
 interface ITorrentDownloadHandler {
@@ -29,6 +25,9 @@ export function torrentDownloadHandler({
   seasonNumber,
 }: ITorrentDownloadHandler) {
   try {
+    const torrentClient = new WebTorrent({
+      maxConns: 1, // 동시 연결 수 제한
+    });
     torrentClient.add(
       torrentId,
       { path: `${__dirname}/public/video` },
@@ -90,6 +89,7 @@ export function torrentDownloadHandler({
             where: { id: seriesId },
             data: { updatedAt: new Date() },
           });
+          torrentClient.destroy();
         });
       }
     );
