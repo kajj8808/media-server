@@ -111,6 +111,7 @@ router.get("/video/:videoId", async (req, res) => {
     const end = Math.min(start + chuckSize, videoSize - 1);
     const contentLength = end - start + 1;
 
+    // HEAD 경우를 처리해 주지 않으면 IOS에서는 동작을 하지 않음. 주의!
     if (req.method === "HEAD") {
       res.status(200).header({
         "accept-ranges": "bytes",
