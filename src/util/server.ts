@@ -1,5 +1,5 @@
 import fs from "fs";
-import { IUploadInfo } from "../interfaces";
+import { IUploadInfo } from "./interfaces";
 import path from "path";
 
 export function readAutoList() {

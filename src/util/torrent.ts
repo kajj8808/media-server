@@ -1,7 +1,7 @@
 import fs from "fs";
 import WebTorrent from "webtorrent";
 import crypto from "crypto";
-import { extractEpisodeNumber, prismaClient } from "./util/client";
+import { extractEpisodeNumber, prismaClient } from "./client";
 import path from "path";
 import { IDetail } from "./interfaces";
 import { Readable } from "stream";

@@ -4,7 +4,7 @@ import {
   saveMagnet,
   torrentDownloadHandler,
 } from "./torrent";
-import { isAfterDate, readAutoList } from "./util/server";
+import { isAfterDate, readAutoList } from "./server";
 import { getNyaaMagnets } from "./nyaa";
 
 export function autoAnimationDownload() {
