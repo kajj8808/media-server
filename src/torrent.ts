@@ -28,64 +28,74 @@ export function torrentDownloadHandler({
   seasonId,
   seasonNumber,
 }: ITorrentDownloadHandler) {
-  torrentClient.add(
-    torrentId,
-    { path: `${__dirname}/public/video` },
-    async (torrent) => {
-      const videoFiles = torrent.files.filter(
-        (file) => file.name.endsWith(".mkv") || file.name.endsWith(".mp4")
-      );
-      if (!videoFiles || videoFiles.length > 1) {
-        const deletePath = path.join(
-          __dirname,
-          "public",
-          "video",
-          torrent.name
+  try {
+    torrentClient.add(
+      torrentId,
+      { path: `${__dirname}/public/video` },
+      async (torrent) => {
+        const videoFiles = torrent.files.filter(
+          (file) => file.name.endsWith(".mkv") || file.name.endsWith(".mp4")
         );
-        torrent.destroy();
-        fs.rmdirSync(deletePath);
-        return;
-      }
-
-      const videoFile = videoFiles[0];
-
-      torrent.on("done", async () => {
-        const episodeNumber = extractEpisodeNumber(videoFile.name);
-        if (!episodeNumber) return console.error("not found episode number...");
-        // video file이 저장 되어있는 위치.
-        const videoFilePath = path.join(
-          __dirname,
-          "public",
-          "video",
-          videoFile.name
-        );
-
-        const filename = `${new Date().getTime()}`;
-        const newPath = path.join(__dirname, "public", "video", filename);
-        const tempPath = newPath + ".mkv";
-        try {
-          await hevcToHvc1(videoFilePath, tempPath);
-        } catch (error) {
-          console.log(error);
+        if (!videoFiles || videoFiles.length > 1) {
+          const deletePath = path.join(
+            __dirname,
+            "public",
+            "video",
+            torrent.name
+          );
+          torrent.destroy();
+          fs.rmdirSync(deletePath);
+          return;
         }
 
-        fs.renameSync(tempPath, newPath);
-        fs.unlinkSync(videoFilePath);
+        const videoFile = videoFiles[0];
 
-        const episodeDetails = (await fetchEpisodeDetails(
-          tmdbId,
-          seasonNumber,
-          episodeNumber
-        )) as IDetail;
+        torrent.on("done", async () => {
+          const episodeNumber = extractEpisodeNumber(videoFile.name);
+          if (!episodeNumber)
+            return console.error("not found episode number...");
+          // video file이 저장 되어있는 위치.
+          const videoFilePath = path.join(
+            __dirname,
+            "public",
+            "video",
+            videoFile.name
+          );
 
-        await saveEpisodeDetails(episodeDetails, filename, seasonId, seriesId);
-        await prismaClient.series.update({
-          where: { id: seriesId },
-          data: { updatedAt: new Date() },
+          const filename = `${new Date().getTime()}`;
+          const newPath = path.join(__dirname, "public", "video", filename);
+          const tempPath = newPath + ".mkv";
+          try {
+            await hevcToHvc1(videoFilePath, tempPath);
+          } catch (error) {
+            console.log(error);
+          }
+
+          fs.renameSync(tempPath, newPath);
+          fs.unlinkSync(videoFilePath);
+
+          const episodeDetails = (await fetchEpisodeDetails(
+            tmdbId,
+            seasonNumber,
+            episodeNumber
+          )) as IDetail;
+
+          await saveEpisodeDetails(
+            episodeDetails,
+            filename,
+            seasonId,
+            seriesId
+          );
+          await prismaClient.series.update({
+            where: { id: seriesId },
+            data: { updatedAt: new Date() },
+          });
         });
-      });
-    }
-  );
+      }
+    );
+  } catch (error) {
+    console.log(error);
+  }
 }
 
 async function fetchEpisodeDetails(
