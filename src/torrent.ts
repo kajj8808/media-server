@@ -1,11 +1,12 @@
 import fs from "fs";
 import WebTorrent from "webtorrent";
 import crypto from "crypto";
-import { extractEpisodeNumber, prismaClient } from "./client";
+import { extractEpisodeNumber, prismaClient } from "./util/client";
 import path from "path";
-import { IDetail } from "./interfaces";
+import { IDetail } from "./util/interfaces";
 import { Readable } from "stream";
-import { hevcToHvc1 } from "./ffmpeg";
+import { hevcToHvc1 } from "./util/ffmpeg";
+import fetch from "node-fetch";
 
 const FILE_DIR = `${__dirname}/public/json/magnet_hash_list.json`;
 
@@ -17,6 +18,11 @@ interface ITorrentDownloadHandler {
   seasonNumber: number;
 }
 
+const torrentClient = new WebTorrent({
+  maxConns: 50, // 동시 연결 수 제한
+  nodeId: "9d05b3e8-4ece-4fc0-835d-dd782605413b",
+});
+
 export function torrentDownloadHandler({
   torrentId,
   tmdbId,
@@ -25,9 +31,6 @@ export function torrentDownloadHandler({
   seasonNumber,
 }: ITorrentDownloadHandler) {
   try {
-    const torrentClient = new WebTorrent({
-      maxConns: 50, // 동시 연결 수 제한
-    });
     torrentClient.add(
       torrentId,
       { path: `${__dirname}/public/video` },
@@ -42,7 +45,6 @@ export function torrentDownloadHandler({
             "video",
             torrent.name
           );
-          torrent.destroy();
           fs.rmdirSync(deletePath);
           return;
         }
@@ -89,7 +91,6 @@ export function torrentDownloadHandler({
             where: { id: seriesId },
             data: { updatedAt: new Date() },
           });
-          torrentClient.destroy();
         });
       }
     );
@@ -116,6 +117,7 @@ async function fetchEpisodeDetails(
     return await response.json();
   } catch (error) {
     console.error("Error fetching episode details:", error);
+    console.error(url);
     throw error;
   }
 }

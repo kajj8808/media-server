@@ -2,7 +2,6 @@ import express from "express";
 import multer from "multer";
 import mime from "mime";
 import fs from "fs";
-import http from "http";
 
 import { Season, Series } from "@prisma/client";
 import { prismaClient } from "./util/client";
@@ -11,7 +10,6 @@ import { IUploadInfo } from "./util/interfaces";
 import path from "path";
 import rangeParser, { Ranges, Result } from "range-parser";
 
-http.globalAgent.maxSockets = 500;
 const router = express.Router();
 const upload = multer({ dest: "./src/chunks/" });
 router.get("/", (req, res) => {

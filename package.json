@@ -4,9 +4,10 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "build": "npx tsc",
+    "build": "npx tsc --outDir dist",
     "start": "node dist/index.js",
-    "dev": "set NODE_OPTIONS=--max-old-space-size=10000 && nodemon src/index.ts"
+    "dev": "set NODE_OPTIONS=--max-old-space-size=10000 && nodemon src/index.ts",
+    "pm2": "pm2 start 'npm run dev'"
   },
   "keywords": [],
   "author": "",
@@ -25,7 +26,9 @@
     "https": "^1.0.0",
     "mime-types": "^2.1.35",
     "multer": "^1.4.5-lts.1",
+    "node-fetch": "^2.7.0",
     "node-schedule": "^2.1.1",
+    "pm2": "^5.3.1",
     "prisma": "^5.11.0",
     "pug": "^3.0.2",
     "puppeteer": "^22.6.0",
@@ -38,6 +41,7 @@
     "@types/fluent-ffmpeg": "^2.1.24",
     "@types/multer": "^1.4.11",
     "@types/node": "^20.11.0",
+    "@types/node-fetch": "^2.6.11",
     "@types/node-schedule": "^2.1.6",
     "@types/webtorrent": "^0.109.8",
     "nodemon": "^3.0.2",
