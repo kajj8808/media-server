@@ -105,27 +105,35 @@ router.get("/video/:videoId", async (req, res) => {
     const chuckSize = 10 ** 6;
 
     const rangeResult = rangeParser(videoSize, range);
-    if (Array.isArray(rangeResult)) {
-      const start = rangeResult[0].start;
-      const end = Math.min(start + chuckSize, videoSize - 1);
-      const contentLength = end - start + 1;
-      res.status(206).header({
-        "Content-Range": `bytes ${start}-${end}/${videoSize}`,
-        "Accept-Ranges": "bytes",
-        "Content-Length": contentLength,
-        "Content-Type": "video/mp4",
-      });
 
-      const stream = fs.createReadStream(videoPath, { start, end });
-      stream.on("open", () => {
-        stream.pipe(res);
-      });
+    if (!Array.isArray(rangeResult)) return;
+    const start = rangeResult[0].start;
+    const end = Math.min(start + chuckSize, videoSize - 1);
+    const contentLength = end - start + 1;
 
-      stream.on("error", (error) => {
-        res.status(500).send("error streaming video");
-        console.error(`stream error: ${error}`);
+    if (req.method === "HEAD") {
+      res.status(200).header({
+        "accept-ranges": "bytes",
+        "content-length": contentLength,
       });
+      res.end();
     }
+
+    res.status(206).header({
+      "Content-Range": `bytes ${start}-${end}/${videoSize}`,
+      "Accept-Ranges": "bytes",
+      "Content-Length": contentLength,
+      "Content-Type": "video/mp4",
+    });
+
+    const stream = fs.createReadStream(videoPath, { start, end });
+
+    stream.on("error", (error) => {
+      res.status(500).send("error streaming video");
+      console.error(`stream error: ${error}`);
+    });
+
+    stream.pipe(res);
   });
 });
 
