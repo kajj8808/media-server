@@ -6,7 +6,7 @@
   "scripts": {
     "build": "npx tsc",
     "start": "node dist/index.js",
-    "dev": "nodemon --max-old-space-size=100000 src/index.ts"
+    "dev": "set NODE_OPTIONS=--max-old-space-size=100000 && nodemon src/index.ts"
   },
   "keywords": [],
   "author": "",
