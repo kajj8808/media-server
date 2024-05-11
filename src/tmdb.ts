@@ -21,7 +21,7 @@ export async function autoInseartSeries() {
       series = await db.series.create({
         data: {
           title: name,
-          coverImage: backdrop_path,
+          coverImage: "http://image.tmdb.org/t/p/original/" + backdrop_path,
           overview: overview,
           tmdbId: autoSeries.tmdbId,
         },
@@ -33,7 +33,7 @@ export async function autoInseartSeries() {
             where: { title: name },
             data: {
               title: name,
-              coverImage: backdrop_path,
+              coverImage: "http://image.tmdb.org/t/p/original/" + backdrop_path,
               overview: overview,
               tmdbId: autoSeries.tmdbId,
             },

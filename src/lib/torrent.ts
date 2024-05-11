@@ -39,7 +39,8 @@ async function episdePushHandler({
         number: episodeDetail.episode_number,
         description: episodeDetail.overview,
         runningTime: episodeDetail.runtime,
-        thumnail: episodeDetail.still_path,
+        thumnail:
+          "http://image.tmdb.org/t/p/original/" + episodeDetail.still_path,
         title: episodeDetail.name,
         videoId: +videoId,
         seasonId: seasonId,
