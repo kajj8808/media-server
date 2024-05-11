@@ -1,0 +1,93 @@
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>auto episode</title>
+  </head>
+  <body>
+    <h1>Auto Episode</h1>
+    <form>
+      <select id="series"></select>
+      <select id="season"></select>
+      <input type="text" placeholder="nyaa query" />
+      <button>submit</button>
+    </form>
+  </body>
+  <script>
+    const form = document.querySelector("form");
+    const input = document.querySelector("input");
+    const seriesSelect = document.getElementById("series");
+    const seasonSelect = document.getElementById("season");
+    const hostURL = window.location.origin;
+
+    async function seriesChangeHandler(seriesId) {
+      const season = await (
+        await fetch(`${hostURL}/season`, {
+          body: JSON.stringify({
+            seriesId,
+          }),
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        })
+      ).json();
+      seasonSelect.innerText = "";
+      season.forEach((item) => {
+        const seasonOption = document.createElement("option");
+        seasonOption.value = item.id;
+        seasonOption.text = item.name;
+        seasonSelect.appendChild(seasonOption);
+      });
+    }
+
+    function onSeriesSelect(event) {
+      seriesChangeHandler(event.target.value);
+    }
+
+    async function onSubmit(evnet) {
+      evnet.preventDefault();
+
+      if (input.value) {
+        const seriesId = seriesSelect.value;
+        const seasonId = seasonSelect.value;
+        const nyaaQuery = input.value;
+        const autoEpisode = await (
+          await fetch(`${hostURL}/auto_episode`, {
+            body: JSON.stringify({
+              seriesId,
+              seasonId,
+              nyaaQuery,
+            }),
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+          })
+        ).json();
+        if (autoEpisode) {
+          alert("ok!");
+          input.value = "";
+        }
+      }
+    }
+
+    async function init() {
+      const series = await (await fetch(`${hostURL}/series`)).json();
+      series.forEach((item) => {
+        const seriesOption = document.createElement("option");
+        seriesOption.value = item.id;
+        seriesOption.text = item.title;
+        seriesSelect.appendChild(seriesOption);
+      });
+      if (series.length >= 1) {
+        seriesChangeHandler(series[0].id);
+      }
+    }
+
+    seriesSelect.addEventListener("change", onSeriesSelect);
+    form.addEventListener("submit", onSubmit);
+
+    init();
+  </script>
+</html>

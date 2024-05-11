@@ -1,0 +1,40 @@
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>auto series</title>
+  </head>
+  <body>
+    <h1>Auto Series</h1>
+    <form>
+      <input type="text" placeholder="tmdb id" />
+      <button>submit</button>
+    </form>
+  </body>
+  <script>
+    const form = document.querySelector("form");
+    const input = document.querySelector("input");
+    const hostURL = window.location.origin;
+
+    async function onSubmit(event) {
+      event.preventDefault();
+      if (input.value) {
+        const result = await (
+          await fetch(`${hostURL}/auto_series`, {
+            body: JSON.stringify({ tmdbId: input.value }),
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+          })
+        ).json();
+        if (result) {
+          alert("ok!");
+          input.value = "";
+        }
+      }
+    }
+
+    form.addEventListener("submit", onSubmit);
+  </script>
+</html>

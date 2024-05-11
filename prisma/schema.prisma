@@ -1,0 +1,74 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                 Int                  @id @default(autoincrement())
+  email              String
+  EpisodeWatchRecord EpisodeWatchRecord[]
+}
+
+model Series {
+  id         Int      @id @default(autoincrement())
+  title      String   @unique
+  overview   String
+  coverImage String
+  logo       String?
+  createAt   DateTime @default(now())
+  updateAt   DateTime @default(now())
+  tmdbId     Int
+  seasons    Season[]
+}
+
+model Season {
+  id         Int       @id @default(autoincrement())
+  number     Int
+  name       String
+  seriesId   Int?
+  autoUpload Boolean   @default(false)
+  nyaaQuery  String?
+  episodes   Episode[]
+  series     Series?   @relation(fields: [seriesId], references: [id])
+}
+
+model Episode {
+  id                 Int                  @id @default(autoincrement())
+  title              String
+  description        String
+  thumnail           String
+  runningTime        Int
+  number             Int
+  videoId            BigInt
+  vttId              Int?
+  seasonId           Int?
+  Season             Season?              @relation(fields: [seasonId], references: [id])
+  EpisodeWatchRecord EpisodeWatchRecord[]
+  DownloadedMagnet   DownloadedMagnet[]
+}
+
+model EpisodeWatchRecord {
+  id        Int      @id @default(autoincrement())
+  watchedAt DateTime @default(now())
+  progress  Float    @default(0.0)
+  episodeId Int
+  userId    Int
+  episode   Episode  @relation(fields: [episodeId], references: [id])
+  user      User     @relation(fields: [userId], references: [id])
+}
+
+model AutoSeries {
+  id     Int @id @default(autoincrement())
+  tmdbId Int @unique
+}
+
+model DownloadedMagnet {
+  id           Int     @id @default(autoincrement())
+  cipherMagnet String  @unique
+  episode      Episode @relation(fields: [episodeId], references: [id])
+  episodeId    Int
+}
