@@ -95,7 +95,7 @@ export function torrentDownloadeHandler({
     nodeId: torrentId,
   });
 
-  client.setMaxListeners(20);
+  client.setMaxListeners(10);
 
   client.add(
     torrentId,
