@@ -6,6 +6,7 @@ import db from "./db";
 import { getNyaaMagnets } from "./nyaa";
 import { torrentDownloadeHandler } from "./torrent";
 import { autoInseartSeries } from "../tmdb";
+import { sleep } from "./utile";
 
 async function videoAutoDownloader() {
   const autoSeason = await db.season.findMany({
@@ -41,6 +42,7 @@ async function videoAutoDownloader() {
           seasonNumber: season.number,
           torrentId: magnet,
         });
+        await sleep(1800);
       }
     }
   }

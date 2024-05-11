@@ -95,7 +95,7 @@ export function anyVideoToHvc1(props: anyVideoToHvc1Props) {
       props.videoIndex
     } -map 0:a:${props.audioIndex} -c:v ${
       props.isHevc ? "copy" : "hevc"
-    } -c:a aac -b:a 640k -tag:v hvc1 "${tempPath}"`;
+    } -tag:v hvc1 -c:a aac -ac 2 -b:a 640k  "${tempPath}"`;
     const process = spawn(command, { shell: true, stdio: "pipe" });
 
     process.on("error", (error) => {

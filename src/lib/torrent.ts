@@ -96,8 +96,6 @@ export function torrentDownloadeHandler({
     nodeId: torrentId,
   });
 
-  client.setMaxListeners(10);
-
   client.add(
     torrentId,
     { path: path.join(__dirname, "../../public", "video") },
