@@ -5,6 +5,7 @@ import cors from "cors";
 import path from "path";
 import fs from "fs";
 import db from "./lib/db";
+import "./lib/auto";
 
 import { autoInseartSeries } from "./tmdb";
 import { VideoStremInfoOption } from "../types/interface";

@@ -5,6 +5,7 @@ import crypto from "crypto";
 import db from "./db";
 import { getNyaaMagnets } from "./nyaa";
 import { torrentDownloadeHandler } from "./torrent";
+import { autoInseartSeries } from "../tmdb";
 
 async function videoAutoDownloader() {
   const autoSeason = await db.season.findMany({
@@ -44,5 +45,5 @@ async function videoAutoDownloader() {
     }
   }
 }
-//autoInseartSeries();
-//videoAutoDownloader();
+autoInseartSeries();
+videoAutoDownloader();
