@@ -3,7 +3,7 @@ export async function getNyaaMagnets(nyaaQuery: string) {
   const nyaaUrl = `https://nyaa.si/?q=${nyaaQuery}`;
   const browser = await puppeteer.launch({});
   const page = await browser.newPage();
-  await page.goto(nyaaUrl, { waitUntil: "networkidle0" });
+  await page.goto(nyaaUrl, { waitUntil: "load", timeout: 0 });
 
   const nyaaMagnets = await page.evaluate(() => {
     const anchorTags = Array.from(document.querySelectorAll("a"));
