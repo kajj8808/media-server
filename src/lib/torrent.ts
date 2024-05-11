@@ -92,9 +92,10 @@ export function torrentDownloadeHandler({
   seasonNumber,
 }: ITorrentDownloadHandler) {
   const client = new WebTorrentHybrid({
-    maxConns: 20,
     nodeId: torrentId,
   });
+
+  client.setMaxListeners(20);
 
   client.add(
     torrentId,
