@@ -149,6 +149,7 @@ export function torrentDownloadeHandler({
           episodeNumber!
         );
         if (episodeDetail.overview === "") {
+          console.error("tmdb에 설명글이 없습니다.");
           torrent.removeAllListeners();
           torrent.destroy();
 
