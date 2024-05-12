@@ -140,7 +140,24 @@ export function torrentDownloadeHandler({
   client.add(
     torrentId,
     { path: path.join(__dirname, "../../public", "video") },
-    (torrent) => {
+    async (torrent) => {
+      if (torrent.files.length <= 1) {
+        const episodeNumber = extractEpisodeNumber(torrent.files[0].name);
+        const episodeDetail = await fetchEpisodeDetail(
+          tmdbId,
+          seasonNumber,
+          episodeNumber!
+        );
+        if (episodeDetail.overview === "") {
+          torrent.removeAllListeners();
+          torrent.destroy();
+
+          // Delete the torrent path
+          fs.rmdirSync(torrent.path);
+          return;
+        }
+      }
+
       // 5초마다 다운 진행도 출력
       const interval = setInterval(() => {
         console.log(
