@@ -69,14 +69,56 @@ async function episdePushHandler({
 
 /** 정규 표현식을 사용하여 파일 이름에서 에피소드 번호 추출 */
 export function extractEpisodeNumber(filename: string): number | null {
-  const match = filename.match(/\d+\s*-\s*(\d+)/);
-  if (match && match.length > 1) {
-    return parseInt(match[1], 10);
+  const parts = filename.split(/[ _\-()]/);
+  let episodeNumber: number | null = null;
+
+  for (let i = 0; i < parts.length; i++) {
+    const part = parts[i];
+
+    // 1. [1080p] 앞이나 [] 앞의 숫자 2~3개
+    if (part.length === 2 || part.length === 3) {
+      const nextPart = parts[i + 1];
+      if (nextPart && /^\[/.test(nextPart)) {
+        episodeNumber = parseInt(part, 10);
+        break;
+      }
+    }
+
+    // 2. - 이후의 값이 될 가능성이 높음
+    if (part === "-") {
+      const nextPart = parts[i + 1];
+      if (nextPart) {
+        const num = parseInt(nextPart, 10);
+        if (!isNaN(num) && num >= 1 && num <= 99) {
+          episodeNumber = num;
+          break;
+        }
+      }
+    }
+
+    // 3. .mkv 확장자 이전에 나올 가능성 높음
+    const lastDotIndex = part.lastIndexOf(".");
+    if (lastDotIndex !== -1) {
+      const numPart = part.slice(0, lastDotIndex);
+      const num = parseInt(numPart, 10);
+      if (!isNaN(num) && num >= 1 && num <= 99) {
+        episodeNumber = num;
+        break;
+      }
+    }
+
+    // 4. 파일 이름에 에피소드 번호가 포함되어 있는 경우
+    const episodeRegex = /\b(\d+)\b/;
+    const match = part.match(episodeRegex);
+    if (match) {
+      episodeNumber = parseInt(match[1], 10);
+      break;
+    }
   }
 
-  const numbers = filename.match(/\d+/g)?.map(Number) || [];
-  return Math.max(...numbers);
+  return episodeNumber;
 }
+
 interface ITorrentDownloadHandler {
   torrentId: string;
   tmdbId: number;
