@@ -9,6 +9,7 @@ import "./lib/auto";
 
 import { autoInseartSeries } from "./tmdb";
 import { VideoStremInfoOption } from "../types/interface";
+import { extractEpisodeNumber } from "./lib/torrent";
 
 const app = express();
 
