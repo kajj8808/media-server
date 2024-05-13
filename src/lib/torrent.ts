@@ -117,7 +117,6 @@ export function extractEpisodeNumber(filename: string) {
   }
 
   console.log(episodeNumber);
-
   return episodeNumber;
 }
 
@@ -154,9 +153,6 @@ export function torrentDownloadeHandler({
           console.error("tmdb에 설명글이 없습니다.");
           torrent.removeAllListeners();
           torrent.destroy();
-
-          // Delete the torrent path
-          fs.rmdirSync(torrent.path);
           return;
         }
       }

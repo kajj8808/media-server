@@ -18,6 +18,7 @@ model Series {
   title      String   @unique
   overview   String
   coverImage String
+  poster     String?
   logo       String?
   createAt   DateTime @default(now())
   updateAt   DateTime @default(now())

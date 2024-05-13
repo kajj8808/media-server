@@ -15,7 +15,7 @@ export async function autoInseartSeries() {
   for (let autoSeries of autoSeriesList) {
     const url = `https://api.themoviedb.org/3/tv/${autoSeries.tmdbId}?language=ko-KR`;
     const json = await (await fetch(url, options)).json();
-    const { name, overview, backdrop_path, seasons } = json;
+    const { name, overview, backdrop_path, poster_path, seasons } = json;
     let series;
     try {
       series = await db.series.create({
@@ -36,6 +36,7 @@ export async function autoInseartSeries() {
               coverImage: "http://image.tmdb.org/t/p/original/" + backdrop_path,
               overview: overview,
               tmdbId: autoSeries.tmdbId,
+              poster: poster_path,
             },
           });
         }
