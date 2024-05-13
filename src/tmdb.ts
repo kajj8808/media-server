@@ -24,6 +24,7 @@ export async function autoInseartSeries() {
           coverImage: "http://image.tmdb.org/t/p/original/" + backdrop_path,
           overview: overview,
           tmdbId: autoSeries.tmdbId,
+          poster: "http://image.tmdb.org/t/p/original/" + poster_path,
         },
       });
     } catch (error) {
@@ -36,7 +37,7 @@ export async function autoInseartSeries() {
               coverImage: "http://image.tmdb.org/t/p/original/" + backdrop_path,
               overview: overview,
               tmdbId: autoSeries.tmdbId,
-              poster: poster_path,
+              poster: "http://image.tmdb.org/t/p/original/" + poster_path,
             },
           });
         }
