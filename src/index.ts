@@ -237,6 +237,27 @@ app.post("/subtitle", async (req, res) => {
   res.json({ ok: true });
 });
 
+app.get("/subtitle/:id", async (req, res) => {
+  const id = req.params.id;
+  const filePath = path.join(__dirname, "../public", "subtitle", id);
+  res.setHeader("content-type", "text/vtt");
+  fs.stat(filePath, (err, stat) => {
+    if (err) {
+      console.error(`File stat error for ${filePath}.`);
+      console.error(err);
+      res.sendStatus(500);
+      return;
+    }
+    const fileStream = fs.createReadStream(filePath);
+    fileStream.on("error", (error) => {
+      console.log(`Error reading file ${filePath}.`);
+      console.log(error);
+      res.sendStatus(500);
+    });
+    fileStream.pipe(res);
+  });
+});
+
 app.listen(8000, () => {
   console.log("server is readey http://localhost:8000");
 });
