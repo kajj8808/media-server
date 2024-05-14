@@ -76,6 +76,7 @@ app.post("/episode", async (req, res) => {
   const episodes = result.episodes.map((episode) => ({
     ...episode,
     videoId: episode.videoId?.toString(),
+    vttId: episode.vttId?.toString(),
   }));
 
   res.json(episodes);
