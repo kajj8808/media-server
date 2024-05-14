@@ -1,6 +1,9 @@
 import "dotenv/config";
 
 import express from "express";
+import smi2vtt from "smi2vtt";
+import multer from "multer";
+import subsrt from "subsrt";
 import cors from "cors";
 import path from "path";
 import fs from "fs";
@@ -10,8 +13,12 @@ import "./lib/auto";
 import { autoInseartSeries } from "./tmdb";
 import { VideoStremInfoOption } from "../types/interface";
 import { extractEpisodeNumber } from "./lib/torrent";
+import { changePath } from "./lib/utile";
 
 const app = express();
+const subtitleUpload = multer({
+  dest: path.join(__dirname, "../public", "subtitle"),
+});
 
 app.use(cors());
 app.use(express.json());
@@ -23,6 +30,11 @@ app.get("/auto_episode", (_, res) => {
 
 app.get("/auto_series", (_, res) => {
   const filePath = path.join(__dirname, "pages", "auto_series.html");
+  res.sendFile(filePath);
+});
+
+app.get("/upload_smi", (_, res) => {
+  const filePath = path.join(__dirname, "pages", "upload_smi.html");
   res.sendFile(filePath);
 });
 
@@ -43,6 +55,30 @@ app.post("/season", async (req, res) => {
     },
   });
   res.json(season);
+});
+
+app.post("/episode", async (req, res) => {
+  const { seasonId } = req.body;
+
+  const result = await db.season.findUnique({
+    where: {
+      id: +seasonId,
+    },
+    include: {
+      episodes: true,
+    },
+  });
+
+  if (!result || !result.episodes) {
+    return res.status(404).json({ error: "No episodes found" });
+  }
+
+  const episodes = result.episodes.map((episode) => ({
+    ...episode,
+    videoId: episode.videoId?.toString(),
+  }));
+
+  res.json(episodes);
 });
 
 app.post("/auto_episode", async (req, res) => {
@@ -157,6 +193,47 @@ app.get("/video/:id", async (req, res) => {
       fileStream.pipe(res);
     }
   });
+});
+
+app.post(
+  "/upload/subtitle",
+  subtitleUpload.single("file"),
+  async (req, res) => {
+    if (req.file) {
+      const newFileName = new Date().getTime() + "";
+      const newPath = path.join(req.file?.destination, "/", newFileName);
+      let vtt: undefined | string = undefined;
+      if (req.file.originalname.includes(".ass")) {
+        const ass = fs.readFileSync(req.file.path, "utf-8");
+        vtt = subsrt.convert(ass, { format: "vtt" });
+      } else if (req.file.originalname.includes(".smi")) {
+        vtt = await smi2vtt(req.file.path);
+      }
+      if (vtt) {
+        fs.writeFileSync(newPath, vtt);
+        fs.rmSync(req.file.path);
+        res.json({ ok: true, fileName: newFileName });
+      } else {
+        res.json({ ok: false, error: "this file is not subtile file.." });
+      }
+    }
+  }
+);
+
+app.post("/subtitle", async (req, res) => {
+  const { seriesId, episodeId, fileName } = req.body;
+  await db.episode.update({
+    data: {
+      vttId: +fileName,
+    },
+    where: { id: +episodeId },
+  });
+  await db.series.update({
+    data: { updateAt: new Date() },
+    where: { id: +seriesId },
+  });
+
+  res.json({ ok: true });
 });
 
 app.listen(8000, () => {

@@ -45,7 +45,7 @@ model Episode {
   runningTime        Int
   number             Int
   videoId            BigInt
-  vttId              Int?
+  vttId              BigInt?
   seasonId           Int?
   Season             Season?              @relation(fields: [seasonId], references: [id])
   EpisodeWatchRecord EpisodeWatchRecord[]

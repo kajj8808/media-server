@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <style>
+    body {
+      display: flex;
+      width: 100%;
+      height: 100vh;
+      justify-content: center;
+      align-items: center;
+    }
+    form {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      gap: 10px;
+    }
+    label {
+      width: 230px;
+      height: 230px;
+      background-color: antiquewhite;
+      border-radius: 8px;
+      box-shadow: rgba(0, 0, 0, 0.35) 0px 5px 15px;
+      font-weight: bold;
+      font-size: large;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      cursor: pointer;
+      text-align: center;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    input {
+      display: none;
+    }
+    button {
+      background-color: rgb(4, 113, 24);
+      display: none;
+      border: none;
+      border-radius: 8px;
+      padding: 10px 6preventDefaultpx;
+      color: white;
+      font-weight: bold;
+      font-size: 16px;
+      &:hover {
+        background-color: rgb(49, 205, 22);
+      }
+      &:active {
+        background-color: rgb(11, 47, 4);
+      }
+      cursor: pointer;
+    }
+  </style>
+  <body>
+    <form>
+      <div>
+        <select id="series"></select>
+        <select id="season"></select>
+        <select id="episode"></select>
+      </div>
+      <label for="smi">smi file here</label>
+      <input type="file" id="smi" name="smi" accept".smi,.ass" />
+      <button disabled>submit</button>
+    </form>
+  </body>
+  <script>
+    const form = document.querySelector("form");
+    const subTitleInput = document.querySelector("input");
+    const smiLabel = document.querySelector("label");
+    const submitBtn = document.querySelector("button");
+    const seriesSelect = document.getElementById("series");
+    const seasonSelect = document.getElementById("season");
+    const episodeSelect = document.getElementById("episode");
+
+    const hostURL = window.location.origin;
+
+    let fileName = "";
+    let disabledButton = true;
+
+    async function onSubtitleChange(event) {
+      const file = event.target.files[0];
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const { ok, fileName: newFileName } = await (
+        await fetch(`${hostURL}/upload/subtitle`, {
+          method: "POST",
+          body: formData,
+        })
+      ).json();
+      fileName = newFileName;
+      smiLabel.innerText = event.target.value;
+      toggleButton();
+    }
+
+    async function onSmbmit(event) {
+      event.preventDefault();
+      await fetch(`${hostURL}/subtitle`, {
+        method: "POST",
+        body: JSON.stringify({
+          seriesId: seriesSelect.value,
+          episodeId: episodeSelect.value,
+          fileName: fileName,
+        }),
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+      inital();
+    }
+
+    function toggleButton() {
+      disabledButton = !disabledButton;
+      if (!disabledButton) {
+        submitBtn.style.display = "block";
+      }
+      submitBtn.disabled = disabledButton;
+    }
+
+    async function getSeason(seriesId) {
+      const season = await (
+        await fetch(`${hostURL}/season`, {
+          body: JSON.stringify({
+            seriesId,
+          }),
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        })
+      ).json();
+      seasonSelect.innerText = "";
+      season.forEach((item) => {
+        const seasonOption = document.createElement("option");
+        seasonOption.value = item.id;
+        seasonOption.text = item.name;
+        seasonSelect.appendChild(seasonOption);
+      });
+      getEpisode(season[0].id);
+    }
+
+    async function getEpisode(seasonId) {
+      const episode = await (
+        await fetch(`${hostURL}/episode`, {
+          body: JSON.stringify({
+            seasonId: seasonId,
+          }),
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        })
+      ).json();
+      episodeSelect.innerText = "";
+      console.log(episode);
+      episode.forEach((item) => {
+        const episodeOption = document.createElement("option");
+        episodeOption.value = item.id;
+        episodeOption.text = item.number;
+        episodeSelect.appendChild(episodeOption);
+      });
+    }
+
+    function onSeriesChange(event) {
+      getSeason(event.target.value);
+    }
+
+    async function onSeasonChange(event) {
+      cogetEpisode(event.target.value);
+    }
+
+    async function inital() {
+      fileName = "";
+      smiLabel.innerText = "smi file here";
+
+      const series = await (await fetch(`${hostURL}/series`)).json();
+      series.forEach((item) => {
+        const seriesOption = document.createElement("option");
+        seriesOption.value = item.id;
+        seriesOption.text = item.title;
+        seriesSelect.appendChild(seriesOption);
+      });
+      if (series.length >= 1) {
+        getSeason(series[0].id);
+      }
+    }
+
+    form.addEventListener("submit", onSmbmit);
+    subTitleInput.addEventListener("change", onSubtitleChange);
+    seriesSelect.addEventListener("change", onSeriesChange);
+    seasonSelect.addEventListener("change", onSeasonChange);
+    inital();
+  </script>
+</html>
