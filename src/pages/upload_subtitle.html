@@ -20,7 +20,7 @@
       align-items: center;
       gap: 10px;
     }
-    label {
+    .subtitle_box {
       width: 230px;
       height: 230px;
       background-color: antiquewhite;
@@ -36,7 +36,7 @@
       overflow: hidden;
       text-overflow: ellipsis;
     }
-    input {
+    .subtitle_box input {
       display: none;
     }
     button {
@@ -44,7 +44,7 @@
       display: none;
       border: none;
       border-radius: 8px;
-      padding: 10px 6preventDefaultpx;
+      padding: 10px 6px;
       color: white;
       font-weight: bold;
       font-size: 16px;
@@ -63,20 +63,25 @@
         <select id="series"></select>
         <select id="season"></select>
         <select id="episode"></select>
+        <input type="checkbox" id="isAss" />
+        <label for="isAss">is Ass?</label>
       </div>
-      <label for="smi">smi file here</label>
-      <input type="file" id="smi" name="smi" accept".smi,.ass" />
+      <div class="subtitle_box">
+        <label for="subtitle">subtitle file here</label>
+        <input type="file" id="subtitle" name="subtitle" accept".mp4,.ass" />
+      </div>
       <button disabled>submit</button>
     </form>
   </body>
   <script>
     const form = document.querySelector("form");
-    const subTitleInput = document.querySelector("input");
-    const smiLabel = document.querySelector("label");
+    const subTitleInput = document.getElementById("subtitle");
+    const subtitleLabel = document.querySelector(".subtitle_box label");
     const submitBtn = document.querySelector("button");
     const seriesSelect = document.getElementById("series");
     const seasonSelect = document.getElementById("season");
     const episodeSelect = document.getElementById("episode");
+    const isAssInput = document.getElementById("isAss");
 
     const hostURL = window.location.origin;
 
@@ -95,7 +100,7 @@
         })
       ).json();
       fileName = newFileName;
-      smiLabel.innerText = event.target.value;
+      subtitleLabel.innerText = event.target.value;
       toggleButton();
     }
 
@@ -107,6 +112,7 @@
           seriesId: seriesSelect.value,
           episodeId: episodeSelect.value,
           fileName: fileName,
+          isAss: isAssInput.checked,
         }),
         headers: {
           "Content-Type": "application/json",
@@ -177,7 +183,7 @@
 
     async function inital() {
       fileName = "";
-      smiLabel.innerText = "smi file here";
+      subtitleLabel.innerText = "smi file here";
 
       const series = await (await fetch(`${hostURL}/series`)).json();
       series.forEach((item) => {

@@ -35,7 +35,7 @@ app.get("/auto_series", (_, res) => {
 });
 
 app.get("/upload_smi", (_, res) => {
-  const filePath = path.join(__dirname, "pages", "upload_smi.html");
+  const filePath = path.join(__dirname, "pages", "upload_subtitle.html");
   res.sendFile(filePath);
 });
 
@@ -223,7 +223,7 @@ app.post(
 );
 
 app.post("/subtitle", async (req, res) => {
-  const { seriesId, episodeId, fileName } = req.body;
+  const { seriesId, episodeId, fileName, isAss } = req.body;
   const episode = await db.episode.update({
     data: {
       vttId: +fileName,
@@ -234,10 +234,13 @@ app.post("/subtitle", async (req, res) => {
     data: { updateAt: new Date() },
     where: { id: +seriesId },
   });
-  const publicPath = path.join(__dirname, "../public");
-  const videoPath = path.join(publicPath, "video", episode.videoId + "");
-  const subTitlePath = path.join(publicPath, "subtitle", fileName);
-  addSubtitleToVideo(videoPath, subTitlePath);
+  // ass 자막일 경우에만 처리하도록 처리.( video 에 ass 자막 합치기. )
+  if (isAss) {
+    const publicPath = path.join(__dirname, "../public");
+    const videoPath = path.join(publicPath, "video", episode.videoId + "");
+    const subTitlePath = path.join(publicPath, "subtitle", fileName);
+    addSubtitleToVideo(videoPath, subTitlePath);
+  }
   res.json({ ok: true });
 });
 
