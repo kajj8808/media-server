@@ -238,8 +238,11 @@ app.post("/subtitle", async (req, res) => {
   if (isAss) {
     const publicPath = path.join(__dirname, "../public");
     const videoPath = path.join(publicPath, "video", episode.videoId + "");
+
     const subTitlePath = path.join(publicPath, "subtitle", fileName);
-    addSubtitleToVideo(videoPath, subTitlePath);
+    const srcPath = path.join(__dirname, fileName);
+    await changePath(subTitlePath, srcPath);
+    // addSubtitleToVideo(videoPath, subTitlePath);
   }
   res.json({ ok: true });
 });
