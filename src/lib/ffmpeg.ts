@@ -154,6 +154,13 @@ export async function addSubtitleToVideo(
       console.error("Failed to start process:", error);
       reject(error);
     });
+    process.stdout.on("data", (data) => {
+      console.log(data.toString());
+    });
+
+    process.stderr.on("data", (data) => {
+      console.error(data.toString());
+    });
 
     process.on("exit", (code, signal) => {
       if (code === 0) {
