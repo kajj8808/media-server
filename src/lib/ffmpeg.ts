@@ -144,11 +144,10 @@ export async function addSubtitleToVideo(
   videoPath: string,
   subTitlePath: string
 ) {
-  return new Promise<string>(async (resolve, reject) => {
+  return new Promise<string>((resolve, reject) => {
     const tempPath = videoPath + ".mp4";
-    await changePath(videoPath, tempPath);
 
-    const command = `ffmpeg -i "${tempPath}" -vf "ass=${subTitlePath}" -c:a copy -c:v hevc -crf 18 -tag:v hvc1 "${videoPath}"`;
+    const command = `ffmpeg -i "${videoPath}" -vf "ass=${subTitlePath}" -c:a copy -c:v hevc -crf 18 -tag:v hvc1 "${tempPath}"`;
     const process = spawn(command, { shell: true, stdio: "pipe" });
 
     process.on("error", (error) => {
@@ -158,7 +157,7 @@ export async function addSubtitleToVideo(
 
     process.on("exit", (code, signal) => {
       if (code === 0) {
-        fs.rmSync(videoPath);
+        fs.renameSync(tempPath, videoPath);
         resolve("");
       } else {
         reject(code);
