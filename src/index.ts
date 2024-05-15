@@ -14,6 +14,7 @@ import { autoInseartSeries } from "./tmdb";
 import { VideoStremInfoOption } from "../types/interface";
 import { extractEpisodeNumber } from "./lib/torrent";
 import { changePath } from "./lib/utile";
+import { addSubtitleToVideo } from "./lib/ffmpeg";
 
 const app = express();
 const subtitleUpload = multer({
@@ -223,7 +224,7 @@ app.post(
 
 app.post("/subtitle", async (req, res) => {
   const { seriesId, episodeId, fileName } = req.body;
-  await db.episode.update({
+  const episode = await db.episode.update({
     data: {
       vttId: +fileName,
     },
@@ -233,29 +234,18 @@ app.post("/subtitle", async (req, res) => {
     data: { updateAt: new Date() },
     where: { id: +seriesId },
   });
-
+  const publicPath = path.join(__dirname, "../public");
+  const videoPath = path.join(publicPath, "video", episode.videoId + "");
+  const subTitlePath = path.join(publicPath, "subtitle", fileName);
+  addSubtitleToVideo(videoPath, subTitlePath);
   res.json({ ok: true });
 });
 
 app.get("/subtitle/:id", async (req, res) => {
   const id = req.params.id;
   const filePath = path.join(__dirname, "../public", "subtitle", id);
-  res.setHeader("content-type", "text/vtt");
-  fs.stat(filePath, (err, stat) => {
-    if (err) {
-      console.error(`File stat error for ${filePath}.`);
-      console.error(err);
-      res.sendStatus(500);
-      return;
-    }
-    const fileStream = fs.createReadStream(filePath);
-    fileStream.on("error", (error) => {
-      console.log(`Error reading file ${filePath}.`);
-      console.log(error);
-      res.sendStatus(500);
-    });
-    fileStream.pipe(res);
-  });
+  res.setHeader("Content-Type", "text/vtt");
+  res.sendFile(filePath);
 });
 
 app.listen(8000, () => {

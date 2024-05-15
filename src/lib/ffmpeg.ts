@@ -2,7 +2,8 @@ import { spawn } from "child_process";
 import ffmpegPath from "ffmpeg-static";
 import ffmpeg from "fluent-ffmpeg";
 import path from "path";
-import fs from "fs";
+import fs, { renameSync } from "fs";
+import { changePath } from "./utile";
 interface IVideoCodec {
   video?: ffmpeg.FfprobeStream;
   audio?: ffmpeg.FfprobeStream;
@@ -137,4 +138,31 @@ export async function streamingFormatConverter(filePath: string) {
     console.error("streming fomat error: ", error);
     return undefined;
   }
+}
+
+export async function addSubtitleToVideo(
+  videoPath: string,
+  subTitlePath: string
+) {
+  return new Promise<string>(async (resolve, reject) => {
+    const tempPath = videoPath + ".mp4";
+    await changePath(videoPath, tempPath);
+
+    const command = `ffmpeg -i "${tempPath}" -vf "ass=${subTitlePath}" -c:a copy -c:v hevc -crf 18 -tag:v hvc1 "${videoPath}"`;
+    const process = spawn(command, { shell: true, stdio: "pipe" });
+
+    process.on("error", (error) => {
+      console.error("Failed to start process:", error);
+      reject(error);
+    });
+
+    process.on("exit", (code, signal) => {
+      if (code === 0) {
+        fs.rmSync(videoPath);
+        resolve("");
+      } else {
+        reject(code);
+      }
+    });
+  });
 }
