@@ -206,8 +206,7 @@ app.post(
       const newPath = path.join(req.file?.destination, "/", newFileName);
       let vtt: undefined | string = undefined;
       if (req.file.originalname.includes(".ass")) {
-        const ass = fs.readFileSync(req.file.path, "utf-8");
-        vtt = subsrt.convert(ass, { format: "vtt" });
+        vtt = fs.readFileSync(req.file.path, "utf-8");
       } else if (req.file.originalname.includes(".smi")) {
         vtt = await smi2vtt(req.file.path);
       }
@@ -238,11 +237,13 @@ app.post("/subtitle", async (req, res) => {
   if (isAss) {
     const publicPath = path.join(__dirname, "../public");
     const videoPath = path.join(publicPath, "video", episode.videoId + "");
-
-    const subTitlePath = path.join(publicPath, "subtitle", fileName);
-    const srcPath = path.join(__dirname, fileName);
-    await changePath(subTitlePath, srcPath);
-    // addSubtitleToVideo(videoPath, subTitlePath);
+    // 자막 옵션에서 상대주소가 먹지 않아서 한번 옮긴이후에 처리
+    const subTitlePublicPath = path.join(publicPath, "subtitle", fileName);
+    const srcSubTitlePath = path.join(__dirname, "../", fileName);
+    await changePath(subTitlePublicPath, srcSubTitlePath);
+    await addSubtitleToVideo(videoPath, fileName);
+    res.json({ ok: true });
+    await changePath(srcSubTitlePath, subTitlePublicPath);
   }
   res.json({ ok: true });
 });
