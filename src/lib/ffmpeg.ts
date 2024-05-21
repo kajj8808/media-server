@@ -40,28 +40,15 @@ export async function getVideoCodec(
     });
   });
 }
-/** codec이 h265(hvc1), aac로 이루어져 있는지 확인하는 함수입니다. */
-export function hasValidCodecs(
-  videoCodec: IVideoCodec,
-  expectedVideoCodec: string,
-  expectedAudioCodec: string
-): boolean {
-  if (
-    videoCodec.video?.codec_name !== expectedVideoCodec ||
-    videoCodec.audio?.codec_name !== expectedAudioCodec
-  ) {
-    return false;
-  }
-  return true;
-}
 
-export function hevcToHvc1(filePath: string) {
+export function runCommand(option: string, filePath: string) {
   return new Promise<string>((resolve, reject) => {
     const filename = `${new Date().getTime()}`;
     const newPath = path.join(__dirname, "../../public", "video", filename);
     const tempPath = newPath + ".mp4";
 
-    const command = `ffmpeg -i "${filePath}" -c copy -tag:v hvc1 "${tempPath}"`;
+    const command = `ffmpeg -i "${filePath}" ${option} "${tempPath}"`;
+
     const process = spawn(command, { shell: true, stdio: "pipe" });
 
     process.on("error", (error) => {
@@ -71,8 +58,7 @@ export function hevcToHvc1(filePath: string) {
 
     process.on("exit", (code, signal) => {
       if (code === 0) {
-        fs.renameSync(tempPath, newPath);
-        fs.rmSync(filePath);
+        renameSync(filePath, newPath);
         resolve(filename);
       } else {
         reject(code);
@@ -121,18 +107,22 @@ export async function streamingFormatConverter(filePath: string) {
   try {
     const videoCodec = await getVideoCodec(filePath);
     if (!videoCodec) return;
-    let videoId = "";
-    const videoCodecValid = hasValidCodecs(videoCodec, "hevc", "aac");
-    if (videoCodecValid) {
-      videoId = await hevcToHvc1(filePath);
+    let option = ``;
+
+    if (
+      videoCodec.audio?.codec_name === "aac" &&
+      videoCodec.video?.codec_name === "hevc"
+    ) {
+      option = "-c copy -tag:v hvc1";
+    } else if (
+      videoCodec.audio?.codec_name === "flac" &&
+      videoCodec.video?.codec_name === "hevc"
+    ) {
+      option = "-tag:v hvc1 -c:v copy -c:a flac -ac 2 -strict -2";
     } else {
-      videoId = await anyVideoToHvc1({
-        filePath,
-        audioIndex: videoCodec.audio?.index!,
-        videoIndex: videoCodec.video?.index!,
-        isHevc: videoCodec.video?.codec_name === "hevc",
-      });
+      option = "-tag:v hvc1 -c:v hevc -c:a flac -ac 2 -strict -2";
     }
+    const videoId = await runCommand(option, filePath);
     return videoId;
   } catch (error) {
     console.error("streming fomat error: ", error);

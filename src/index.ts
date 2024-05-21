@@ -245,7 +245,9 @@ app.post("/subtitle", async (req, res) => {
     res.json({ ok: true });
     await changePath(srcSubTitlePath, subTitlePublicPath);
   }
-  res.json({ ok: true });
+  try {
+    res.json({ ok: true });
+  } catch (error) {}
 });
 
 app.get("/subtitle/:id", async (req, res) => {

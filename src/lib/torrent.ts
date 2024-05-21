@@ -178,7 +178,10 @@ export function torrentDownloadeHandler({
         // 토렌트가 폴더일떄.
         if (torrent.files.length > 1) {
           torrent.files.forEach(async (file: any) => {
-            if (file.name.includes("mkv") || file.name.includes("mp4")) {
+            if (
+              (file.name.includes("mkv") || file.name.includes("mp4")) &&
+              !file.name.includes("[SP")
+            ) {
               const prevPath = path.join(
                 __dirname,
                 "../../public",
