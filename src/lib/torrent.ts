@@ -177,7 +177,7 @@ export function torrentDownloadeHandler({
         clearInterval(interval);
         // 토렌트가 폴더일떄.
         if (torrent.files.length > 1) {
-          torrent.files.forEach(async (file: any) => {
+          for (const file of torrent.files) {
             if (
               (file.name.includes("mkv") || file.name.includes("mp4")) &&
               !file.name.includes("[SP")
@@ -209,9 +209,11 @@ export function torrentDownloadeHandler({
                 magnet: torrentId,
               });
             }
-          });
+          }
+
           fs.rmdirSync(
-            path.join(__dirname, "../../public", "video", torrent.name)
+            path.join(__dirname, "../../public", "video", torrent.name),
+            { recursive: true }
           );
           torrent.removeAllListeners();
           torrent.destroy();
