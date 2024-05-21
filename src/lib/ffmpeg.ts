@@ -2,7 +2,7 @@ import { spawn } from "child_process";
 import ffmpegPath from "ffmpeg-static";
 import ffmpeg from "fluent-ffmpeg";
 import path from "path";
-import fs, { renameSync } from "fs";
+import fs, { renameSync, rmSync } from "fs";
 import { changePath } from "./utile";
 interface IVideoCodec {
   video?: ffmpeg.FfprobeStream;
@@ -58,7 +58,8 @@ export function runCommand(option: string, filePath: string) {
 
     process.on("exit", (code, signal) => {
       if (code === 0) {
-        renameSync(filePath, newPath);
+        renameSync(tempPath, newPath);
+        rmSync(tempPath);
         resolve(filename);
       } else {
         reject(code);

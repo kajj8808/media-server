@@ -211,9 +211,8 @@ export function torrentDownloadeHandler({
             }
           }
 
-          fs.rmdirSync(
-            path.join(__dirname, "../../public", "video", torrent.name),
-            { recursive: true }
+          fs.rmSync(
+            path.join(__dirname, "../../public", "video", torrent.name)
           );
           torrent.removeAllListeners();
           torrent.destroy();
