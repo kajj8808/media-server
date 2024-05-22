@@ -155,6 +155,7 @@ export async function addSubtitleToVideo(
 
     process.on("exit", (code, signal) => {
       if (code === 0) {
+        fs.rmSync(videoPath);
         fs.renameSync(tempPath, videoPath);
         resolve("");
       } else {
