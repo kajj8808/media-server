@@ -3,7 +3,7 @@ import ffmpegPath from "ffmpeg-static";
 import ffmpeg from "fluent-ffmpeg";
 import path from "path";
 import fs, { renameSync, rmSync } from "fs";
-import { changePath } from "./utile";
+
 interface IVideoCodec {
   video?: ffmpeg.FfprobeStream;
   audio?: ffmpeg.FfprobeStream;
@@ -42,64 +42,25 @@ export async function getVideoCodec(
 }
 
 export function runCommand(option: string, filePath: string) {
+  const options = option.split(" ");
   return new Promise<string>((resolve, reject) => {
     const filename = `${new Date().getTime()}`;
     const newPath = path.join(__dirname, "../../public", "video", filename);
     const tempPath = newPath + ".mp4";
 
-    const command = `ffmpeg -i "${filePath}" ${option} "${tempPath}"`;
-
-    const process = spawn(command, { shell: true, stdio: "pipe" });
-
-    process.on("error", (error) => {
-      console.error("Failed to start process:", error);
-      reject(error);
+    const process = ffmpeg(filePath).addOptions(options).output(tempPath);
+    process.on("end", async () => {
+      renameSync(tempPath, newPath);
+      rmSync(filePath);
+      resolve(filename);
     });
-
-    process.on("exit", (code, signal) => {
-      if (code === 0) {
-        renameSync(tempPath, newPath);
-        rmSync(tempPath);
-        resolve(filename);
-      } else {
-        reject(code);
-      }
+    process.on("error", (error: any) => {
+      console.error(error);
     });
-  });
-}
-
-interface anyVideoToHvc1Props {
-  filePath: string;
-  videoIndex: number;
-  audioIndex: number;
-  isHevc: boolean;
-}
-export function anyVideoToHvc1(props: anyVideoToHvc1Props) {
-  return new Promise<string>((resolve, reject) => {
-    const filename = `${new Date().getTime()}`;
-    const newPath = path.join(__dirname, "../../public", "video", filename);
-    const tempPath = newPath + ".mkv";
-    const command = `${ffmpegPath} -i "${props.filePath}" -map 0:v:${
-      props.videoIndex
-    } -map 0:a:${props.audioIndex} -c:v ${
-      props.isHevc ? "copy" : "hevc"
-    } -tag:v hvc1 -c:a aac -ac 2 -b:a 640k  "${tempPath}"`;
-    const process = spawn(command, { shell: true, stdio: "pipe" });
-
-    process.on("error", (error) => {
-      console.error("Failed to start process:", error);
-      reject(error);
+    process.on("progress", (progress: any) => {
+      console.log(progress);
     });
-
-    process.on("exit", (code, signal) => {
-      if (code === 0) {
-        fs.renameSync(tempPath, newPath);
-        fs.rmSync(props.filePath);
-        resolve(filename);
-      } else {
-        reject(code);
-      }
-    });
+    process.run();
   });
 }
 
