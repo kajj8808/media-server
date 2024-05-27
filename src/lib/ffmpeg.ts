@@ -82,7 +82,7 @@ export async function streamingFormatConverter(filePath: string) {
     ) {
       option = "-tag:v hvc1 -c:v copy -c:a flac -ac 2 -strict -2";
     } else {
-      option = "-tag:v hvc1 -c:v hevc -c:a flac -ac 2 -strict -2";
+      option = "-tag:v hvc1 -c:v hevc -crf 23 -c:a flac -ac 2 -strict -2";
     }
     const videoId = await runCommand(option, filePath);
     return videoId;
@@ -99,7 +99,7 @@ export async function addSubtitleToVideo(
   return new Promise<string>((resolve, reject) => {
     const tempPath = videoPath + ".mp4";
 
-    const command = `ffmpeg -i "${videoPath}" -vf "ass=${subTitlePath}" -c:a copy -c:v hevc -crf 18 -tag:v hvc1 "${tempPath}"`;
+    const command = `ffmpeg -i "${videoPath}" -vf "ass=${subTitlePath}" -c:a copy -c:v hevc -crf 23 -tag:v hvc1 "${tempPath}"`;
     const process = spawn(command, { shell: true, stdio: "pipe" });
 
     process.on("error", (error) => {
