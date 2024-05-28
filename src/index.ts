@@ -14,7 +14,7 @@ import { autoInseartSeries } from "./tmdb";
 import { VideoStremInfoOption } from "../types/interface";
 import { extractEpisodeNumber } from "./lib/torrent";
 import { changePath } from "./lib/utile";
-import { addSubtitleToVideo } from "./lib/ffmpeg";
+import { addSubtitleToVideo, streamingFormatConverter } from "./lib/ffmpeg";
 
 const app = express();
 const subtitleUpload = multer({
@@ -260,3 +260,10 @@ app.get("/subtitle/:id", async (req, res) => {
 app.listen(8000, () => {
   console.log("server is readey http://localhost:8000");
 });
+
+/* (async () => {
+  const filePath = path.join(__dirname, "../public/video", "g1.mkv");
+  const videoId = await streamingFormatConverter(filePath);
+  console.log(videoId);
+})();
+ */

@@ -81,6 +81,8 @@ export async function streamingFormatConverter(filePath: string) {
       videoCodec.video?.codec_name === "hevc"
     ) {
       option = "-tag:v hvc1 -c:v copy -c:a flac -ac 2 -strict -2";
+    } else if (videoCodec.video?.codec_name === "hevc") {
+      option = "-tag:v hvc1 -c:v copy -c:a flac -ac 2 -strict -2";
     } else {
       option = "-tag:v hvc1 -c:v hevc -crf 23 -c:a flac -ac 2 -strict -2";
     }
