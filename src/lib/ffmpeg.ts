@@ -51,7 +51,7 @@ export function runCommand(option: string, filePath: string) {
     const process = ffmpeg(filePath).addOptions(options).output(tempPath);
     process.on("end", async () => {
       renameSync(tempPath, newPath);
-      rmSync(filePath);
+      rmSync(filePath, { recursive: true });
       resolve(filename);
     });
     process.on("error", (error: any) => {
