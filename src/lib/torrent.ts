@@ -7,6 +7,7 @@ import { streamingFormatConverter } from "./ffmpeg";
 import { fetchEpisodeDetail } from "../tmdb";
 import { changePath } from "./utile";
 import db from "./db";
+import { uploadMessageToDiscordChannel } from "./discord";
 
 interface IEpisdoePush {
   tmdbId: number;
@@ -58,9 +59,16 @@ async function episdePushHandler({
       },
     });
 
-    await db.series.update({
+    const series = await db.series.update({
       where: { id: seriesId },
       data: { updateAt: new Date() },
+    });
+
+    uploadMessageToDiscordChannel({
+      thumnail:
+        "http://image.tmdb.org/t/p/original/" + episodeDetail.still_path,
+      title: `${series.title}-${episodeDetail.episode_number}.${episodeDetail.name}`,
+      url: `${process.env.BASE_SITE_URL}/watch/${episodeDetail.id}`,
     });
   } catch (error) {
     console.log(error);

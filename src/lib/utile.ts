@@ -14,3 +14,16 @@ export async function changePath(prevPath: string, newPath: string) {
     console.error(error);
   }
 }
+
+import { getAverageColor } from "fast-average-color-node";
+export async function getProminentColorHexCode(imageUrl: string) {
+  let hexCode;
+  try {
+    // hexCode = (await Vibrant.from(imageUrl).getPalette()).Vibrant?.hex; <- webp 지원 x
+    hexCode = (await getAverageColor(imageUrl)).hex;
+  } catch (error) {
+    console.log(error);
+  }
+
+  return hexCode ?? "#1f1f1f";
+}
