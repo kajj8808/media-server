@@ -268,10 +268,3 @@ app.listen(8000, () => {
   console.log(videoId);
 })();
  */
-
-uploadMessageToDiscordChannel({
-  thumnail:
-    "https://media.themoviedb.org/t/p/w227_and_h127_bestv2/8ahTIsRz5EJPhTS4qMZkM6b06uE.jpg",
-  title: "꿈의 시작",
-  url: `${process.env.BASE_SITE_URL}/watch/145`,
-});
