@@ -218,7 +218,9 @@ export function torrentDownloadeHandler({
                 seasonId: seasonId,
                 seasonNumber: seasonNumber,
                 tmdbId: tmdbId,
-                episodeNumber: episodeNumber,
+                episodeNumber: excludedEpisodeCount
+                  ? episodeNumber + excludedEpisodeCount
+                  : episodeNumber,
                 magnet: torrentId,
               });
             }
