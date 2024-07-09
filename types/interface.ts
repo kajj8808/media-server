@@ -26,6 +26,7 @@ export interface IDetail {
   still_path: string;
   vote_average: number;
   vote_count: number;
+  status_code?: number;
 }
 interface Crew {
   job: string;

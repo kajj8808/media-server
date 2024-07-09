@@ -8,9 +8,9 @@ import cors from "cors";
 import path from "path";
 import fs from "fs";
 import db from "./lib/db";
-import "./lib/auto";
-
-import { autoInseartSeries } from "./tmdb";
+/* import "./lib/auto";
+ */
+import { autoInseartSeries, fetchEpisodeDetail } from "./tmdb";
 import { VideoStremInfoOption } from "../types/interface";
 import { extractEpisodeNumber } from "./lib/torrent";
 import { changePath } from "./lib/utile";
@@ -266,5 +266,11 @@ app.listen(8000, () => {
   const filePath = path.join(__dirname, "../public/video", "g1.mkv");
   const videoId = await streamingFormatConverter(filePath);
   console.log(videoId);
+})();
+ */
+// tmdb test case
+/* (async () => {
+  const episodeDetail = await fetchEpisodeDetail(203737, 1, 13);
+  console.log(episodeDetail);
 })();
  */

@@ -23,6 +23,8 @@ async function videoAutoDownloader() {
           tmdbId: true,
         },
       },
+      skippedSeasonCount: true,
+      excludedEpisodeCount: true,
     },
   });
 
@@ -35,13 +37,25 @@ async function videoAutoDownloader() {
         await db.downloadedMagnet.findUnique({ where: { cipherMagnet: hash } })
       );
       if (!isDownloaded) {
-        torrentDownloadeHandler({
-          tmdbId: season.series?.tmdbId!,
-          seriesId: season.series?.id!,
-          seasonId: season.id,
-          seasonNumber: season.number,
-          torrentId: magnet,
-        });
+        if (season.skippedSeasonCount && season.excludedEpisodeCount) {
+          torrentDownloadeHandler({
+            tmdbId: season.series?.tmdbId!,
+            seriesId: season.series?.id!,
+            seasonId: season.id,
+            seasonNumber: season.number - season.skippedSeasonCount,
+            torrentId: magnet,
+            excludedEpisodeCount: season.excludedEpisodeCount,
+          });
+        } else {
+          torrentDownloadeHandler({
+            tmdbId: season.series?.tmdbId!,
+            seriesId: season.series?.id!,
+            seasonId: season.id,
+            seasonNumber: season.number,
+            torrentId: magnet,
+          });
+        }
+
         await sleep(1800);
       }
     }

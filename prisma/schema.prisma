@@ -27,14 +27,17 @@ model Series {
 }
 
 model Season {
-  id         Int       @id @default(autoincrement())
-  number     Int
-  name       String
-  seriesId   Int?
-  autoUpload Boolean   @default(false)
-  nyaaQuery  String?
-  episodes   Episode[]
-  series     Series?   @relation(fields: [seriesId], references: [id])
+  id                   Int       @id @default(autoincrement())
+  number               Int
+  name                 String
+  seriesId             Int?
+  autoUpload           Boolean   @default(false)
+  nyaaQuery            String?
+  skippedSeasonCount   Int?
+  excludedEpisodeCount Int?
+  episodes             Episode[]
+
+  series Series? @relation(fields: [seriesId], references: [id])
 }
 
 model Episode {

@@ -134,6 +134,7 @@ interface ITorrentDownloadHandler {
   seriesId: number;
   seasonId: number;
   seasonNumber: number;
+  excludedEpisodeCount?: number;
 }
 export function torrentDownloadeHandler({
   torrentId,
@@ -141,6 +142,7 @@ export function torrentDownloadeHandler({
   seriesId,
   seasonId,
   seasonNumber,
+  excludedEpisodeCount,
 }: ITorrentDownloadHandler) {
   const client = new WebTorrentHybrid({
     nodeId: torrentId,
@@ -151,13 +153,16 @@ export function torrentDownloadeHandler({
     { path: path.join(__dirname, "../../public", "video") },
     async (torrent) => {
       if (torrent.files.length <= 1) {
-        const episodeNumber = extractEpisodeNumber(torrent.files[0].name);
+        let episodeNumber = extractEpisodeNumber(torrent.files[0].name);
+        if (excludedEpisodeCount && episodeNumber) {
+          episodeNumber -= excludedEpisodeCount;
+        }
         const episodeDetail = await fetchEpisodeDetail(
           tmdbId,
           seasonNumber,
           episodeNumber!
         );
-        if (episodeDetail.overview === "") {
+        if (episodeDetail.status_code === 34 || episodeDetail.overview === "") {
           console.error("tmdb에 설명글이 없습니다.");
           torrent.removeAllListeners();
           torrent.destroy();
