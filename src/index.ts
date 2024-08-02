@@ -4,6 +4,7 @@ import express from "express";
 import smi2vtt from "smi2vtt";
 import multer from "multer";
 import subsrt from "subsrt";
+import https from "https";
 import cors from "cors";
 import path from "path";
 import fs from "fs";
@@ -258,10 +259,21 @@ app.get("/subtitle/:id", async (req, res) => {
   res.sendFile(filePath);
 });
 
-app.listen(8000, () => {
+/* app.listen(8000, () => {
   console.log("server is readey http://localhost:8000");
-});
+}); */
 
+const httpsOptions = {
+  key: fs.readFileSync(path.join(__dirname, "key/private.key")),
+  cert: fs.readFileSync(path.join(__dirname, "key/certificate.crt")),
+};
+
+const httpsServer = https.createServer(httpsOptions, app);
+
+const PORT = 8443;
+httpsServer.listen(PORT, () => {
+  console.log(`Server is running on https://localhost:${PORT}`);
+});
 /* (async () => {
   const filePath = path.join(__dirname, "../public/video", "g1.mkv");
   const videoId = await streamingFormatConverter(filePath);

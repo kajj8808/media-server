@@ -68,7 +68,7 @@ async function episdePushHandler({
       thumnail:
         "http://image.tmdb.org/t/p/original/" + episodeDetail.still_path,
       title: `${series.title}-${episodeDetail.episode_number}.${episodeDetail.name}`,
-      url: `${process.env.BASE_SITE_URL}/watch/${videoId}`,
+      url: `${process.env.BASE_SITE_URL}/watch/${episode.id}`,
     });
   } catch (error) {
     console.log(error);
