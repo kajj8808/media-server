@@ -28,11 +28,27 @@ async function episdePushHandler({
   videoId,
   magnet,
 }: IEpisdoePush) {
-  const episodeDetail = await fetchEpisodeDetail(
-    tmdbId,
-    seasonNumber,
-    episodeNumber
-  );
+  const season = await db.season.findUnique({
+    where: {
+      id: seasonId,
+    },
+  });
+  const excludedEpisodeCount = season?.excludedEpisodeCount;
+
+  let episodeDetail;
+  if (excludedEpisodeCount) {
+    episodeDetail = await fetchEpisodeDetail(
+      tmdbId,
+      seasonNumber,
+      episodeNumber + excludedEpisodeCount
+    );
+  } else {
+    episodeDetail = await fetchEpisodeDetail(
+      tmdbId,
+      seasonNumber,
+      episodeNumber
+    );
+  }
 
   try {
     const episode = await db.episode.create({
