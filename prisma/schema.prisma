@@ -71,8 +71,8 @@ model AutoSeries {
 }
 
 model DownloadedMagnet {
-  id           Int     @id @default(autoincrement())
-  cipherMagnet String  @unique
-  episode      Episode @relation(fields: [episodeId], references: [id])
-  episodeId    Int
+  id           Int      @id @default(autoincrement())
+  cipherMagnet String   @unique
+  episode      Episode? @relation(fields: [episodeId], references: [id], onDelete: SetNull)
+  episodeId    Int?
 }
