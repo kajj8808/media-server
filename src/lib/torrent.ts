@@ -53,7 +53,9 @@ async function episdePushHandler({
   try {
     const episode = await db.episode.create({
       data: {
-        number: episodeDetail.episode_number,
+        number: excludedEpisodeCount
+          ? episodeDetail.episode_number - excludedEpisodeCount
+          : episodeDetail.episode_number,
         description: episodeDetail.overview,
         runningTime: episodeDetail.runtime,
         thumnail:
