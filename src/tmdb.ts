@@ -34,10 +34,11 @@ export async function autoInseartSeries() {
             where: { title: name },
             data: {
               title: name,
-              coverImage: "http://image.tmdb.org/t/p/original/" + backdrop_path,
-              overview: overview,
+              /*               coverImage: "http://image.tmdb.org/t/p/original/" + backdrop_path,
+               */ overview: overview,
               tmdbId: autoSeries.tmdbId,
-              poster: "http://image.tmdb.org/t/p/original/" + poster_path,
+              /*               poster: "http://image.tmdb.org/t/p/original/" + poster_path,
+               */
             },
           });
         }
