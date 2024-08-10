@@ -14,16 +14,20 @@ model User {
 }
 
 model Series {
-  id         Int      @id @default(autoincrement())
-  title      String   @unique
-  overview   String
-  coverImage String
-  poster     String?
-  logo       String?
-  createAt   DateTime @default(now())
-  updateAt   DateTime @default(now())
-  tmdbId     Int
-  seasons    Season[]
+  id                   Int      @id @default(autoincrement())
+  title                String   @unique
+  overview             String
+  coverImage           String
+  poster               String?
+  logo                 String?
+  createAt             DateTime @default(now())
+  updateAt             DateTime @default(now())
+  tmdbId               Int
+  seasons              Season[]
+  isOldOriginal        Boolean?
+  isMangaOriginal      Boolean?
+  isGameOriginal       Boolean?
+  isLightNovelOriginal Boolean?
 }
 
 model Season {
@@ -51,6 +55,8 @@ model Episode {
   number             Int
   videoId            BigInt
   vttId              BigInt?
+  isSmi              Boolean?
+  isAss              Boolean?
   seasonId           Int?
   Season             Season?              @relation(fields: [seasonId], references: [id])
   EpisodeWatchRecord EpisodeWatchRecord[]
