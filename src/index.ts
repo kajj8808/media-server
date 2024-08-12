@@ -32,10 +32,5 @@ app.listen(4040, () => console.log("server is ready http://localhost:4000"));
 // 비디오 파일을 웹페이지에 스트리밍 가능하게 인코딩.
 // 비디오 파일에 ass파일 입히기
 
-// test paths
-const videoPath = path.join(__dirname, "../public", "video", "sample");
-const videoOutPath = path.join(__dirname, "../public", "video", "sample1.mp4");
-const subtitlePath = path.join(__dirname, "../public", "subtitle", "sample");
-
 import "./utils/ffmpeg";
 import "./data/tmdb";

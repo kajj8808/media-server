@@ -1,6 +1,21 @@
 import ffmpeg from "fluent-ffmpeg";
+import path from "path";
 
-export function checkVideoCodec(videoPath: string, videoCodec: string) {
+function checkCurrentLanguage(currentLanguage: String, language: String) {
+  return language === currentLanguage;
+}
+interface GetCurrentStremingCodecIndexProps {
+  videoPath: string;
+  videoCodec?: string;
+  audioCodec?: String;
+  language?: String;
+}
+export function getCurrentStremingCodecIndex({
+  audioCodec,
+  videoCodec = "hevc",
+  videoPath = "aac",
+  language = "jpn",
+}: GetCurrentStremingCodecIndexProps) {
   return new Promise((resolve, reject) => {
     ffmpeg.ffprobe(videoPath, (err, metadata) => {
       if (err) {
@@ -9,11 +24,35 @@ export function checkVideoCodec(videoPath: string, videoCodec: string) {
       const vidoStreams = metadata.streams.filter(
         (stream) => stream.codec_type === "video"
       );
+      const audioStreams = metadata.streams.filter(
+        (stream) => stream.codec_type === "audio"
+      );
 
-      const currentCodec = vidoStreams.find(
+      const currentVideoCodec = vidoStreams.find(
         (stream) => stream.codec_name === videoCodec
       );
-      return resolve(Boolean(currentCodec));
+      const currentAudioCodec = audioStreams.find((stream) => {
+        let currentCodec = false;
+        if (stream.codec_name === audioCodec) {
+          currentCodec = true;
+        } else {
+          currentCodec = false;
+          return currentCodec;
+        }
+        if (stream.tags.language) {
+          currentCodec = checkCurrentLanguage(language, stream.tags.language);
+        }
+        return currentCodec;
+      });
+
+      return {
+        videoCodec: {
+          index: currentVideoCodec?.index,
+        },
+        audioCodec: {
+          index: currentAudioCodec?.index,
+        },
+      };
     });
   });
 }
@@ -57,3 +96,20 @@ export async function addAssSubtitleToVideo({
       .run();
   });
 }
+
+// test paths
+/* const videoPath = path.join(__dirname, "../../public", "video", "sample");
+const videoOutPath = path.join(
+  __dirname,
+  "../../public",
+  "video",
+  "sample1.mp4"
+);
+const subtitlePath = path.join(__dirname, "../../public", "subtitle", "sample");
+
+getCurrentStremingCodecIndex({
+  audioCodec: "aac",
+  videoCodec: "hevc",
+  videoPath,
+});
+ */
