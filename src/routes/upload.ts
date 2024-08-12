@@ -22,7 +22,7 @@ function subtitleFileFilter(
 
 const uploadRouter = express.Router();
 const subtitleUpload = multer({
-  dest: path.join(__dirname, "../../public", "subtitles"),
+  dest: path.join(__dirname, "../../public", "subtitle"),
   fileFilter: subtitleFileFilter,
 });
 uploadRouter.post("/subtitle", subtitleUpload.single("file"), (req, res) => {
