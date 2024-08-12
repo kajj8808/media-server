@@ -11,8 +11,13 @@
 - [] video streming
 - [] smi streming
 
+### 데이터 부분
+
+- [x] tmdb ( series , episode )
+- [] nyaa ( page crawling )
+
 ### 비디오 부분
 
 - [] 비디오 파일 인코딩,
 - [] 비디오 파일을 웹페이지에 스트리밍 가능하게 인코딩.
-- [] 비디오 파일에 ass파일 입히기
+- [x] 비디오 파일에 ass파일 입히기

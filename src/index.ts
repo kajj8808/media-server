@@ -4,6 +4,9 @@ import multer from "multer";
 import path from "path";
 import cors from "cors";
 import uploadRouter from "./routes/upload";
+import dotenv from "dotenv";
+
+dotenv.config();
 function createServer() {
   return;
 }
@@ -35,3 +38,4 @@ const videoOutPath = path.join(__dirname, "../public", "video", "sample1.mp4");
 const subtitlePath = path.join(__dirname, "../public", "subtitle", "sample");
 
 import "./utils/ffmpeg";
+import "./data/tmdb";
