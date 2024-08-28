@@ -1,0 +1,113 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model AutoSeries {
+  id     Int @id @default(autoincrement())
+  tmdbId Int @unique
+}
+
+model DownloadedMagnet {
+  id            Int      @id @default(autoincrement())
+  cipher_magnet String   @unique(map: "DownloadedMagnet_cipherMagnet_key")
+  episode_id    Int?
+  episodes      Episode? @relation(fields: [episode_id], references: [id], map: "DownloadedMagnet_episodeId_fkey")
+}
+
+model Episode {
+  id                 Int                  @id @default(autoincrement())
+  title              String
+  description        String
+  thumnail           String
+  running_time       Int
+  number             Int
+  video_id           String
+  subtitle_id        String?
+  season_id          Int?
+  series_id          Int?
+  is_ass             Boolean?
+  is_smi             Boolean?
+  kr_overview        Boolean?
+  downloaded_magnets DownloadedMagnet[]
+  season             Season?              @relation(fields: [season_id], references: [id], map: "Episode_seasonId_fkey")
+  EpisodeWatchRecord EpisodeWatchRecord[]
+  series             Series?              @relation(fields: [series_id], references: [id])
+}
+
+model EpisodeWatchRecord {
+  id         Int      @id @default(autoincrement())
+  watched_at DateTime @default(now())
+  progress   Float    @default(0.0)
+  episodeId  Int
+  userId     Int
+  Episode    Episode  @relation(fields: [episodeId], references: [id], onDelete: Cascade)
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Genres {
+  id     Int      @id @default(autoincrement())
+  name   String
+  series Series[] @relation("SeriesGenres")
+}
+
+model ProductionCompanies {
+  id             Int      @id
+  logo_path      String
+  name           String
+  origin_country String
+  series         Series[] @relation("SeriesProductionCompanies")
+}
+
+model Season {
+  id                     Int       @id @default(autoincrement())
+  number                 Int
+  name                   String
+  series_id              Int?
+  auto_upload            Boolean   @default(false)
+  nyaa_query             String?
+  excluded_episode_count Int?
+  skipped_season_count   Int?
+  encoder                String?
+  is_ass                 Boolean?
+  is_db                  Boolean?
+  air_date               DateTime?
+  poster                 String?
+  episodes               Episode[]
+  series                 Series?   @relation(fields: [series_id], references: [id])
+}
+
+model Series {
+  id                   Int                   @id @default(autoincrement())
+  title                String                @unique
+  overview             String
+  cover_image          String
+  logo                 String?
+  create_at            DateTime              @default(now())
+  update_at            DateTime              @default(now())
+  tmdb_id              Int                   @unique
+  poster               String?
+  is_game_original     Boolean?
+  is_novel_original    Boolean?
+  is_manga_original    Boolean?
+  is_old_original      Boolean?
+  first_air_date       String?
+  homepage             String?
+  next_episode_to_air  DateTime?
+  original_name        String?
+  is_auto_update       Boolean?
+  seasons              Season[]
+  episodes             Episode[]
+  genres               Genres[]              @relation("SeriesGenres")
+  production_companies ProductionCompanies[] @relation("SeriesProductionCompanies")
+}
+
+model User {
+  id                    Int                  @id @default(autoincrement())
+  email                 String
+  episode_watch_records EpisodeWatchRecord[]
+}
