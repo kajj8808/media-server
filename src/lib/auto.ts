@@ -19,6 +19,7 @@ export async function animationAutoDownload() {
           tmdb_id: true,
         },
       },
+      skipped_season_count: true,
       excluded_episode_count: true,
     },
   });
@@ -42,7 +43,9 @@ export async function animationAutoDownload() {
         torrentDownloadeHandler({
           magnet: magnet,
           seasonId: season.id,
-          seasonNumber: season.number,
+          seasonNumber: season.skipped_season_count
+            ? season.number - season.skipped_season_count
+            : season.number,
           seriesId: season.series?.id!,
           tmdbId: season.series?.tmdb_id!,
           excludedEpisodeCount: season.excluded_episode_count,
