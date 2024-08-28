@@ -19,9 +19,23 @@ export function torrentDownloadeHandler({
   magnet,
   seasonId,
   seriesId,
+  excludedEpisodeCount,
 }: TorrentDownloadeHandlerProps) {
   const client = new WebTorrent();
   client.add(magnet, { path: VIDEO_FOLDER_DIR }, async (torrent) => {
+    if (torrent.files.length <= 1) {
+      let episodeNumber = extractEpisodeNumber(torrent.files[0].name);
+      if (excludedEpisodeCount && episodeNumber) {
+        episodeNumber -= excludedEpisodeCount;
+      }
+      const episodeDetail = await getEpisodeDetail(seasonId, episodeNumber!);
+      if (episodeDetail.status_code === 34 || episodeDetail.overview === "") {
+        console.error("tmdb에 설명글이 없습니다.");
+        torrent.removeAllListeners();
+        torrent.destroy();
+        return;
+      }
+    }
     // 5초마다 다운 진행도 출력
     const interval = setInterval(() => {
       console.log(
@@ -166,8 +180,7 @@ async function episodeUploadHandler({
     return console.error("episode 번호가 없는거 같습니다?..");
   }
   const episode = await getEpisodeDetail(seasonId, episodeNumber);
-  console.log(episode);
-  /*  const newEpisode = await db.episode.create({
+  const newEpisode = await db.episode.create({
     data: {
       title: episode.name,
       description: episode.overview,
@@ -185,5 +198,5 @@ async function episodeUploadHandler({
       cipher_magnet: cipherMagnet,
       episode_id: newEpisode.id,
     },
-  }); */
+  });
 }
