@@ -29,7 +29,8 @@ export function torrentDownloadeHandler({
       );
     }, 5000);
 
-    torrent.on("metadata", async () => {
+    torrent.on("download", async () => {
+      console.log(torrent.name);
       if (torrent.name.includes("(ITA)")) {
         const cipherMagnet = crypto
           .createHash("md5")
@@ -38,14 +39,16 @@ export function torrentDownloadeHandler({
         await db.downloadedMagnet.create({
           data: {
             cipher_magnet: cipherMagnet,
-            episode_id: 0,
           },
         });
-        rmSync(path.join(VIDEO_FOLDER_DIR, torrent.name), {
-          recursive: true,
-        });
-        torrent.removeAllListeners();
-        torrent.destroy();
+        try {
+          rmSync(path.join(VIDEO_FOLDER_DIR, torrent.name), {
+            recursive: true,
+          });
+          torrent.removeAllListeners();
+          torrent.destroy();
+        } catch (error) {}
+
         return;
       }
     });
