@@ -29,29 +29,26 @@ export function torrentDownloadeHandler({
       );
     }, 5000);
 
-    torrent.on("download", async () => {
-      console.log(torrent.name);
-      if (torrent.name.includes("(ITA)")) {
-        const cipherMagnet = crypto
-          .createHash("md5")
-          .update(magnet)
-          .digest("base64");
-        await db.downloadedMagnet.create({
-          data: {
-            cipher_magnet: cipherMagnet,
-          },
+    if (torrent.name.includes("(ITA)")) {
+      const cipherMagnet = crypto
+        .createHash("md5")
+        .update(magnet)
+        .digest("base64");
+      await db.downloadedMagnet.create({
+        data: {
+          cipher_magnet: cipherMagnet,
+        },
+      });
+      try {
+        rmSync(path.join(VIDEO_FOLDER_DIR, torrent.name), {
+          recursive: true,
         });
-        try {
-          rmSync(path.join(VIDEO_FOLDER_DIR, torrent.name), {
-            recursive: true,
-          });
-          torrent.removeAllListeners();
-          torrent.destroy();
-        } catch (error) {}
+        torrent.removeAllListeners();
+        torrent.destroy();
+      } catch (error) {}
 
-        return;
-      }
-    });
+      return;
+    }
 
     torrent.on("error", (error: any) => {
       console.log(error);
