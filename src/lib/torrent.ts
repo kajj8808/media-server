@@ -29,8 +29,8 @@ export function torrentDownloadeHandler({
       );
     }, 5000);
 
-    torrent.on("ready", async () => {
-      if (torrent.name.includes("(ITA")) {
+    torrent.on("metadata", async () => {
+      if (torrent.name.includes("(ITA)")) {
         const cipherMagnet = crypto
           .createHash("md5")
           .update(magnet)
