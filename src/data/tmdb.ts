@@ -34,12 +34,17 @@ export async function getEpisodeDetail(
       },
       number: true,
       excluded_episode_count: true,
+      skipped_season_count: true,
     },
   });
 
   const url = `https://api.themoviedb.org/3/tv/${
     season?.series?.tmdb_id
-  }/season/${season?.number}/episode/${
+  }/season/${
+    season?.skipped_season_count
+      ? season?.number - season.skipped_season_count
+      : season?.number
+  }/episode/${
     season?.excluded_episode_count
       ? episodeNumber + season.excluded_episode_count
       : episodeNumber

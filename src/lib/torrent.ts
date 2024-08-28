@@ -12,7 +12,6 @@ interface TorrentDownloadeHandlerProps {
   tmdbId: number;
   seriesId: number;
   seasonId: number;
-  seasonNumber: number;
   excludedEpisodeCount: number | null;
 }
 export function torrentDownloadeHandler({
