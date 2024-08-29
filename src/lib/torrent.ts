@@ -43,7 +43,6 @@ export function torrentDownloadeHandler({
         torrent.name + "Progress: " + (torrent.progress * 100).toFixed(1) + "%"
       );
     }, 5000);
-
     if (torrent.name.includes("(ITA)")) {
       const cipherMagnet = crypto
         .createHash("md5")
@@ -60,7 +59,9 @@ export function torrentDownloadeHandler({
         });
         torrent.removeAllListeners();
         torrent.destroy();
-      } catch (error) {}
+      } catch (error) {
+        console.log(error);
+      }
 
       return;
     }
