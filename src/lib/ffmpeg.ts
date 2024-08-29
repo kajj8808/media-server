@@ -123,11 +123,7 @@ export async function streamingFormatConverter(videoPath: string) {
   let videoId;
 
   if (videoCodec.index !== undefined && audioCodec.index !== undefined) {
-    videoId = await runFfmpeg(videoPath, [
-      "-c:v copy",
-      "-c:a copy",
-      "-tag:v hvc1",
-    ]);
+    videoId = await runFfmpeg(videoPath, ["-c copy", "-tag:v hvc1"]);
   } else if (videoCodec.index !== undefined && audioCodec.index === undefined) {
     videoId = await runFfmpeg(videoPath, [
       "-c:v copy",
@@ -167,7 +163,7 @@ async function runFfmpeg(
   outputOptions: string[]
 ): Promise<string> {
   const videoId = new Date().getTime() + "";
-  const newVideoPath = path.join(VIDEO_FOLDER_DIR, videoId + ".mkv");
+  const newVideoPath = path.join(VIDEO_FOLDER_DIR, videoId + ".mp4");
   return new Promise((resolve) =>
     ffmpeg(videoPath)
       .outputOptions(outputOptions)
