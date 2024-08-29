@@ -200,4 +200,12 @@ async function episodeUploadHandler({
       episode_id: newEpisode.id,
     },
   });
+  await db.series.update({
+    where: {
+      id: seriesId,
+    },
+    data: {
+      update_at: new Date(),
+    },
+  });
 }
