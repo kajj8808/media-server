@@ -46,8 +46,8 @@ export async function animationAutoDownload() {
           tmdbId: season.series?.tmdb_id!,
           excludedEpisodeCount: season.excluded_episode_count,
         });
-        // 20분
-        await sleep(1 * 60 * 20);
+        // 30분
+        await sleep(1 * 60 * 30);
       }
     }
   }

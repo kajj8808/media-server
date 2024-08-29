@@ -20,7 +20,9 @@ export function torrentDownloadeHandler({
   seriesId,
   excludedEpisodeCount,
 }: TorrentDownloadeHandlerProps) {
-  const client = new WebTorrent();
+  const client = new WebTorrent({
+    nodeId: magnet,
+  });
   client.add(magnet, { path: VIDEO_FOLDER_DIR }, async (torrent) => {
     if (torrent.files.length <= 1) {
       let episodeNumber = extractEpisodeNumber(torrent.files[0].name);
