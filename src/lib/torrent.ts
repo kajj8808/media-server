@@ -6,6 +6,7 @@ import { DIR_NAME, VIDEO_FOLDER_DIR } from "./constants";
 import db from "./db";
 import { getEpisodeDetail } from "../data/tmdb";
 import crypto from "crypto";
+import { uploadMessageToDiscordChannel } from "./discord";
 
 interface TorrentDownloadeHandlerProps {
   magnet: string;
@@ -208,5 +209,10 @@ async function episodeUploadHandler({
     data: {
       update_at: new Date(),
     },
+  });
+  uploadMessageToDiscordChannel({
+    thumnail: newEpisode.thumnail,
+    title: newEpisode.title,
+    url: process.env.FRONT_URL || "",
   });
 }
