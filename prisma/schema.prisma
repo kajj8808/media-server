@@ -16,7 +16,7 @@ model DownloadedMagnet {
   id            Int      @id @default(autoincrement())
   cipher_magnet String   @unique(map: "DownloadedMagnet_cipherMagnet_key")
   episode_id    Int?
-  episodes      Episode? @relation(fields: [episode_id], references: [id], map: "DownloadedMagnet_episodeId_fkey")
+  episode       Episode? @relation(fields: [episode_id], references: [id], onDelete: Cascade, map: "DownloadedMagnet_episodeId_fkey")
 }
 
 model Episode {
@@ -25,7 +25,7 @@ model Episode {
   description        String
   thumnail           String
   running_time       Int
-  number             Int
+  number             Float
   video_id           String
   subtitle_id        String?
   season_id          Int?
