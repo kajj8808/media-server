@@ -2,7 +2,7 @@ import path from "path";
 import WebTorrent from "webtorrent";
 import fs, { rmdirSync, rmSync } from "fs";
 import { streamingFormatConverter } from "./ffmpeg";
-import { DIR_NAME, VIDEO_FOLDER_DIR } from "./constants";
+import { DIR_NAME, FRONT_URL, VIDEO_FOLDER_DIR } from "./constants";
 import db from "./db";
 import { getEpisodeDetail } from "../data/tmdb";
 import crypto from "crypto";
@@ -213,6 +213,6 @@ async function episodeUploadHandler({
   uploadMessageToDiscordChannel({
     thumnail: newEpisode.thumnail,
     title: newEpisode.title,
-    url: process.env.FRONT_URL || "",
+    url: FRONT_URL,
   });
 }
