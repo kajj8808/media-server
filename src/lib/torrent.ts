@@ -104,6 +104,7 @@ export function torrentDownloadeHandler({
           recursive: true,
         });
       }
+      client.destroy((err) => console.error(err));
     });
   });
 }
