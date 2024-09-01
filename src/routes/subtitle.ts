@@ -57,14 +57,17 @@ subtitleRouter.post(
       if (req.body.is_overlap) {
         try {
           await addAssSubtitleToVideo({
-            assPath: `${SUBTITLE_FOLDER_DIR}/${subtitleId}`,
-            videoOutPath: `${VIDEO_FOLDER_DIR}/${req.body.video_id}.mp4`,
-            videoPath: `${VIDEO_FOLDER_DIR}/${req.body.video_id}`,
+            assPath: path.join(SUBTITLE_FOLDER_DIR, subtitleId.toString()),
+            videoOutPath: path.join(
+              VIDEO_FOLDER_DIR,
+              req.body.video_id + ".mp4"
+            ),
+            videoPath: path.join(VIDEO_FOLDER_DIR, req.body.video_id),
           });
           fs.rmSync(`${VIDEO_FOLDER_DIR}/${req.body.video_id}`);
           fs.renameSync(
-            `${VIDEO_FOLDER_DIR}/${req.body.video_id}.mp4`,
-            `${VIDEO_FOLDER_DIR}/${req.body.video_id}`
+            path.join(VIDEO_FOLDER_DIR, req.body.video_id + ".mp4"),
+            path.join(VIDEO_FOLDER_DIR, req.body.video_id)
           );
           await db.episode.update({
             where: {
