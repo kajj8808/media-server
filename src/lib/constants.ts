@@ -10,7 +10,11 @@ export const DIR_NAME = fileURLToPath(new URL(".", import.meta.url));
 export const __filename = fileURLToPath(import.meta.url);
 
 export const VIDEO_FOLDER_DIR = path.join(DIR_NAME, "../../public", "video");
-
+export const SUBTITLE_FOLDER_DIR = path.join(
+  DIR_NAME,
+  "../../public",
+  "subtitle"
+);
 export const FRONT_URL = process.env.FRONT_URL || "";
 
 export const PORT = 8443;

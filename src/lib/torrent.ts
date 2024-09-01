@@ -23,6 +23,7 @@ export function torrentDownloadeHandler({
 }: TorrentDownloadeHandlerProps) {
   const client = new WebTorrent({
     nodeId: magnet,
+    utp: false,
   });
   client.add(magnet, { path: VIDEO_FOLDER_DIR }, async (torrent) => {
     if (torrent.files.length <= 1) {
@@ -104,6 +105,7 @@ export function torrentDownloadeHandler({
           recursive: true,
         });
       }
+      client.destroy((err) => console.error(err));
     });
   });
 }
@@ -183,6 +185,7 @@ async function episodeUploadHandler({
     return console.error("episode 번호가 없는거 같습니다?..");
   }
   const episode = await getEpisodeDetail(seasonId, episodeNumber);
+  console.log(episodeNumber);
   const newEpisode = await db.episode.create({
     data: {
       title: episode.name,
@@ -202,6 +205,7 @@ async function episodeUploadHandler({
       episode_id: newEpisode.id,
     },
   });
+  console.log(seriesId);
   await db.series.update({
     where: {
       id: seriesId,
