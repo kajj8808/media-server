@@ -71,6 +71,9 @@ export function getCurrentStremingCodecIndex({
   });
 }
 
+function escapeFilePath(filePath: string) {
+  return `"${filePath.replace(/\\/g, "\\\\")}"`;
+}
 interface AddAssSubtitleToVideoProps {
   videoPath: string;
   assPath: string;
@@ -86,8 +89,8 @@ export async function addAssSubtitleToVideo({
   // 기본 코덱으로 hevc사용.
   return new Promise((resolve, reject) => {
     ffmpeg(videoPath)
-      .inputOptions([`-i "${assPath}"`])
-      .videoFilters([{ filter: "ass", options: `"${assPath}"` }])
+      .inputOptions([`-i ${escapeFilePath(assPath)}`])
+      .videoFilters([{ filter: "ass", options: escapeFilePath(assPath) }])
       .output(videoOutPath)
       .outputOptions([
         videoCodec ? `-c:v ${videoCodec}` : "-c:v hevc",
