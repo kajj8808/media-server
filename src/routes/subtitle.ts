@@ -24,7 +24,6 @@ const fileFilter = (
 const subtitleRouter = Router();
 const subtitleUpload = multer({
   dest: `${SUBTITLE_FOLDER_DIR}`,
-  fileFilter: fileFilter,
 });
 
 const checkAssFile = (filename: string) => filename.includes(".ass");
