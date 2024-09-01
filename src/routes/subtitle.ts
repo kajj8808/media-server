@@ -24,8 +24,16 @@ const fileFilter = (
 };
 
 const subtitleRouter = Router();
+const storage = multer.diskStorage({
+  destination: (req, res, callback) => {
+    callback(null, SUBTITLE_FOLDER_DIR);
+  },
+  filename: (req, file, callback) => {
+    callback(null, file.originalname);
+  },
+});
 const subtitleUpload = multer({
-  dest: `${SUBTITLE_FOLDER_DIR}`,
+  storage: storage,
 });
 
 const checkAssFile = (filename: string) => filename.includes(".ass");
