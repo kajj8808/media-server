@@ -86,7 +86,7 @@ export async function addAssSubtitleToVideo({
   // 기본 코덱으로 hevc사용.
   return new Promise((resolve, reject) => {
     ffmpeg(videoPath)
-      .inputOptions([`-i ${assPath}`])
+      .inputOptions([`-i "${assPath}"`])
       .videoFilters([{ filter: "ass", options: assPath }])
       .output(videoOutPath)
       .outputOptions([
