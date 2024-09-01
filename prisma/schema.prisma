@@ -32,6 +32,7 @@ model Episode {
   series_id          Int?
   is_ass             Boolean?
   is_smi             Boolean?
+  is_overlap         Boolean?
   kr_overview        Boolean?
   downloaded_magnets DownloadedMagnet[]
   season             Season?              @relation(fields: [season_id], references: [id], map: "Episode_seasonId_fkey")
