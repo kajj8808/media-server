@@ -29,7 +29,11 @@ const storage = multer.diskStorage({
     callback(null, SUBTITLE_FOLDER_DIR);
   },
   filename: (req, file, callback) => {
-    callback(null, file.originalname);
+    if (file.originalname.includes(".ass")) {
+      callback(null, file.filename + ".ass");
+    } else {
+      callback(null, file.filename + ".smi");
+    }
   },
 });
 const subtitleUpload = multer({
