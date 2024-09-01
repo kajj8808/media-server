@@ -87,7 +87,7 @@ export async function addAssSubtitleToVideo({
   return new Promise((resolve, reject) => {
     ffmpeg(videoPath)
       .inputOptions([`-i "${assPath}"`])
-      .videoFilters([{ filter: "ass", options: assPath }])
+      .videoFilters([{ filter: "ass", options: `"${assPath}"` }])
       .output(videoOutPath)
       .outputOptions([
         videoCodec ? `-c:v ${videoCodec}` : "-c:v hevc",
