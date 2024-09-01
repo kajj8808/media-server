@@ -85,3 +85,8 @@ export interface VideoStremInfoOption {
   start?: number;
   end?: number;
 }
+export interface VttCaption {
+  start: string;
+  end: string;
+  text: string;
+}

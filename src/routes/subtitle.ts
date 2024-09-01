@@ -5,6 +5,8 @@ import { SUBTITLE_FOLDER_DIR, VIDEO_FOLDER_DIR } from "../lib/constants";
 import path from "path";
 import { addAssSubtitleToVideo } from "../lib/ffmpeg";
 import db from "../lib/db";
+import { convertAssToVtt } from "../lib/subtitle/assToVtt";
+import { convertSmiToVtt } from "../lib/subtitle/smiToVtt";
 
 const fileFilter = (
   req: e.Request,
@@ -35,28 +37,26 @@ subtitleRouter.post(
     const file = req.file;
     const episodeId = req.body.episode_id as number;
     if (file && episodeId) {
-      const subtitleId = new Date().getTime();
-      fs.renameSync(
-        file.path,
-        path.join(`${SUBTITLE_FOLDER_DIR}/${subtitleId}`)
-      );
-      await db.episode.update({
-        where: {
-          id: +episodeId,
-        },
-        data: {
-          subtitle_id: subtitleId.toString(),
-          is_ass: checkAssFile(file.originalname),
-        },
-      });
-      res.json({
-        ok: true,
-        subtitleId: subtitleId,
-      });
-      if (req.body.is_overlap) {
-        try {
+      try {
+        const subtitleId = new Date().getTime();
+
+        await db.episode.update({
+          where: {
+            id: +episodeId,
+          },
+          data: {
+            subtitle_id: subtitleId.toString(),
+            is_ass: checkAssFile(file.originalname),
+            is_smi: checkAssFile(file.originalname),
+          },
+        });
+        res.json({
+          ok: true,
+          subtitleId: subtitleId,
+        });
+        if (req.body.is_overlap) {
           await addAssSubtitleToVideo({
-            assPath: path.join(SUBTITLE_FOLDER_DIR, subtitleId.toString()),
+            assPath: file.path,
             videoOutPath: path.join(
               VIDEO_FOLDER_DIR,
               req.body.video_id + ".mp4"
@@ -76,9 +76,23 @@ subtitleRouter.post(
               is_overlap: true,
             },
           });
-        } catch (error) {
-          console.error(error);
         }
+        const fileData = fs.readFileSync(file.path, "utf-8");
+        if (file.originalname.includes(".ass")) {
+          fs.writeFileSync(
+            path.join(SUBTITLE_FOLDER_DIR, subtitleId.toString()),
+            convertAssToVtt(fileData)
+          );
+        } else {
+          fs.writeFileSync(
+            path.join(SUBTITLE_FOLDER_DIR, subtitleId.toString()),
+            convertSmiToVtt(fileData)
+          );
+        }
+
+        fs.rmSync(file.path);
+      } catch (error) {
+        console.error(error);
       }
     } else {
       return res.json({
