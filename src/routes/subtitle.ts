@@ -7,6 +7,7 @@ import { addAssSubtitleToVideo } from "../lib/ffmpeg";
 import db from "../lib/db";
 import { convertAssToVtt } from "../lib/subtitle/assToVtt";
 import { convertSmiToVtt } from "../lib/subtitle/smiToVtt";
+import { readSubtitleFileData } from "../lib/utils";
 
 const fileFilter = (
   req: e.Request,
@@ -83,7 +84,7 @@ subtitleRouter.post(
             },
           });
         }
-        const fileData = fs.readFileSync(file.path, "utf-8");
+        const fileData = await readSubtitleFileData(file.path);
         if (file.originalname.includes(".ass")) {
           fs.writeFileSync(
             path.join(SUBTITLE_FOLDER_DIR, subtitleId.toString()),

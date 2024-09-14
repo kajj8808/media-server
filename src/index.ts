@@ -4,7 +4,7 @@ import express from "express";
 import { animationAutoDownload } from "./lib/auto";
 import { createServer } from "./lib/http";
 import { PORT, SUBTITLE_FOLDER_DIR, VIDEO_FOLDER_DIR } from "./lib/constants";
-import { sleep } from "./lib/utils";
+import { readSubtitleFileData, sleep } from "./lib/utils";
 
 import seriesRouter from "./routes/series";
 import videoRouter from "./routes/video";
@@ -34,6 +34,21 @@ const videoOutPath = path.join(VIDEO_FOLDER_DIR, "T.mp4");
 const assPath = path.join(SUBTITLE_FOLDER_DIR, "T.ass");
 
 addAssSubtitleToVideo({ videoPath, assPath, videoOutPath }); */
+
+/* import fs from "fs";
+
+import { convertAssToVtt } from "./lib/subtitle/assToVtt";
+import { convertSmiToVtt } from "./lib/subtitle/smiToVtt";
+(async () => {
+  const assPath = path.join(SUBTITLE_FOLDER_DIR, "T.ass");
+  const smiPath = path.join(SUBTITLE_FOLDER_DIR, "w.smi");
+
+  const filedata = await readSubtitleFileData(assPath);
+  //const filedata = await readSubtitleFileData(smiPath);
+  console.log(filedata);
+  console.log(convertSmiToVtt(filedata));
+})();
+ */
 
 while (true) {
   animationAutoDownload();
