@@ -108,4 +108,10 @@ subtitleRouter.post(
   }
 );
 
+subtitleRouter.get("/:id", (req, res) => {
+  const filePath = path.join(SUBTITLE_FOLDER_DIR, req.params.id);
+  res.setHeader("Content-Type", "text/vtt");
+  res.sendFile(filePath);
+});
+
 export default subtitleRouter;
