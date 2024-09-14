@@ -107,6 +107,9 @@ export async function addAssSubtitleToVideo({
         console.error(error);
         reject(error);
       })
+      .on("stderr", (stderrLine) => {
+        console.log("FFmpeg stderr:", stderrLine);
+      })
       .run();
   });
 }

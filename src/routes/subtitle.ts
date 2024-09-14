@@ -24,20 +24,9 @@ const fileFilter = (
 };
 
 const subtitleRouter = Router();
-const storage = multer.diskStorage({
-  destination: (req, res, callback) => {
-    callback(null, SUBTITLE_FOLDER_DIR);
-  },
-  filename: (req, file, callback) => {
-    if (file.originalname.includes(".ass")) {
-      callback(null, file.filename + ".ass");
-    } else {
-      callback(null, file.filename + ".smi");
-    }
-  },
-});
+
 const subtitleUpload = multer({
-  storage: storage,
+  dest: `${SUBTITLE_FOLDER_DIR}`,
 });
 
 const checkAssFile = (filename: string) => filename.includes(".ass");
@@ -67,8 +56,13 @@ subtitleRouter.post(
           subtitleId: subtitleId,
         });
         if (req.body.is_overlap) {
+          fs.renameSync(
+            file.path,
+            path.join(SUBTITLE_FOLDER_DIR, file.filename + ".ass")
+          );
+          console.log(path.join(SUBTITLE_FOLDER_DIR, file.filename + ".ass"));
           await addAssSubtitleToVideo({
-            assPath: file.path,
+            assPath: path.join(SUBTITLE_FOLDER_DIR, file.filename + ".ass"),
             videoOutPath: path.join(
               VIDEO_FOLDER_DIR,
               req.body.video_id + ".mp4"
