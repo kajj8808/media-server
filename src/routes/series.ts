@@ -6,7 +6,7 @@ import { makeTMDBImageURL } from "../lib/utils";
 const seriesRouter = Router();
 seriesRouter.post("/insert", async (req, res) => {
   try {
-    const tmdbId = req.query.tmdb_id as string;
+    const tmdbId = req.body.tmdb_id as string;
 
     const tmdbSeries = await getSeries(tmdbId);
     const series = await db.series.upsert({
