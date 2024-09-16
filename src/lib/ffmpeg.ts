@@ -22,7 +22,7 @@ interface GetCurrentStremingCodecIndexResult {
   err?: any;
 }
 export function getCurrentStremingCodecIndex({
-  audioCodec = "aac",
+  audioCodec = "flac",
   videoCodec = "hevc",
   videoPath,
   language = "jpn",
