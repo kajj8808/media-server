@@ -36,6 +36,7 @@ export function torrentDownloadeHandler({
         console.error("tmdb에 설명글이 없습니다.");
         torrent.removeAllListeners();
         torrent.destroy();
+        client.destroy((err) => console.error(err));
         return;
       }
     }
