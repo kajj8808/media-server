@@ -54,6 +54,6 @@ import { convertSmiToVtt } from "./lib/subtitle/smiToVtt";
 
 while (true) {
   animationAutoDownload();
-  // one day wait
-  await sleep(1 * 60 * 60 * 24);
+  // 4 hour wait
+  await sleep(1 * 60 * 60 * 4);
 }
