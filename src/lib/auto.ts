@@ -47,7 +47,7 @@ export async function animationAutoDownload() {
           excludedEpisodeCount: season.excluded_episode_count,
         });
         // 5분
-        await sleep(1 * 60 * 5);
+        await sleep(1 * 60 * 0);
       }
     }
   }
