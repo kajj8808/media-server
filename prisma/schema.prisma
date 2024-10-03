@@ -72,6 +72,7 @@ model Season {
   auto_upload            Boolean   @default(false)
   nyaa_query             String?
   excluded_episode_count Int?
+  included_episode_count Int?
   skipped_season_count   Int?
   encoder                String?
   is_ass                 Boolean?

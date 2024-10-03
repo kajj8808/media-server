@@ -13,7 +13,8 @@ interface TorrentDownloadeHandlerProps {
   tmdbId: number;
   seriesId: number;
   seasonId: number;
-  excludedEpisodeCount: number | null;
+  excludedEpisodeCount?: number | null;
+  includedEpisodeCount?: number | null;
 }
 export function torrentDownloadeHandler({
   magnet,
@@ -29,8 +30,9 @@ export function torrentDownloadeHandler({
     if (torrent.files.length <= 1) {
       let episodeNumber = extractEpisodeNumber(torrent.files[0].name);
       if (excludedEpisodeCount && episodeNumber) {
-        episodeNumber -= excludedEpisodeCount;
+        episodeNumber += excludedEpisodeCount;
       }
+
       const episodeDetail = await getEpisodeDetail(seasonId, episodeNumber!);
       if (episodeDetail.status_code === 34 || episodeDetail.overview === "") {
         console.error("tmdb에 설명글이 없습니다.");
@@ -46,28 +48,6 @@ export function torrentDownloadeHandler({
         torrent.name + "Progress: " + (torrent.progress * 100).toFixed(1) + "%"
       );
     }, 5000);
-    if (torrent.name.includes("(ITA)")) {
-      const cipherMagnet = crypto
-        .createHash("md5")
-        .update(magnet)
-        .digest("base64");
-      await db.downloadedMagnet.create({
-        data: {
-          cipher_magnet: cipherMagnet,
-        },
-      });
-      try {
-        rmSync(path.join(VIDEO_FOLDER_DIR, torrent.name), {
-          recursive: true,
-        });
-        torrent.removeAllListeners();
-        torrent.destroy();
-      } catch (error) {
-        console.log(error);
-      }
-
-      return;
-    }
 
     torrent.on("error", (error: any) => {
       console.log(error);
@@ -77,7 +57,6 @@ export function torrentDownloadeHandler({
 
     torrent.on("done", async () => {
       clearInterval(interval);
-
       if (torrent.files.length > 1) {
         for (const file of torrent.files) {
           if (
@@ -184,7 +163,6 @@ async function episodeUploadHandler({
     return console.error("episode 번호가 없는거 같습니다?..");
   }
   const episode = await getEpisodeDetail(seasonId, episodeNumber);
-  console.log(episodeNumber);
   const newEpisode = await db.episode.create({
     data: {
       title: episode.name,
@@ -204,7 +182,6 @@ async function episodeUploadHandler({
       episode_id: newEpisode.id,
     },
   });
-  console.log(seriesId);
   await db.series.update({
     where: {
       id: seriesId,
