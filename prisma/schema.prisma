@@ -28,12 +28,12 @@ model Episode {
   number             Float
   video_id           String
   subtitle_id        String?
-  season_id          Int?
-  series_id          Int?
+  season_id          Int
+  series_id          Int
   is_ass             Boolean?
   is_smi             Boolean?
   is_overlap         Boolean?
-  kr_overview        Boolean?
+  kr_description     Boolean?
   downloaded_magnets DownloadedMagnet[]
   season             Season?              @relation(fields: [season_id], references: [id], map: "Episode_seasonId_fkey")
   EpisodeWatchRecord EpisodeWatchRecord[]

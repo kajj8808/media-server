@@ -49,7 +49,7 @@ export async function getEpisodeDetail(
       ? episodeNumber + season.excluded_episode_count
       : episodeNumber
   }?language=ko-KR`;
-  console.log(url);
+
   const options = {
     headers: {
       accept: "application/json",

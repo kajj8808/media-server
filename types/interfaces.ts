@@ -90,3 +90,15 @@ export interface VttCaption {
   end: string;
   text: string;
 }
+
+export interface EpisodeData {
+  title: string;
+  description: string;
+  running_time: number;
+  thumnail: string;
+  video_id: string;
+  season_id: number;
+  series_id: number;
+  number: number;
+  kr_description: boolean;
+}

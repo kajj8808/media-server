@@ -1,7 +1,10 @@
 import "./data/tmdb";
 import express from "express";
 
-import { animationAutoDownload } from "./lib/auto";
+import {
+  animationAutoDownload,
+  animationKorDescriptionAutoUpdate,
+} from "./lib/auto";
 import { createServer } from "./lib/http";
 import { PORT, SUBTITLE_FOLDER_DIR, VIDEO_FOLDER_DIR } from "./lib/constants";
 import { readSubtitleFileData, sleep } from "./lib/utils";
@@ -56,4 +59,10 @@ while (true) {
   animationAutoDownload();
   // 4 hour wait
   await sleep(1 * 60 * 60 * 4);
+}
+
+while (true) {
+  animationKorDescriptionAutoUpdate();
+  // 1 day wait
+  await sleep(1 * 60 * 60 * 24);
 }

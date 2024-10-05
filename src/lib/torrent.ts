@@ -2,11 +2,12 @@ import path from "path";
 import WebTorrent from "webtorrent";
 import fs, { rmdirSync, rmSync } from "fs";
 import { streamingFormatConverter } from "./ffmpeg";
-import { DIR_NAME, FRONT_URL, VIDEO_FOLDER_DIR } from "./constants";
+import { FRONT_URL, VIDEO_FOLDER_DIR } from "./constants";
 import db from "./db";
 import { getEpisodeDetail } from "../data/tmdb";
 import crypto from "crypto";
 import { uploadMessageToDiscordChannel } from "./discord";
+import { EpisodeData } from "../../types/interfaces";
 
 interface TorrentDownloadeHandlerProps {
   magnet: string;
@@ -20,28 +21,12 @@ export function torrentDownloadeHandler({
   magnet,
   seasonId,
   seriesId,
-  excludedEpisodeCount,
 }: TorrentDownloadeHandlerProps) {
   const client = new WebTorrent({
     nodeId: magnet,
     utp: false,
   });
   client.add(magnet, { path: VIDEO_FOLDER_DIR }, async (torrent) => {
-    if (torrent.files.length <= 1) {
-      let episodeNumber = extractEpisodeNumber(torrent.files[0].name);
-      if (excludedEpisodeCount && episodeNumber) {
-        episodeNumber += excludedEpisodeCount;
-      }
-
-      const episodeDetail = await getEpisodeDetail(seasonId, episodeNumber!);
-      if (episodeDetail.status_code === 34 || episodeDetail.overview === "") {
-        console.error("tmdb에 설명글이 없습니다.");
-        torrent.removeAllListeners();
-        torrent.destroy();
-        client.destroy((err) => console.error(err));
-        return;
-      }
-    }
     // 5초마다 다운 진행도 출력
     const interval = setInterval(() => {
       console.log(
@@ -153,46 +138,81 @@ async function episodeUploadHandler({
   seriesId,
   magnet,
 }: EpisodeUploadHandlerProps) {
-  const oldPath = path.join(VIDEO_FOLDER_DIR, filename);
-  const newPath = path.join(VIDEO_FOLDER_DIR, filename);
-  fs.renameSync(oldPath, newPath);
-  const episodeNumber = extractEpisodeNumber(filename);
-  const videoId = await streamingFormatConverter(newPath);
+  try {
+    const oldPath = path.join(VIDEO_FOLDER_DIR, filename);
+    const newPath = path.join(VIDEO_FOLDER_DIR, filename);
+    fs.renameSync(oldPath, newPath);
+    const episodeNumber = extractEpisodeNumber(filename);
+    const videoId = await streamingFormatConverter(newPath);
 
-  if (!episodeNumber) {
-    return console.error("episode 번호가 없는거 같습니다?..");
+    if (!videoId) {
+      return console.error(
+        "streamingFormatConverter에서 문제가 생긴거 같습니다."
+      );
+    }
+
+    if (!episodeNumber) {
+      return console.error("episode 번호가 없는거 같습니다?..");
+    }
+    const episode = await getEpisodeDetail(seasonId, episodeNumber);
+
+    let data: EpisodeData;
+    if (episode.status_code === 34 || episode.overview === "") {
+      data = {
+        title: `${episodeNumber}화`,
+        description: episode.overview,
+        running_time: episode.runtime,
+        thumnail: "http://image.tmdb.org/t/p/original/" + episode.still_path,
+        video_id: videoId,
+        season_id: seasonId,
+        series_id: seriesId,
+        number: episodeNumber,
+        kr_description: false,
+      };
+    } else {
+      data = {
+        title: episode.name,
+        description: episode.overview,
+        running_time: episode.runtime,
+        thumnail: "http://image.tmdb.org/t/p/original/" + episode.still_path,
+        video_id: videoId,
+        season_id: seasonId,
+        series_id: seriesId,
+        number: episodeNumber,
+        kr_description: true,
+      };
+    }
+
+    let newEpisode = await db.episode.create({
+      data,
+    });
+    const cipherMagnet = crypto
+      .createHash("md5")
+      .update(magnet)
+      .digest("base64");
+
+    await db.downloadedMagnet.create({
+      data: {
+        cipher_magnet: cipherMagnet,
+        episode_id: newEpisode.id,
+      },
+    });
+
+    await db.series.update({
+      where: {
+        id: seriesId,
+      },
+      data: {
+        update_at: new Date(),
+      },
+    });
+
+    uploadMessageToDiscordChannel({
+      thumnail: newEpisode.thumnail,
+      title: newEpisode.title,
+      url: FRONT_URL,
+    });
+  } catch (error) {
+    console.error(`episodeUploadHandler error: ${error}`);
   }
-  const episode = await getEpisodeDetail(seasonId, episodeNumber);
-  const newEpisode = await db.episode.create({
-    data: {
-      title: episode.name,
-      description: episode.overview,
-      running_time: episode.runtime,
-      thumnail: "http://image.tmdb.org/t/p/original/" + episode.still_path,
-      video_id: videoId!,
-      season_id: seasonId,
-      series_id: seriesId,
-      number: episodeNumber,
-    },
-  });
-  const cipherMagnet = crypto.createHash("md5").update(magnet).digest("base64");
-  await db.downloadedMagnet.create({
-    data: {
-      cipher_magnet: cipherMagnet,
-      episode_id: newEpisode.id,
-    },
-  });
-  await db.series.update({
-    where: {
-      id: seriesId,
-    },
-    data: {
-      update_at: new Date(),
-    },
-  });
-  uploadMessageToDiscordChannel({
-    thumnail: newEpisode.thumnail,
-    title: newEpisode.title,
-    url: FRONT_URL,
-  });
 }

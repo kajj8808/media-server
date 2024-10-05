@@ -3,6 +3,7 @@ import crypto from "crypto";
 import db from "./db";
 import { torrentDownloadeHandler } from "./torrent";
 import { sleep } from "./utils";
+import { getEpisodeDetail } from "../data/tmdb";
 
 export async function animationAutoDownload() {
   const autoSeasons = await db.season.findMany({
@@ -49,6 +50,40 @@ export async function animationAutoDownload() {
         // 5분
         await sleep(1 * 60 * 0);
       }
+    }
+  }
+}
+
+/** Description + title 이 한국어로 되어 있지 않은 경우를 자동으로 수정하는 함수. */
+export async function animationKorDescriptionAutoUpdate() {
+  const episodes = await db.episode.findMany({
+    where: {
+      kr_description: false,
+    },
+    select: {
+      id: true,
+      season_id: true,
+      number: true,
+    },
+  });
+  for (let episode of episodes) {
+    const tmdbEpisode = await getEpisodeDetail(
+      episode.season_id,
+      episode.number
+    );
+
+    if (tmdbEpisode.status_code === 34 || tmdbEpisode.overview === "") {
+      continue;
+    } else {
+      await db.episode.update({
+        where: {
+          id: episode.id,
+        },
+        data: {
+          title: tmdbEpisode.name,
+          description: tmdbEpisode.overview,
+        },
+      });
     }
   }
 }
