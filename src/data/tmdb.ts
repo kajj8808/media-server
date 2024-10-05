@@ -65,5 +65,3 @@ export async function getEpisodeDetail(
     throw error;
   }
 }
-
-// getSeries("122");
