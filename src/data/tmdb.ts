@@ -30,6 +30,7 @@ export async function getEpisodeDetail(
       series: {
         select: {
           tmdb_id: true,
+          title: true,
         },
       },
       number: true,
@@ -58,7 +59,8 @@ export async function getEpisodeDetail(
   };
   try {
     const response = await fetch(url, options);
-    return await response.json();
+    const json = await response.json();
+    return { ...json, series_name: season?.series?.title };
   } catch (error) {
     console.error("Error fetching episode details:", error);
     console.error(url);

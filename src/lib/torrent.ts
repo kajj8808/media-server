@@ -159,7 +159,7 @@ async function episodeUploadHandler({
     let data: EpisodeData;
     if (episode.status_code === 34 || episode.overview === "") {
       data = {
-        title: `${episode.name} #${episodeNumber}`,
+        title: `${episode.series_name} ${episode.name}`,
         description: episode.overview,
         running_time: episode.runtime,
         thumnail: "http://image.tmdb.org/t/p/original/" + episode.still_path,

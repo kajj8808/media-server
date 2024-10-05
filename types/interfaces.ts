@@ -67,6 +67,7 @@ export interface TMDBDetail {
   vote_average: number;
   vote_count: number;
   status_code?: number;
+  series_name: string;
 }
 interface Crew {
   job: string;
