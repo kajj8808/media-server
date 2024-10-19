@@ -22,7 +22,7 @@ interface GetCurrentStremingCodecIndexResult {
   err?: any;
 }
 export function getCurrentStremingCodecIndex({
-  audioCodec = "flac",
+  audioCodec = "aac",
   videoCodec = "hevc",
   videoPath,
   language = "jpn",
@@ -92,6 +92,7 @@ export async function addAssSubtitleToVideo({
       .outputOptions([
         videoCodec ? `-c:v ${videoCodec}` : "-c:v hevc",
         "-c:a copy",
+        "-strict -2",
         videoCodec ? "" : "-tag:v hvc1",
         "-crf 23",
         "-threads 0",

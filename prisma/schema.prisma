@@ -22,9 +22,9 @@ model DownloadedMagnet {
 model Episode {
   id                 Int                  @id @default(autoincrement())
   title              String
-  description        String
-  thumnail           String
-  running_time       Int
+  description        String?
+  thumnail           String?
+  running_time       Int?
   number             Float
   video_id           String
   subtitle_id        String?

@@ -54,15 +54,18 @@ import { convertSmiToVtt } from "./lib/subtitle/smiToVtt";
   console.log(convertSmiToVtt(filedata));
 })();
  */
+/* while (true) {
+  // 1 day wait
+  await sleep(1 * 60 * 60 * 24);
+}
+ */
+
+
 
 while (true) {
   animationAutoDownload();
+  animationKorDescriptionAutoUpdate();
   // 4 hour wait
   await sleep(1 * 60 * 60 * 4);
 }
 
-while (true) {
-  animationKorDescriptionAutoUpdate();
-  // 1 day wait
-  await sleep(1 * 60 * 60 * 24);
-}
