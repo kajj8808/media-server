@@ -28,4 +28,5 @@ lerna-debug.log*
 .DS_Store
 keys
 
-public
+public/video/*
+public/subtitle/*
