@@ -93,6 +93,7 @@ model Series {
   is_novel_original    Boolean?
   is_manga_original    Boolean?
   is_old_original      Boolean?
+  is_movie             Boolean?
   first_air_date       String?
   homepage             String?
   next_episode_to_air  DateTime?

@@ -1,7 +1,7 @@
 import { getNyaaMagnets } from "../data/nyaa";
 import crypto from "crypto";
 import db from "./db";
-import { torrentDownloadeHandler } from "./torrent";
+import { episodeDownloadeHandler } from "./torrent";
 import { sleep } from "./utils";
 import { getEpisodeDetail } from "../data/tmdb";
 
@@ -40,15 +40,14 @@ export async function animationAutoDownload() {
         })
       );
       if (!isDownloaded) {
-        torrentDownloadeHandler({
+        episodeDownloadeHandler({
           magnet: magnet,
           seasonId: season.id,
           seriesId: season.series?.id!,
           tmdbId: season.series?.tmdb_id!,
-          excludedEpisodeCount: season.excluded_episode_count,
         });
         // 5분
-        await sleep(1 * 60 * 0);
+        await sleep(1 * 60 * 5);
       }
     }
   }

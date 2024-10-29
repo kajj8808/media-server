@@ -115,9 +115,25 @@ export async function addAssSubtitleToVideo({
   });
 }
 
-export async function streamingFormatConverter(videoPath: string) {
-  const { videoCodec, audioCodec, err } = await getCurrentStremingCodecIndex({
+interface StreamingFormatConverterProps {
+  videoPath: string;
+  audioCodec?: string;
+  videoCodec?: string;
+}
+
+export async function streamingFormatConverter({
+  videoPath,
+  audioCodec,
+  videoCodec,
+}: StreamingFormatConverterProps) {
+  const {
+    videoCodec: { index: videoIndex },
+    audioCodec: { index: audioIndex },
+    err,
+  } = await getCurrentStremingCodecIndex({
     videoPath: videoPath,
+    audioCodec,
+    videoCodec,
   });
   if (err) {
     console.error(`not found video ${videoPath}`);
@@ -126,9 +142,9 @@ export async function streamingFormatConverter(videoPath: string) {
 
   let videoId;
 
-  if (videoCodec.index !== undefined && audioCodec.index !== undefined) {
+  if (videoIndex !== undefined && audioIndex !== undefined) {
     videoId = await runFfmpeg(videoPath, ["-c copy", "-tag:v hvc1"]);
-  } else if (videoCodec.index !== undefined && audioCodec.index === undefined) {
+  } else if (videoIndex !== undefined && audioIndex === undefined) {
     videoId = await runFfmpeg(videoPath, [
       "-c:v copy",
       "-c:a flac",
@@ -139,7 +155,7 @@ export async function streamingFormatConverter(videoPath: string) {
       "-map 0:a:m:language:jpn",
       "-tag:v hvc1",
     ]);
-  } else if (videoCodec.index === undefined && audioCodec.index !== undefined) {
+  } else if (videoIndex === undefined && audioIndex !== undefined) {
     videoId = await runFfmpeg(videoPath, [
       "-c:v hevc",
       "-c:a copy",

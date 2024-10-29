@@ -4,24 +4,22 @@ import fs, { rmdirSync, rmSync } from "fs";
 import { streamingFormatConverter } from "./ffmpeg";
 import { FRONT_URL, VIDEO_FOLDER_DIR } from "./constants";
 import db from "./db";
-import { getEpisodeDetail } from "../data/tmdb";
+import { getEpisodeDetail, getMovieDetail } from "../data/tmdb";
 import crypto from "crypto";
 import { uploadMessageToDiscordChannel } from "./discord";
 import { EpisodeData } from "../../types/interfaces";
 
-interface TorrentDownloadeHandlerProps {
+interface EpisodeDownloadeHandlerProps {
   magnet: string;
   tmdbId: number;
   seriesId: number;
   seasonId: number;
-  excludedEpisodeCount?: number | null;
-  includedEpisodeCount?: number | null;
 }
-export function torrentDownloadeHandler({
+export function episodeDownloadeHandler({
   magnet,
   seasonId,
   seriesId,
-}: TorrentDownloadeHandlerProps) {
+}: EpisodeDownloadeHandlerProps) {
   const client = new WebTorrent({
     nodeId: magnet,
     utp: false,
@@ -42,6 +40,7 @@ export function torrentDownloadeHandler({
 
     torrent.on("done", async () => {
       clearInterval(interval);
+
       if (torrent.files.length > 1) {
         for (const file of torrent.files) {
           if (
@@ -143,7 +142,7 @@ async function episodeUploadHandler({
     const newPath = path.join(VIDEO_FOLDER_DIR, filename);
     fs.renameSync(oldPath, newPath);
     const episodeNumber = extractEpisodeNumber(filename);
-    const videoId = await streamingFormatConverter(newPath);
+    const videoId = await streamingFormatConverter({ videoPath: newPath });
 
     if (!videoId) {
       return console.error(
@@ -224,4 +223,121 @@ async function episodeUploadHandler({
   } catch (error) {
     console.error(`episodeUploadHandler error: ${error}`);
   }
+}
+
+interface MovieDownloadeHandlerProps {
+  magnet: string;
+  movieId: number;
+  seriesId: number;
+}
+export function movieDownloadeHandler({
+  magnet,
+  movieId,
+  seriesId,
+}: MovieDownloadeHandlerProps) {
+  const client = new WebTorrent({
+    nodeId: magnet,
+    utp: false,
+  });
+  client.add(magnet, { path: VIDEO_FOLDER_DIR }, async (torrent) => {
+    // 5초마다 다운 진행도 출력
+    const interval = setInterval(() => {
+      console.log(
+        torrent.name + "Progress: " + (torrent.progress * 100).toFixed(1) + "%"
+      );
+    }, 5000);
+
+    torrent.on("error", (error: any) => {
+      console.log(error);
+      torrent.removeAllListeners();
+      client.destroy();
+    });
+
+    torrent.on("done", async () => {
+      clearInterval(interval);
+
+      if (torrent.files.length > 1) {
+        for (const file of torrent.files) {
+          if (
+            file.name.includes(".mkv") ||
+            (file.name.includes(".mp4") && !file.name.includes("[SP"))
+          ) {
+            await movieUploadHandler({
+              magnet,
+              movieId,
+              filename: file.name,
+              seriesId: seriesId,
+            });
+          }
+        }
+        rmdirSync(path.join(VIDEO_FOLDER_DIR, torrent.name), {
+          recursive: true,
+        });
+      } else {
+        await movieUploadHandler({
+          magnet,
+          movieId,
+          filename: torrent.name,
+          seriesId: seriesId,
+        });
+        rmSync(path.join(VIDEO_FOLDER_DIR, torrent.name), {
+          recursive: true,
+        });
+      }
+      client.destroy((err) => console.error(err));
+    });
+  });
+}
+interface MovieUploadHandlerProps {
+  magnet: string;
+  movieId: number;
+  seriesId: number;
+  filename: string;
+}
+async function movieUploadHandler({
+  magnet,
+  movieId,
+  seriesId,
+  filename,
+}: MovieUploadHandlerProps) {
+  const movieDetail = await getMovieDetail(movieId);
+  const newPath = path.join(VIDEO_FOLDER_DIR, filename);
+  const videoId = await streamingFormatConverter({
+    videoPath: newPath,
+    audioCodec: "flac",
+  });
+
+  if (!videoId) {
+    console.error("Movie Upload Handler error : video id");
+    return;
+  }
+
+  const newEpisode = await db.episode.create({
+    data: {
+      thumnail: movieDetail.backdrop_path,
+      title: movieDetail.title,
+      video_id: videoId,
+      description: movieDetail.overview,
+      running_time: movieDetail.runtime,
+      number: 0,
+      series: {
+        connect: {
+          id: seriesId,
+        },
+      },
+    },
+  });
+  const cipherMagnet = crypto.createHash("md5").update(magnet).digest("base64");
+
+  await db.downloadedMagnet.create({
+    data: {
+      cipher_magnet: cipherMagnet,
+      episode_id: newEpisode.id,
+    },
+  });
+
+  await db.series.update({
+    where: { id: seriesId },
+    data: { update_at: new Date() },
+  });
 }

@@ -1,5 +1,9 @@
 import { TMDB_API_KEY, TMDB_API_URL } from "../lib/constants";
-import { TMDBDetail, TMDBSeries } from "../../types/interfaces";
+import {
+  TMDBDetail,
+  TMDBMovieDetail,
+  TMDBSeries,
+} from "../../types/interfaces";
 import db from "../lib/db";
 
 export async function getSeries(seriesId: string) {
@@ -61,6 +65,28 @@ export async function getEpisodeDetail(
     const response = await fetch(url, options);
     const json = await response.json();
     return { ...json, series_name: season?.series?.title };
+  } catch (error) {
+    console.error("Error fetching episode details:", error);
+    console.error(url);
+    throw error;
+  }
+}
+
+export async function getMovieDetail(
+  movieId: number
+): Promise<TMDBMovieDetail> {
+  const url = `https://api.themoviedb.org/3/movie/${movieId}?language=ko-KR`;
+
+  const options = {
+    headers: {
+      accept: "application/json",
+      Authorization: `Bearer ${process.env.TMDB_API_KEY}`,
+    },
+  };
+  try {
+    const response = await fetch(url, options);
+    const json = await response.json();
+    return json;
   } catch (error) {
     console.error("Error fetching episode details:", error);
     console.error(url);
