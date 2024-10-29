@@ -11,7 +11,6 @@ import { EpisodeData } from "../../types/interfaces";
 
 interface EpisodeDownloadeHandlerProps {
   magnet: string;
-  tmdbId: number;
   seriesId: number;
   seasonId: number;
 }
@@ -141,7 +140,7 @@ async function episodeUploadHandler({
     const oldPath = path.join(VIDEO_FOLDER_DIR, filename);
     const newPath = path.join(VIDEO_FOLDER_DIR, filename);
     fs.renameSync(oldPath, newPath);
-    const episodeNumber = extractEpisodeNumber(filename);
+    let episodeNumber = extractEpisodeNumber(filename);
     const videoId = await streamingFormatConverter({ videoPath: newPath });
 
     if (!videoId) {
@@ -151,7 +150,10 @@ async function episodeUploadHandler({
     }
 
     if (!episodeNumber) {
-      return console.error("episode 번호가 없는거 같습니다?..");
+      episodeNumber = 1;
+      console.error(
+        "episode 번호가 없는거 같습니다! episode number를 1로 지정합니다. : episodeUploadHandler"
+      );
     }
     const episode = await getEpisodeDetail(seasonId, episodeNumber);
 
@@ -228,12 +230,10 @@ async function episodeUploadHandler({
 interface MovieDownloadeHandlerProps {
   magnet: string;
   movieId: number;
-  seriesId: number;
 }
 export function movieDownloadeHandler({
   magnet,
   movieId,
-  seriesId,
 }: MovieDownloadeHandlerProps) {
   const client = new WebTorrent({
     nodeId: magnet,
@@ -266,7 +266,6 @@ export function movieDownloadeHandler({
               magnet,
               movieId,
               filename: file.name,
-              seriesId: seriesId,
             });
           }
         }
@@ -278,7 +277,6 @@ export function movieDownloadeHandler({
           magnet,
           movieId,
           filename: torrent.name,
-          seriesId: seriesId,
         });
         rmSync(path.join(VIDEO_FOLDER_DIR, torrent.name), {
           recursive: true,
@@ -291,13 +289,11 @@ export function movieDownloadeHandler({
 interface MovieUploadHandlerProps {
   magnet: string;
   movieId: number;
-  seriesId: number;
   filename: string;
 }
 async function movieUploadHandler({
   magnet,
   movieId,
-  seriesId,
   filename,
 }: MovieUploadHandlerProps) {
   const movieDetail = await getMovieDetail(movieId);
@@ -320,11 +316,7 @@ async function movieUploadHandler({
       description: movieDetail.overview,
       running_time: movieDetail.runtime,
       number: 0,
-      series: {
-        connect: {
-          id: seriesId,
-        },
-      },
+      is_movie: true,
     },
   });
   const cipherMagnet = crypto.createHash("md5").update(magnet).digest("base64");
@@ -334,10 +326,5 @@ async function movieUploadHandler({
       cipher_magnet: cipherMagnet,
       episode_id: newEpisode.id,
     },
-  });
-
-  await db.series.update({
-    where: { id: seriesId },
-    data: { update_at: new Date() },
   });
 }

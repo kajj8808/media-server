@@ -44,7 +44,6 @@ export async function animationAutoDownload() {
           magnet: magnet,
           seasonId: season.id,
           seriesId: season.series?.id!,
-          tmdbId: season.series?.tmdb_id!,
         });
         // 5분
         await sleep(1 * 60 * 5);

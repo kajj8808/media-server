@@ -13,7 +13,7 @@ import seriesRouter from "./routes/series";
 import videoRouter from "./routes/video";
 import subtitleRouter from "./routes/subtitle";
 import cors from "cors";
-import { movieDownloadeHandler } from "./lib/torrent";
+import { episodeDownloadeHandler, movieDownloadeHandler } from "./lib/torrent";
 
 const app = express();
 app.use(express.json());
@@ -27,19 +27,36 @@ app.get("/", (req, res) => {
   return res.send("Hello Hono!");
 });
 
-app.post("/movie/insert", async (req, res) => {
+app.post("/episode/insert", async (req, res) => {
   const magnet = req.body.magnet as string;
-  const movieId = req.body.movie_id as number;
+  const seasonId = req.body.season_id as number;
   const seriesId = req.body.series_id as number;
 
-  if (isNaN(movieId) || isNaN(seriesId) || !magnet) {
+  if (isNaN(seasonId) || isNaN(seriesId) || !magnet) {
     return res.json({
       ok: false,
     });
   }
 
-  movieDownloadeHandler({ magnet, movieId, seriesId });
-  return res.json({
+  episodeDownloadeHandler({ magnet, seasonId, seriesId });
+
+  res.json({
+    ok: true,
+  });
+});
+
+app.post("/movie/insert", async (req, res) => {
+  const magnet = req.body.magnet as string;
+  const movieId = req.body.movie_id as number;
+
+  if (isNaN(movieId) || !magnet) {
+    return res.json({
+      ok: false,
+    });
+  }
+
+  movieDownloadeHandler({ magnet, movieId });
+  res.json({
     ok: true,
   });
 });
