@@ -97,7 +97,6 @@ model Series {
   homepage             String?
   next_episode_to_air  DateTime?
   original_name        String?
-  is_auto_update       Boolean?
   seasons              Season[]
   episodes             Episode[]
   genres               Genres[]              @relation("SeriesGenres")
