@@ -207,6 +207,15 @@ async function episodeUploadHandler({
       },
     });
 
+    await db.season.update({
+      where: {
+        id: seasonId,
+      },
+      data: {
+        update_at: new Date(),
+      },
+    });
+
     uploadMessageToDiscordChannel({
       thumnail: newEpisode.thumnail,
       title: newEpisode.title,
