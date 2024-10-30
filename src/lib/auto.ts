@@ -42,8 +42,8 @@ export async function animationAutoDownload() {
       if (!isDownloaded) {
         episodeDownloadeHandler({
           magnet: magnet,
-          seasonId: season.id,
-          seriesId: season.series?.id!,
+          seasonId: `${season.id}`,
+          seriesId: `${season.series?.id}`,
         });
         // 5분
         await sleep(1 * 60 * 5);
