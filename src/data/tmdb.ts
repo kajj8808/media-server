@@ -28,7 +28,7 @@ export async function getEpisodeDetail(
 ): Promise<TMDBDetail> {
   const season = await db.season.findUnique({
     where: {
-      id: seasonId,
+      id: +seasonId,
     },
     select: {
       series: {

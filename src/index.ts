@@ -38,7 +38,11 @@ app.post("/episode/insert", async (req, res) => {
     });
   }
 
-  episodeDownloadeHandler({ magnet, seasonId, seriesId });
+  episodeDownloadeHandler({
+    magnet,
+    seasonId: `${seasonId}`,
+    seriesId: `${seriesId}`,
+  });
 
   res.json({
     ok: true,

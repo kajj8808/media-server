@@ -11,8 +11,8 @@ import { EpisodeData } from "../../types/interfaces";
 
 interface EpisodeDownloadeHandlerProps {
   magnet: string;
-  seriesId: number;
-  seasonId: number;
+  seriesId: string;
+  seasonId: string;
 }
 export function episodeDownloadeHandler({
   magnet,
@@ -126,8 +126,8 @@ export function extractEpisodeNumber(filename: string): number | null {
 
 interface EpisodeUploadHandlerProps {
   filename: string;
-  seasonId: number;
-  seriesId: number;
+  seasonId: string;
+  seriesId: string;
   magnet: string;
 }
 async function episodeUploadHandler({
@@ -155,7 +155,7 @@ async function episodeUploadHandler({
         "episode 번호가 없는거 같습니다! episode number를 1로 지정합니다. : episodeUploadHandler"
       );
     }
-    const episode = await getEpisodeDetail(seasonId, episodeNumber);
+    const episode = await getEpisodeDetail(+seasonId, episodeNumber);
 
     let data: EpisodeData;
     if (episode.status_code === 34 || episode.overview === "") {
@@ -165,8 +165,8 @@ async function episodeUploadHandler({
         running_time: episode.runtime,
         thumnail: "http://image.tmdb.org/t/p/original/" + episode.still_path,
         video_id: videoId,
-        season_id: seasonId,
-        series_id: seriesId,
+        season_id: +seasonId,
+        series_id: +seriesId,
         number: episodeNumber,
         kr_description: false,
       };
@@ -177,8 +177,8 @@ async function episodeUploadHandler({
         running_time: episode.runtime,
         thumnail: "http://image.tmdb.org/t/p/original/" + episode.still_path,
         video_id: videoId,
-        season_id: seasonId,
-        series_id: seriesId,
+        season_id: +seasonId,
+        series_id: +seriesId,
         number: episodeNumber,
         kr_description: true,
       };
@@ -201,7 +201,7 @@ async function episodeUploadHandler({
 
     await db.series.update({
       where: {
-        id: seriesId,
+        id: +seriesId,
       },
       data: {
         update_at: new Date(),
@@ -210,7 +210,7 @@ async function episodeUploadHandler({
 
     await db.season.update({
       where: {
-        id: seasonId,
+        id: +seasonId,
       },
       data: {
         update_at: new Date(),
