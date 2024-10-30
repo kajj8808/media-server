@@ -49,7 +49,6 @@ subtitleRouter.post(
           data: {
             subtitle_id: subtitleId.toString(),
             is_ass: checkAssFile(file.originalname),
-            is_smi: checkAssFile(file.originalname),
           },
         });
         res.json({
@@ -80,7 +79,7 @@ subtitleRouter.post(
               id: +episodeId,
             },
             data: {
-              is_overlap: true,
+              is_ass: true,
             },
           });
         }
