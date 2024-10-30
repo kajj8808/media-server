@@ -229,7 +229,7 @@ async function episodeUploadHandler({
 
 interface MovieDownloadeHandlerProps {
   magnet: string;
-  movieId: number;
+  movieId: string;
 }
 export function movieDownloadeHandler({
   magnet,
@@ -264,7 +264,7 @@ export function movieDownloadeHandler({
           ) {
             await movieUploadHandler({
               magnet,
-              movieId,
+              movieId: +movieId,
               filename: file.name,
             });
           }
@@ -275,7 +275,7 @@ export function movieDownloadeHandler({
       } else {
         await movieUploadHandler({
           magnet,
-          movieId,
+          movieId: +movieId,
           filename: torrent.name,
         });
         rmSync(path.join(VIDEO_FOLDER_DIR, torrent.name), {

@@ -59,7 +59,7 @@ app.post("/movie/insert", async (req, res) => {
     });
   }
 
-  movieDownloadeHandler({ magnet, movieId });
+  movieDownloadeHandler({ magnet, movieId: `${movieId}` });
   res.json({
     ok: true,
   });
