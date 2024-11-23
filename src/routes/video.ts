@@ -109,8 +109,8 @@ videoRouter.get("/:id", async (req, res) => {
         console.log(error);
         res.sendStatus(500);
       });
-
-      fileStream.pipe(res);
+      // type script 탈출..
+      fileStream.pipe(res as any);
     }
   });
 });

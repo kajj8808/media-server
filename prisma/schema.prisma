@@ -27,13 +27,25 @@ model Episode {
   series_id      Int
   is_overlap     Boolean?
   is_special     Boolean?
-  is_movie       Boolean?
   kr_description Boolean?
 
-  downloaded_magnets DownloadedMagnet[]
-  season             Season?              @relation(fields: [season_id], references: [id], map: "Episode_seasonId_fkey")
-  EpisodeWatchRecord EpisodeWatchRecord[]
-  series             Series?              @relation(fields: [series_id], references: [id])
+  downloaded_magnets   DownloadedMagnet[]
+  season               Season?              @relation(fields: [season_id], references: [id], map: "Episode_seasonId_fkey")
+  episode_watch_record EpisodeWatchRecord[]
+  series               Series?              @relation(fields: [series_id], references: [id])
+}
+
+model Movie {
+  id             Int      @id @default(autoincrement())
+  title          String
+  description    String?
+  thumnail       String
+  running_time   Int?
+  video_id       String
+  subtitle_id    String?
+  kr_description Boolean?
+  seriesId       Int?
+  series         Series?  @relation(fields: [seriesId], references: [id])
 }
 
 model EpisodeWatchRecord {
@@ -101,6 +113,7 @@ model Series {
   original_name        String?
   seasons              Season[]
   episodes             Episode[]
+  movies               Movie[]
   genres               Genres[]              @relation("SeriesGenres")
   production_companies ProductionCompanies[] @relation("SeriesProductionCompanies")
 }

@@ -307,24 +307,28 @@ async function movieUploadHandler({
     console.error("Movie Upload Handler error : video id");
     return;
   }
+  let data = {
+    thumnail: movieDetail.backdrop_path,
+    title: movieDetail.title,
+    video_id: videoId,
+    description: movieDetail.overview,
+    running_time: movieDetail.runtime,
+    kr_description: true,
+  };
+  if (movieDetail.status_code === 34 || movieDetail.overview === "") {
+    data.kr_description = false;
+  }
 
-  const newEpisode = await db.episode.create({
-    data: {
-      thumnail: movieDetail.backdrop_path,
-      title: movieDetail.title,
-      video_id: videoId,
-      description: movieDetail.overview,
-      running_time: movieDetail.runtime,
-      number: 0,
-      is_movie: true,
-    },
+  const newMovie = await db.movie.create({
+    data: data,
   });
+
   const cipherMagnet = crypto.createHash("md5").update(magnet).digest("base64");
 
   await db.downloadedMagnet.create({
     data: {
       cipher_magnet: cipherMagnet,
-      episode_id: newEpisode.id,
+      episode_id: newMovie.id,
     },
   });
 }
