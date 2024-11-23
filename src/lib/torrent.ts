@@ -163,7 +163,7 @@ async function episodeUploadHandler({
         title: `${episode.series_name} ${episode.name}`,
         description: episode.overview,
         running_time: episode.runtime,
-        thumnail: "http://image.tmdb.org/t/p/original" + episode.still_path,
+        thumnail: "https://image.tmdb.org/t/p/original" + episode.still_path,
         video_id: videoId,
         season_id: +seasonId,
         series_id: +seriesId,
@@ -175,7 +175,7 @@ async function episodeUploadHandler({
         title: episode.name,
         description: episode.overview,
         running_time: episode.runtime,
-        thumnail: "http://image.tmdb.org/t/p/original" + episode.still_path,
+        thumnail: "https://image.tmdb.org/t/p/original" + episode.still_path,
         video_id: videoId,
         season_id: +seasonId,
         series_id: +seriesId,
@@ -300,7 +300,7 @@ async function movieUploadHandler({
   const newPath = path.join(VIDEO_FOLDER_DIR, filename);
   const videoId = await streamingFormatConverter({
     videoPath: newPath,
-    audioCodec: "flac",
+    audioCodec: "aac",
   });
 
   if (!videoId) {
