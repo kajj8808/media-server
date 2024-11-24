@@ -308,7 +308,7 @@ async function movieUploadHandler({
     return;
   }
   let data = {
-    thumnail: movieDetail.backdrop_path,
+    poster: movieDetail.poster_path,
     title: movieDetail.title,
     video_id: videoId,
     description: movieDetail.overview,

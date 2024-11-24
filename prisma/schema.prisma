@@ -39,7 +39,7 @@ model Movie {
   id             Int      @id @default(autoincrement())
   title          String
   description    String?
-  thumnail       String
+  poster         String
   running_time   Int?
   video_id       String
   subtitle_id    String?
