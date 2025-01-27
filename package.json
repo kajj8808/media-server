@@ -1,0 +1,35 @@
+{
+  "name": "file-server",
+  "module": "index.ts",
+  "type": "module",
+  "devDependencies": {
+    "@types/bun": "latest",
+    "@types/webtorrent": "^0.110.0"
+  },
+  "peerDependencies": {
+    "typescript": "^5.0.0"
+  },
+  "dependencies": {
+    "@prisma/client": "^6.2.1",
+    "@types/bcrypt": "^5.0.2",
+    "@types/cors": "^2.8.17",
+    "@types/express": "^5.0.0",
+    "@types/fluent-ffmpeg": "^2.1.27",
+    "bcrypt": "^5.1.1",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "fluent-ffmpeg": "^2.1.3",
+    "helmet": "^8.0.0",
+    "http": "^0.0.1-security",
+    "https": "^1.0.0",
+    "node-datachannel": "^0.24.0",
+    "prisma": "^6.2.1",
+    "puppeteer": "^24.1.0",
+    "webtorrent": "^2.5.14",
+    "zod": "^3.24.1"
+  },
+  "scripts": {
+    "dev": "tsx --watch src/index.ts"
+  }
+}

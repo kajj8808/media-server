@@ -1,0 +1,42 @@
+{
+  "compilerOptions": {
+    // Enable latest features
+    "lib": [
+      "ESNext",
+      "DOM"
+    ],
+    "target": "ESNext",
+    "module": "ESNext",
+    "moduleDetection": "force",
+    "jsx": "react-jsx",
+    "allowJs": true,
+    // Bundler mode
+    "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
+    "verbatimModuleSyntax": true,
+    "noEmit": true,
+    // Best practices
+    "strict": true,
+    "skipLibCheck": true,
+    "noFallthroughCasesInSwitch": true,
+    // Some stricter flags (disabled by default)
+    "noUnusedLocals": false,
+    "noUnusedParameters": false,
+    "noPropertyAccessFromIndexSignature": false,
+    "baseUrl": "src", // baseUrl을 src로 설정
+    "paths": {
+      "@controllers/*": [
+        "controllers/*"
+      ], // controllers 폴더 접근
+      "@services/*": [
+        "services/*"
+      ], // services 폴더 접근
+      "@models/*": [
+        "models/*"
+      ], // models 폴더 접근
+      "@routes/*": [
+        "routes/*"
+      ] // routes 폴더 접근
+    },
+  }
+}
