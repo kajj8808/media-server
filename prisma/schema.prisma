@@ -32,11 +32,14 @@ model WatchRecords {
 }
 
 model Magnet {
-  id            Int       @id @default(autoincrement())
-  cipher_magnet String    @unique
-  create_at     DateTime  @default(now())
-  update_at     DateTime  @updatedAt()
-  Episode       Episode[]
+  id            Int      @id @default(autoincrement())
+  cipher_magnet String   @unique
+  create_at     DateTime @default(now())
+  update_at     DateTime @updatedAt()
+  episode_id    Int?
+  movie_id      Int?
+  episode       Episode?
+  movie         Movie?
 }
 
 model Movie {
@@ -55,8 +58,10 @@ model Movie {
   update_at DateTime @updatedAt()
 
   watch_records WatchRecords[]
-  Series        Series?        @relation(fields: [seriesId], references: [id])
-  seriesId      Int?
+  series        Series?        @relation(fields: [series_id], references: [id])
+  series_id     Int?
+  magnet_id     Int?           @unique
+  magnet        Magnet?        @relation(fields: [magnet_id], references: [id])
 }
 
 model Episode {
@@ -79,11 +84,11 @@ model Episode {
 
   season_id Int
   series_id Int
-  magnet_id Int
+  magnet_id Int? @unique
 
-  Season Season? @relation(fields: [season_id], references: [id])
-  Series Series? @relation(fields: [series_id], references: [id])
-  Magnet Magnet? @relation(fields: [magnet_id], references: [id])
+  season Season? @relation(fields: [season_id], references: [id])
+  series Series? @relation(fields: [series_id], references: [id])
+  magnet Magnet? @relation(fields: [magnet_id], references: [id])
 }
 
 model Season {
@@ -108,9 +113,8 @@ model Season {
 
   series_id Int
 
-  episodes             Episode[]
-  series               Series?               @relation(fields: [series_id], references: [id])
-  production_companies ProductionCompanies[]
+  episodes Episode[]
+  series   Series    @relation(fields: [series_id], references: [id])
 }
 
 model Series {
@@ -140,12 +144,4 @@ model Genres {
   id     Int      @id @default(autoincrement())
   name   String
   series Series[] @relation("SeriesGenres")
-}
-
-model ProductionCompanies {
-  id             Int      @id
-  logo_path      String
-  name           String
-  origin_country String
-  seasons        Season[]
 }

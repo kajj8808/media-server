@@ -9,7 +9,8 @@ import { extractEpisodeNumber } from "utils/lib";
 
 interface VideoInfo {
   videoId: string;
-  episodeNumber: number | null;
+  episodeNumber: number;
+  magnetUrl: string;
 }
 
 // 비디오 파일인지 확인하는 함수
@@ -46,14 +47,15 @@ export async function downloadVideoFileFormTorrent(magnetURI: string) {
         clearInterval(interval);
         if (torrent.files.length > 1) {
           for (const file of torrent.files) {
-            if (isVideoFile(file.name)) {
+            if (isVideoFile(file.name) && !file.name.includes("[SP")) {
               const episodeNumber = extractEpisodeNumber(file.name);
               const videoId = await convertToStreamableVideo(
-                `${TEMP_DIR}/${file.name}`
+                `${TEMP_DIR}/${torrent.name}/${file.name}`
               );
               videoInfos.push({
                 videoId,
-                episodeNumber,
+                episodeNumber: episodeNumber ? episodeNumber : 1,
+                magnetUrl: magnetURI,
               });
             }
           }
@@ -67,7 +69,8 @@ export async function downloadVideoFileFormTorrent(magnetURI: string) {
               );
               videoInfos.push({
                 videoId,
-                episodeNumber,
+                episodeNumber: episodeNumber ? episodeNumber : 1,
+                magnetUrl: magnetURI,
               });
             }
           }

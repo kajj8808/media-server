@@ -1,6 +1,7 @@
 import { PrismaClient } from "@prisma/client";
-import { getSeries } from "./tmdb";
+import { createTmdbImageUrl, getEpisodeDetail, getSeries } from "./tmdb";
 import type { Season, TMDBSeries } from "types/tmdb";
+import crypto from "crypto";
 
 const db = new PrismaClient();
 
@@ -29,12 +30,12 @@ export async function upsertSeries(
 ) {
   const seriesData = {
     title: series.name,
-    cover_image: series.backdrop_path,
+    cover_image: createTmdbImageUrl(series.backdrop_path),
     overview: series.overview,
     genres: {
       connect: genres,
     },
-    poster: series.poster_path,
+    poster: createTmdbImageUrl(series.poster_path),
     homepage: series.homepage,
     next_episode_to_air: series.next_episode_to_air
       ? new Date(series.next_episode_to_air.air_date)
@@ -53,7 +54,7 @@ export async function upsertSeries(
   });
 }
 
-export async function upsertSeasons(seasons: Season[], seriesId: number) {
+export async function upsertSeasons(seriesId: number, seasons: Season[]) {
   return await Promise.all(
     seasons.map((season) => {
       const seasonData = {
@@ -61,7 +62,7 @@ export async function upsertSeasons(seasons: Season[], seriesId: number) {
         number: season.season_number,
         air_date: new Date(season.air_date),
         series_id: seriesId,
-        poster: season.poster_path,
+        poster: createTmdbImageUrl(season.poster_path),
       };
       return db.season.upsert({
         create: {
@@ -75,4 +76,89 @@ export async function upsertSeasons(seasons: Season[], seriesId: number) {
       });
     })
   );
+}
+
+interface UpsertEpisodeProps {
+  seasonId: number;
+  episodeNumber: number;
+  magnetUrl: string;
+  videoId: string;
+}
+
+export async function upsertEpisode({
+  seasonId,
+  episodeNumber,
+  magnetUrl,
+  videoId,
+}: UpsertEpisodeProps) {
+  try {
+    const cipherMagnet = crypto
+      .createHash("md5")
+      .update(magnetUrl)
+      .digest("base64");
+
+    const newMagnet = await db.magnet.create({
+      data: { cipher_magnet: cipherMagnet },
+    });
+
+    const season = await db.season.findUnique({
+      where: { id: +seasonId },
+      select: {
+        id: true,
+        number: true,
+        series: { select: { id: true } },
+      },
+    });
+    if (!season) return;
+
+    const episodeDetail = await getEpisodeDetail(
+      season.series.id,
+      season.number,
+      episodeNumber
+    );
+
+    if (!episodeDetail) return;
+
+    const episodeData = {
+      id: +episodeDetail.id,
+      magnet_id: newMagnet.id,
+      number: episodeDetail.episode_number,
+      season_id: season.id,
+      series_id: season.series.id,
+      title: episodeDetail.name,
+      video_id: videoId,
+      description: episodeDetail.overview,
+      kr_description: episodeDetail.overview !== "",
+      thumbnail: createTmdbImageUrl(episodeDetail.still_path),
+      running_time: episodeDetail.runtime,
+    };
+
+    const updatedEpisode = await db.episode.upsert({
+      create: episodeData,
+      update: episodeData,
+      where: { id: +episodeDetail.id },
+    });
+    return updatedEpisode;
+  } catch (error) {
+    console.error(`upsertEpisode error: ${error}`);
+  }
+}
+
+export async function checkMagnetsExist(magnets: string[]) {
+  const magnetInfos = magnets.map((magnet) => ({
+    cipherMagnet: crypto.createHash("md5").update(magnet).digest("base64"),
+    magnet,
+  }));
+
+  const existChecks = magnetInfos.map(async (magnetInfo) => {
+    const exist = await db.magnet.findFirst({
+      where: {
+        cipher_magnet: magnetInfo.cipherMagnet,
+      },
+    });
+    return exist ? null : magnetInfo.magnet;
+  });
+
+  const results = await Promise.all(existChecks);
+  return results.filter((magnet) => magnet !== null) as string[];
 }
