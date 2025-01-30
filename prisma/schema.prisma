@@ -73,7 +73,7 @@ model Episode {
   number         Float
   video_id       String
   subtitle_id    String?
-  is_ass         Boolean?
+  is_overlap     Boolean?
   is_special     Boolean?
   kr_description Boolean?
 

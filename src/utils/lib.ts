@@ -47,3 +47,15 @@ export function extractEpisodeNumber(filename: string): number | null {
 
   return null;
 }
+
+import fs from "fs";
+import iconv from "iconv-lite";
+import chardet from "chardet";
+
+export async function readSubtitleFileData(filePath: string) {
+  const fileData = fs.readFileSync(filePath);
+  const encoding = chardet.detect(fileData);
+  const decodeData = iconv.decode(fileData, encoding || "utf-8");
+
+  return decodeData;
+}

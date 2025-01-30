@@ -23,7 +23,6 @@ export async function getSeries(seriesId: number) {
     `${TMDB_API_URL}/tv/${seriesId}?language=ko-KR`,
     options
   );
-
   if (response.ok) {
     const json = (await response.json()) as TMDBSeries;
     return json;

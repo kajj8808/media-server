@@ -45,11 +45,11 @@ export async function upsertSeries(
   return await db.series.upsert({
     create: {
       ...seriesData,
-      id: seriesId,
+      id: +seriesId,
     },
     update: seriesData,
     where: {
-      id: seriesId,
+      id: +seriesId,
     },
   });
 }
@@ -61,18 +61,18 @@ export async function upsertSeasons(seriesId: number, seasons: Season[]) {
         name: season.name,
         number: season.season_number,
         air_date: new Date(season.air_date),
-        series_id: seriesId,
+        series_id: +seriesId,
         poster: createTmdbImageUrl(season.poster_path),
       };
       return db.season.upsert({
         create: {
-          id: season.id,
+          id: +season.id,
           ...seasonData,
         },
         update: {
           ...seasonData,
         },
-        where: { id: season.id },
+        where: { id: +season.id },
       });
     })
   );
@@ -123,8 +123,8 @@ export async function upsertEpisode({
       id: +episodeDetail.id,
       magnet_id: newMagnet.id,
       number: episodeDetail.episode_number,
-      season_id: season.id,
-      series_id: season.series.id,
+      season_id: +season.id,
+      series_id: +season.series.id,
       title: episodeDetail.name,
       video_id: videoId,
       description: episodeDetail.overview,
@@ -161,4 +161,24 @@ export async function checkMagnetsExist(magnets: string[]) {
 
   const results = await Promise.all(existChecks);
   return results.filter((magnet) => magnet !== null) as string[];
+}
+
+interface UpdateData {
+  seasonId: number;
+  nyaa_query: string;
+  auto_upload: boolean;
+  is_4k: boolean;
+  is_db: boolean;
+}
+
+export async function updateSeason(updateData: UpdateData) {
+  await db.season.update({
+    where: { id: +updateData.seasonId },
+    data: {
+      nyaa_query: updateData.nyaa_query,
+      auto_upload: true,
+      is_4k: updateData.is_4k,
+      is_db: updateData.is_db,
+    },
+  });
 }

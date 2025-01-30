@@ -13,6 +13,7 @@ import "@services/streaming";
 import "@services/tmdb";
 import db, {
   checkMagnetsExist,
+  updateSeason,
   upsertEpisode,
   upsertGenres,
   upsertSeasons,
@@ -22,6 +23,10 @@ import { getEpisodeDetail, getSeries } from "@services/tmdb";
 import { downloadVideoFileFormTorrent } from "@services/torrent";
 import { getNyaaMagnets } from "@services/web-scraper";
 import videoRouter from "@routes/video";
+import seasonRouter from "@routes/season";
+import seriesRouter from "@routes/series";
+import subtitleRouter from "@routes/subtitle";
+import episodeRouter from "@routes/episode";
 
 const app = express();
 app.use(helmet());
@@ -32,34 +37,13 @@ app.get("/", (_, res) => {
   res.send("animation server home...");
 });
 
-app.post("/season/add_nyaa", async (req, res) => {
-  const { seasonId, nyaaQuery } = req.body;
-  console.log(seasonId, nyaaQuery);
-  if (!seasonId || !nyaaQuery) {
-    res.status(400).send({ error: "seasonId와 nyaaQuery는 필수입니다." });
-    return;
-  }
-
-  res.status(200).json({ message: "에피소드 추가 작업이 시작되었습니다." });
-
-  addEpisodes(seasonId, nyaaQuery);
-});
-
 app.use("/video", videoRouter);
+app.use("/season", seasonRouter);
+app.use("/series", seriesRouter);
+app.use("/subtitle", subtitleRouter);
+app.use("/episode", episodeRouter);
 
-async function upsertSeriesById(seriesId: number) {
-  const series = await getSeries(seriesId);
-  if (!series) {
-    return;
-  }
-
-  const updatedGenres = await upsertGenres(series.genres);
-  const updatedSeries = await upsertSeries(seriesId, series, updatedGenres);
-  const updatedSeasons = await upsertSeasons(seriesId, series.seasons);
-  console.log(updatedSeasons);
-}
-
-async function addEpisodes(seasonId: number, nyaaQuery: string) {
+export async function addEpisodes(seasonId: number, nyaaQuery: string) {
   try {
     const nyaaMagnets = await getNyaaMagnets(nyaaQuery);
     const magnets = await checkMagnetsExist(nyaaMagnets);
