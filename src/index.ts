@@ -7,6 +7,8 @@ import zod from "zod";
 
 import https from "https";
 import http from "http";
+import path from "path";
+import fs from "fs";
 
 import "@services/torrent";
 import "@services/streaming";
@@ -27,6 +29,7 @@ import seasonRouter from "@routes/season";
 import seriesRouter from "@routes/series";
 import subtitleRouter from "@routes/subtitle";
 import episodeRouter from "@routes/episode";
+import { DIR_NAME } from "utils/constants";
 
 const app = express();
 app.use(helmet());
@@ -71,9 +74,41 @@ export async function addEpisodes(seasonId: number, nyaaQuery: string) {
   }
 }
 
-async function main() {
-  app.listen(4000, () => {
-    console.log(`http://localhost:4000`);
-  });
+async function startServer() {
+  const httpsOptions = {
+    key: fs.readFileSync("src/keys/key.pem"),
+    cert: fs.readFileSync("src/keys/cert.pem"),
+  };
+  if (httpsOptions.key && httpsOptions.cert) {
+    https.createServer(httpsOptions, app).listen(8443, () => {
+      console.log(`https://localhost:8443`);
+    });
+  } else {
+    http.createServer(app).listen(4000, () => {
+      console.log(`http://localhost:4000`);
+    });
+  }
 }
+
+async function main() {
+  await startServer();
+}
+
+setInterval(async () => {
+  const seasons = await db.season.findMany({
+    where: {
+      AND: {
+        NOT: {
+          nyaa_query: null,
+        },
+        auto_upload: true,
+      },
+    },
+  });
+
+  for (let season of seasons) {
+    addEpisodes(season.id, season.nyaa_query!);
+  }
+}, 6 * 60 * 60 * 1000); // 6시간에 한번 다시 실행.
+
 main();
