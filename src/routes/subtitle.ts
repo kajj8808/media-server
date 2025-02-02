@@ -45,7 +45,7 @@ subtitleRouter.post(
 
       await db.episode.update({
         where: {
-          id: episodeId,
+          id: +episodeId,
         },
         data: {
           subtitle_id: newFileName,
