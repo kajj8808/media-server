@@ -28,6 +28,29 @@ seasonRouter.get("/list/not-nyaa", async (req, res) => {
   }
 });
 
+seasonRouter.get("/list", async (req, res) => {
+  try {
+    const seasons = await db.season.findMany({
+      select: {
+        id: true,
+        name: true,
+        number: true,
+        series: {
+          select: {
+            id: true,
+            title: true,
+          },
+        },
+      },
+      orderBy: { update_at: "desc" },
+    });
+    res.json({ seasons });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "서버 오류가 발생했습니다." });
+  }
+});
+
 seasonRouter.post("/add_nyaa", async (req, res) => {
   const { seasonId, nyaaQuery, is_4k, is_db } = req.body;
 

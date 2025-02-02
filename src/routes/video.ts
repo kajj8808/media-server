@@ -3,6 +3,9 @@ import fs from "fs";
 import { Readable } from "stream";
 import { Router } from "express";
 import { DIR_NAME } from "utils/constants";
+import multer from "multer";
+import { number } from "zod";
+import { convertToStreamableVideo } from "@services/streaming";
 
 const videoRouter = Router();
 
@@ -96,6 +99,71 @@ videoRouter.get("/:id", async (req, res) => {
       fileStream.pipe(res as any);
     }
   });
+});
+
+const videoUpload = multer({
+  dest: path.join("public", "temp"),
+});
+
+videoRouter.post("/upload", videoUpload.single("blob"), async (req, res) => {
+  const { fileName, fileIndex, chunks, mediaType } = req.body as {
+    fileName?: string;
+    fileIndex?: string;
+    chunks?: string;
+    mediaType?: string;
+  };
+
+  const file = req.file;
+
+  if (!file || !fileIndex || !fileName || !chunks || !mediaType) {
+    res.status(400).json({
+      ok: false,
+      error: "Bad Request",
+    });
+    return;
+  }
+
+  if (mediaType === "video" || mediaType === "image") {
+    const tempDir = path.join("public", "temp", fileName);
+    const tempPath = path.join(tempDir, fileIndex);
+
+    if (!fs.existsSync(tempPath)) {
+      try {
+        fs.mkdirSync(tempDir);
+      } catch (error) {}
+    }
+
+    fs.renameSync(file.path, tempPath);
+
+    const files = fs.readdirSync(tempDir);
+    if (files.length === +chunks) {
+      // 0 , 1 , 10 <- 이렇게 나오는 문제가 있어서..
+      const sortedFiles = files
+        .map(Number)
+        .sort((a, b) => a - b)
+        .map(String);
+      for (const file of sortedFiles) {
+        const fileData = fs.readFileSync(path.join(tempDir, file));
+        fs.appendFileSync(path.join("public", mediaType, fileName), fileData);
+      }
+      if (mediaType === "video") {
+        const newFileName = await convertToStreamableVideo(
+          path.join("public", "video", fileName)
+        );
+        fs.rmSync(path.join("public", "temp", fileName), {
+          recursive: true,
+        });
+        res.json({ ok: true, fileName: newFileName });
+      }
+    } else {
+      res.json({ ok: true, len: files.length, chunks: chunks });
+    }
+  } else {
+    res.status(400).json({
+      ok: false,
+      error: "Bad Request",
+    });
+  }
 });
 
 export default videoRouter;

@@ -30,11 +30,12 @@ import seriesRouter from "@routes/series";
 import subtitleRouter from "@routes/subtitle";
 import episodeRouter from "@routes/episode";
 import { DIR_NAME } from "utils/constants";
+import imageRouter from "@routes/image";
 
 const app = express();
 app.use(helmet());
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ limit: "10mb" }));
 
 app.get("/", (_, res) => {
   res.send("animation server home...");
@@ -45,6 +46,7 @@ app.use("/season", seasonRouter);
 app.use("/series", seriesRouter);
 app.use("/subtitle", subtitleRouter);
 app.use("/episode", episodeRouter);
+app.use("/image", imageRouter);
 
 export async function addEpisodes(seasonId: number, nyaaQuery: string) {
   try {
@@ -75,17 +77,19 @@ export async function addEpisodes(seasonId: number, nyaaQuery: string) {
 }
 
 async function startServer() {
-  const httpsOptions = {
-    key: fs.readFileSync("src/keys/key.pem"),
-    cert: fs.readFileSync("src/keys/cert.pem"),
-  };
-  if (httpsOptions.key && httpsOptions.cert) {
-    https.createServer(httpsOptions, app).listen(8443, () => {
-      console.log(`https://localhost:8443`);
-    });
-  } else {
-    http.createServer(app).listen(4000, () => {
-      console.log(`http://localhost:4000`);
+  try {
+    const httpsOptions = {
+      key: fs.readFileSync("src/keys/key.pem"),
+      cert: fs.readFileSync("src/keys/cert.pem"),
+    };
+    if (httpsOptions.key && httpsOptions.cert) {
+      https.createServer(httpsOptions, app).listen(8443, () => {
+        console.log(`https://localhost:8443`);
+      });
+    }
+  } catch (error) {
+    http.createServer(app).listen(3003, () => {
+      console.log(`http://localhost:3003`);
     });
   }
 }
