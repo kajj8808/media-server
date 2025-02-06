@@ -14,8 +14,15 @@ interface AnalyzeVideoCodecResult {
 }
 
 async function analyzeVideoCodec(
-  videoPath: string
+  videoPath: string,
+  videoCodec?: string,
+  audioCodec?: string
 ): Promise<AnalyzeVideoCodecResult> {
+  const codec = {
+    video: videoCodec ? videoCodec : "hevc",
+    audio: audioCodec ? audioCodec : "aac",
+  };
+  console.log(codec);
   return new Promise((resolve, reject) => {
     ffmpeg.ffprobe(videoPath, (err, data) => {
       if (err) {
@@ -35,11 +42,12 @@ async function analyzeVideoCodec(
 
       const videoStream = streams.find(
         (stream) =>
-          stream.codec_type === "video" && stream.codec_name === "hevc"
+          stream.codec_type === "video" && stream.codec_name === codec.video
       );
 
       const audioStream = streams.find(
-        (stream) => stream.codec_type === "audio" && stream.codec_name === "aac"
+        (stream) =>
+          stream.codec_type === "audio" && stream.codec_name === codec.audio
       );
 
       if (videoStream) {
@@ -121,9 +129,20 @@ export async function processVideo(videoPath: string, ffmpegOptions: string[]) {
     return videoId;
   }
 }
+interface Option {
+  videoCodec: string;
+  audioCodec: string;
+}
 
-export async function convertToStreamableVideo(videoPath: string) {
-  const videoCodec = await analyzeVideoCodec(videoPath);
+export async function convertToStreamableVideo(
+  videoPath: string,
+  option?: Option
+) {
+  const videoCodec = await analyzeVideoCodec(
+    videoPath,
+    option?.videoCodec,
+    option?.audioCodec
+  );
   const ffmpegOptions = generateFfmpegOptions(videoCodec);
   const videoId = await processVideo(videoPath, ffmpegOptions);
   return videoId;
