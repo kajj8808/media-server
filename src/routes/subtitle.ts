@@ -7,6 +7,7 @@ import { readSubtitleFileData } from "utils/lib";
 import { convertAssToVtt } from "utils/subtitle/assToVtt";
 import { convertSmiToVtt } from "utils/subtitle/smiToVtt";
 import db from "@services/database";
+import { addAssSubtitleToVideo } from "@services/streaming";
 
 const subtitleRouter = Router();
 
@@ -39,11 +40,7 @@ subtitleRouter.post(
       }
       fs.rmSync(file.path);
 
-      if (isOverlap === "on") {
-        // overlap
-      }
-
-      await db.episode.update({
+      const episode = await db.episode.update({
         where: {
           id: +episodeId,
         },
@@ -51,6 +48,13 @@ subtitleRouter.post(
           subtitle_id: newFileName,
         },
       });
+
+      if (isOverlap === "on") {
+        addAssSubtitleToVideo({
+          videoId: episode.video_id,
+          assPath: newFilePath,
+        });
+      }
     } else {
       res.json({ ok: false });
     }

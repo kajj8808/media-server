@@ -29,9 +29,10 @@ import seasonRouter from "@routes/season";
 import seriesRouter from "@routes/series";
 import subtitleRouter from "@routes/subtitle";
 import episodeRouter from "@routes/episode";
-import { DIR_NAME } from "utils/constants";
+
 import imageRouter from "@routes/image";
 import fileUploadRouter from "@routes/fileUpload";
+import movieRouter from "@routes/movie";
 
 const app = express();
 app.use(helmet());
@@ -49,6 +50,7 @@ app.use("/subtitle", subtitleRouter);
 app.use("/episode", episodeRouter);
 app.use("/image", imageRouter);
 app.use("/file-upload", fileUploadRouter);
+app.use("/movie", movieRouter);
 
 export async function addEpisodes(seasonId: number, nyaaQuery: string) {
   try {

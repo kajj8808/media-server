@@ -148,6 +148,49 @@ export async function convertToStreamableVideo(
   return videoId;
 }
 
+interface AddAssSubtitleToVideoProps {
+  videoId: string;
+  assPath: string;
+}
+export async function addAssSubtitleToVideo({
+  videoId,
+  assPath,
+}: AddAssSubtitleToVideoProps) {
+  const videoPath = path.join("public", "video", videoId);
+  const tempPath = path.join("public", "temp", videoId);
+  // 기본 코덱으로 hevc사용.
+  return new Promise((resolve, reject) => {
+    ffmpeg(videoPath)
+      .inputOptions([`-i ${assPath}`])
+      .videoFilters([{ filter: "ass", options: assPath }])
+      .output(tempPath)
+      .outputOptions([
+        "-c:v hevc",
+        "-c:a copy",
+        "-strict -2",
+        "-tag:v hvc1",
+        "-crf 23",
+        "-threads 0",
+      ])
+      .on("end", async () => {
+        fs.rmSync(videoPath);
+        fs.renameSync(tempPath, videoPath);
+        console.log("자막 추가 완료");
+        resolve(null);
+      })
+      .on("progress", (progress) => {
+        console.log(progress);
+      })
+      .on("error", (error) => {
+        console.error(error);
+        reject(error);
+      })
+      .on("stderr", (stderrLine) => {
+        console.log("FFmpeg stderr:", stderrLine);
+      })
+      .run();
+  });
+}
 /* 
 TEST
 const videoPath = path.join(DIR_NAME, "../../", "public", "temp", "13.mkv");
