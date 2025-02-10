@@ -3,6 +3,17 @@ import { Router } from "express";
 
 const episodeRouter = Router();
 
+episodeRouter.get("/new", async (_, res) => {
+  const episodes = await db.episode.findMany({
+    take: 10,
+  });
+
+  res.json({
+    ok: true,
+    result: episodes,
+  });
+});
+
 episodeRouter.get("/no-subtitles", async (_, res) => {
   const episodes = await db.episode.findMany({
     where: { subtitle_id: null },
