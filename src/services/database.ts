@@ -2,6 +2,8 @@ import { PrismaClient } from "@prisma/client";
 import { createTmdbImageUrl, getEpisodeDetail, getSeries } from "./tmdb";
 import type { Season, TMDBSeries } from "types/tmdb";
 import crypto from "crypto";
+import { getNyaaMagnets } from "./web-scraper";
+import { downloadVideoFileFormTorrent } from "./torrent";
 
 const db = new PrismaClient();
 
@@ -181,4 +183,77 @@ export async function updateSeason(updateData: UpdateData) {
       is_db: updateData.is_db,
     },
   });
+}
+export async function updateEpisodesWithKoreanDescriptions() {
+  const episodes = await db.episode.findMany({
+    where: {
+      kr_description: false,
+    },
+    include: {
+      season: true,
+    },
+  });
+
+  for (let episode of episodes) {
+    if (episode.season) {
+      const episodeData = await getEpisodeDetail(
+        episode.series_id,
+        episode.season.number,
+        episode.number
+      );
+
+      if (episodeData?.overview) {
+        const updatedEpisode = await db.episode.update({
+          data: episodeData,
+          where: { id: +episodeData.id },
+        });
+        console.log(`Episode ${updatedEpisode.id}에 한국어 설명 추가됨.`);
+      }
+    }
+  }
+}
+
+export async function updateSeasonsWithEpisodes() {
+  const seasons = await db.season.findMany({
+    where: {
+      AND: {
+        NOT: {
+          nyaa_query: null,
+        },
+        auto_upload: true,
+      },
+    },
+  });
+
+  for (let season of seasons) {
+    addEpisodes(season.id, season.nyaa_query!);
+  }
+}
+
+export async function addEpisodes(seasonId: number, nyaaQuery: string) {
+  try {
+    const nyaaMagnets = await getNyaaMagnets(nyaaQuery);
+    const magnets = await checkMagnetsExist(nyaaMagnets);
+
+    const videoInfos = await Promise.all(
+      magnets.map(async (magnetUrl) => {
+        return await downloadVideoFileFormTorrent(magnetUrl);
+      })
+    );
+
+    for (let videoInfo of videoInfos) {
+      for (let info of videoInfo) {
+        await upsertEpisode({
+          episodeNumber: info.episodeNumber,
+          magnetUrl: info.magnetUrl,
+          seasonId: seasonId,
+          videoId: info.videoId,
+        });
+      }
+    }
+
+    console.log("에피소드가 성공적으로 추가되었습니다.");
+  } catch (error) {
+    console.error(error);
+  }
 }

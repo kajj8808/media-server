@@ -30,14 +30,15 @@ export async function getSeries(seriesId: number) {
 }
 
 export async function getEpisodeDetail(
-  seasonId: number,
+  seriesId: number,
   seasonNumber: number,
   episodeNumber: number
 ) {
   const response = await fetch(
-    `${TMDB_API_URL}/tv/${seasonId}/season/${seasonNumber}/episode/${episodeNumber}?language=ko-KR`,
+    `${TMDB_API_URL}/tv/${seriesId}/season/${seasonNumber}/episode/${episodeNumber}?language=ko-KR`,
     options
   );
+
   if (response.ok) {
     const json = (await response.json()) as TMDBEpisodeDetail;
     return json;

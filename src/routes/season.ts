@@ -1,6 +1,5 @@
-import db, { updateSeason } from "@services/database";
+import db, { addEpisodes, updateSeason } from "@services/database";
 import { Router } from "express";
-import { addEpisodes } from "index";
 
 const seasonRouter = Router();
 

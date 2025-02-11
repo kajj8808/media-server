@@ -15,7 +15,9 @@ import "@services/streaming";
 import "@services/tmdb";
 import db, {
   checkMagnetsExist,
+  updateEpisodesWithKoreanDescriptions,
   updateSeason,
+  updateSeasonsWithEpisodes,
   upsertEpisode,
   upsertGenres,
   upsertSeasons,
@@ -52,34 +54,6 @@ app.use("/image", imageRouter);
 app.use("/file-upload", fileUploadRouter);
 app.use("/movie", movieRouter);
 
-export async function addEpisodes(seasonId: number, nyaaQuery: string) {
-  try {
-    const nyaaMagnets = await getNyaaMagnets(nyaaQuery);
-    const magnets = await checkMagnetsExist(nyaaMagnets);
-
-    const videoInfos = await Promise.all(
-      magnets.map(async (magnetUrl) => {
-        return await downloadVideoFileFormTorrent(magnetUrl);
-      })
-    );
-
-    for (let videoInfo of videoInfos) {
-      for (let info of videoInfo) {
-        await upsertEpisode({
-          episodeNumber: info.episodeNumber,
-          magnetUrl: info.magnetUrl,
-          seasonId: seasonId,
-          videoId: info.videoId,
-        });
-      }
-    }
-
-    console.log("에피소드가 성공적으로 추가되었습니다.");
-  } catch (error) {
-    console.error(error);
-  }
-}
-
 async function startServer() {
   try {
     const httpsOptions = {
@@ -103,20 +77,8 @@ async function main() {
 }
 
 setInterval(async () => {
-  const seasons = await db.season.findMany({
-    where: {
-      AND: {
-        NOT: {
-          nyaa_query: null,
-        },
-        auto_upload: true,
-      },
-    },
-  });
-
-  for (let season of seasons) {
-    addEpisodes(season.id, season.nyaa_query!);
-  }
+  updateSeasonsWithEpisodes();
+  updateEpisodesWithKoreanDescriptions();
 }, 6 * 60 * 60 * 1000); // 6시간에 한번 다시 실행.
 
 main();
