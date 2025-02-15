@@ -22,7 +22,7 @@ async function analyzeVideoCodec(
     video: videoCodec ? videoCodec : "hevc",
     audio: audioCodec ? audioCodec : "aac",
   };
-  console.log(codec);
+
   return new Promise((resolve, reject) => {
     ffmpeg.ffprobe(videoPath, (err, data) => {
       if (err) {
@@ -63,7 +63,7 @@ async function analyzeVideoCodec(
   });
 }
 
-// ffmpeg 옵션을 생성하는 함수
+// ffmpeg 옵션을 생성하는 함수 s16!!
 function generateFfmpegOptions(videoCodec: AnalyzeVideoCodecResult) {
   const ffmpegOptions: string[] = [];
 

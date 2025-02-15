@@ -57,7 +57,11 @@ fileUploadRouter.post(
         let newFileName = "";
         if (mediaType === "video") {
           newFileName = await convertToStreamableVideo(
-            path.join("public", "video", fileName)
+            path.join("public", "video", fileName),
+            {
+              audioCodec: "flac",
+              videoCodec: "hevc",
+            }
           );
         } else {
           newFileName = new Date().getTime().toString();
