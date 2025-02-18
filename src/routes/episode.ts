@@ -6,6 +6,10 @@ const episodeRouter = Router();
 episodeRouter.get("/new", async (_, res) => {
   const episodes = await db.episode.findMany({
     take: 10,
+    include: {
+      season: true,
+      series: true,
+    },
   });
 
   res.json({
