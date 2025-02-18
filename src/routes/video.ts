@@ -22,8 +22,8 @@ videoRouter.get("/:id", async (req, res) => {
   // Listing 3.
   const options: VideoStremInfoOption = {};
 
-  let start: any;
-  let end: any;
+  let start: number | undefined;
+  let end: number | undefined;
 
   const range = req.headers.range;
   if (range) {
@@ -91,12 +91,13 @@ videoRouter.get("/:id", async (req, res) => {
       // Listing 7.
       const fileStream = fs.createReadStream(filePath, options);
       fileStream.on("error", (error) => {
-        console.log(`Error reading file ${filePath}.`);
-        console.log(error);
-        res.sendStatus(500);
+        if (!res.headersSent) {
+          res.status(500).send("Error while reading the file.");
+        } else {
+          console.error(`Error reading file after headers sent ${filePath}.`);
+        }
       });
-      // type script 탈출..
-      fileStream.pipe(res as any);
+      fileStream.pipe(res);
     }
   });
 });

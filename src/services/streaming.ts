@@ -1,4 +1,5 @@
 import ffmpeg from "fluent-ffmpeg";
+import { exec } from "child_process";
 import path from "path";
 import fs from "fs";
 
@@ -67,23 +68,28 @@ async function analyzeVideoCodec(
 function generateFfmpegOptions(videoCodec: AnalyzeVideoCodecResult) {
   const ffmpegOptions: string[] = [];
 
+  // video
   if (videoCodec.video.reEncoding) {
     ffmpegOptions.push("-c:v hevc");
   } else {
     ffmpegOptions.push("-c:v copy");
   }
 
-  if (videoCodec.audio.reEncoding) {
-    ffmpegOptions.push("-c:a flac", "-sample_fmt s16", "-ac 2", "-strict -2");
-  } else {
-    ffmpegOptions.push("-c:a copy");
-  }
+  // audio
+  ffmpegOptions.push(
+    "-c:a flac",
+    "-b:a 256k",
+    "-ar 48000",
+    "-sample_fmt s16",
+    "-ac 2",
+    "-strict -2"
+  );
 
+  // 모두 적용되는 옵션 ( hvc1 , 일본어 선택. )
   ffmpegOptions.push("-map 0:v:0", "-map 0:a:m:language:jpn", "-tag:v hvc1");
 
   return ffmpegOptions;
 }
-
 export async function processVideo(videoPath: string, ffmpegOptions: string[]) {
   const videoId = new Date().getTime() + "";
   const tempPath = path.join(
@@ -102,14 +108,16 @@ export async function processVideo(videoPath: string, ffmpegOptions: string[]) {
   );
 
   try {
-    await new Promise((resolve, reject) => {
-      ffmpeg(videoPath)
-        .outputOptions(ffmpegOptions)
-        .output(tempPath)
-        .on("progress", console.log)
-        .on("end", resolve)
-        .on("error", reject)
-        .run();
+    await new Promise(async (resolve, reject) => {
+      const commnad = `ffmpeg -i ${videoPath} ${ffmpegOptions.join(
+        " "
+      )} ${tempPath}`;
+      await new Promise((resolve) => {
+        exec(commnad, (err, stdout, stderr) => {
+          resolve(true);
+        });
+      });
+      resolve(true);
     });
 
     fs.renameSync(tempPath, outputPath);
