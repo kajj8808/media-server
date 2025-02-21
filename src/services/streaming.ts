@@ -1,5 +1,5 @@
 import ffmpeg from "fluent-ffmpeg";
-import { exec } from "child_process";
+import { exec, spawn } from "child_process";
 import path from "path";
 import fs from "fs";
 
@@ -8,22 +8,18 @@ import { DIR_NAME } from "utils/constants";
 interface AnalyzeVideoCodecResult {
   video: {
     reEncoding: boolean;
+    streamIndex: number;
   };
   audio: {
     reEncoding: boolean;
+    language: string;
+    streamIndex: number;
   };
 }
 
 async function analyzeVideoCodec(
-  videoPath: string,
-  videoCodec?: string,
-  audioCodec?: string
+  videoPath: string
 ): Promise<AnalyzeVideoCodecResult> {
-  const codec = {
-    video: videoCodec ? videoCodec : "hevc",
-    audio: audioCodec ? audioCodec : "aac",
-  };
-
   return new Promise((resolve, reject) => {
     ffmpeg.ffprobe(videoPath, (err, data) => {
       if (err) {
@@ -33,30 +29,44 @@ async function analyzeVideoCodec(
       const result: AnalyzeVideoCodecResult = {
         video: {
           reEncoding: true,
+          streamIndex: -1,
         },
         audio: {
           reEncoding: true,
+          streamIndex: -1,
+          language: "default",
         },
       };
 
       const streams = data.streams;
 
-      const videoStream = streams.find(
+      // ✅ HEVC (H.265) 비디오 스트림 찾기
+      const currentVideoStream = streams.find(
         (stream) =>
-          stream.codec_type === "video" && stream.codec_name === codec.video
+          stream.codec_type === "video" && stream.codec_name === "hevc"
       );
 
-      const audioStream = streams.find(
-        (stream) =>
-          stream.codec_type === "audio" && stream.codec_name === codec.audio
-      );
-
-      if (videoStream) {
+      if (currentVideoStream) {
         result.video.reEncoding = false;
+        result.video.streamIndex = currentVideoStream.index; // 🔹 비디오 스트림 index 저장
       }
 
-      if (audioStream) {
+      // ✅ FLAC (2채널) 오디오 스트림 찾기
+      const currentAudioStream = streams.find(
+        (stream) =>
+          stream.codec_type === "audio" &&
+          stream.codec_name === "flac" &&
+          stream.channels === 2
+      );
+
+      if (currentAudioStream) {
         result.audio.reEncoding = false;
+        result.audio.streamIndex = currentAudioStream.index; // 🔹 오디오 스트림 index 저장
+      }
+
+      // ✅ 오디오 언어 설정 (FLAC 스트림 기준)
+      if (currentAudioStream && currentAudioStream.tags?.language) {
+        result.audio.language = currentAudioStream.tags.language;
       }
 
       resolve(result);
@@ -65,39 +75,91 @@ async function analyzeVideoCodec(
 }
 
 // ffmpeg 옵션을 생성하는 함수 s16!!
-function generateFfmpegOptions(videoCodec: AnalyzeVideoCodecResult) {
+function generateFfmpegOptions(videoCodec: AnalyzeVideoCodecResult): string[] {
   const ffmpegOptions: string[] = [];
 
-  // video
+  // 비디오 옵션 처리
   if (videoCodec.video.reEncoding) {
-    ffmpegOptions.push("-c:v hevc");
+    ffmpegOptions.push(
+      "-c:v",
+      "hevc",
+      "-preset",
+      "slow",
+      "-crf",
+      "18",
+      "-pix_fmt",
+      "yuv420p10le",
+      "-b:v",
+      "3775k",
+      "-color_primaries",
+      "bt709",
+      "-color_trc",
+      "bt709",
+      "-colorspace",
+      "bt709"
+    );
   } else {
-    ffmpegOptions.push("-c:v copy");
+    ffmpegOptions.push("-c:v", "copy");
   }
 
-  // audio
-  ffmpegOptions.push(
-    "-c:a flac",
-    "-b:a 256k",
-    "-ar 48000",
-    "-sample_fmt s16",
-    "-ac 2",
-    "-strict -2"
-  );
+  // 오디오 옵션 처리 (FLAC, 2채널, 256k, 48kHz)
+  // 만약 reEncoding이 필요한 경우에만 옵션을 적용하고,
+  // 이미 FLAC 2채널이면 copy 옵션을 쓸 수도 있음.
+  if (videoCodec.audio.reEncoding) {
+    ffmpegOptions.push(
+      "-c:a",
+      "flac",
+      "-b:a",
+      "256k",
+      "-ar",
+      "48000",
+      "-ac",
+      "2",
+      "-strict",
+      "-2"
+    );
+  } else {
+    ffmpegOptions.push("-c:a", "copy");
+  }
 
-  // 모두 적용되는 옵션 ( hvc1 , 일본어 선택. )
-  ffmpegOptions.push("-map 0:v:0", "-map 0:a:m:language:jpn", "-tag:v hvc1");
+  if (
+    typeof videoCodec.audio.streamIndex === "number" &&
+    videoCodec.audio.streamIndex >= 0
+  ) {
+    ffmpegOptions.push("-map", `0:a:${videoCodec.audio.streamIndex}`);
+  } else if (videoCodec.audio.language === "jpn") {
+    ffmpegOptions.push("-map", "0:a:m:language:jpn");
+  } else {
+    ffmpegOptions.push("-map", "0:a:0");
+  }
+
+  if (
+    typeof videoCodec.video.streamIndex === "number" &&
+    videoCodec.video.streamIndex >= 0
+  ) {
+    ffmpegOptions.push("-map", `0:v:${videoCodec.video.streamIndex}`);
+  } else {
+    ffmpegOptions.push("-map", "0:v:0");
+  }
+
+  // 비디오 태그 설정 (예: hvc1)
+  ffmpegOptions.push("-tag:v", "hvc1");
 
   return ffmpegOptions;
 }
-export async function processVideo(videoPath: string, ffmpegOptions: string[]) {
-  const videoId = new Date().getTime() + "";
+
+export async function processVideo(
+  videoPath: string,
+  ffmpegOptions: string[],
+  fileName?: string
+) {
+  const videoId = fileName ? fileName : new Date().getTime() + "";
   const tempPath = path.join(
     DIR_NAME,
     "../../",
     "public",
     "temp",
-    `${videoId}.mkv`
+    `${videoId}.mp4`
   );
   const outputPath = path.join(
     DIR_NAME,
@@ -108,18 +170,43 @@ export async function processVideo(videoPath: string, ffmpegOptions: string[]) {
   );
 
   try {
-    await new Promise(async (resolve, reject) => {
-      const commnad = `ffmpeg -i ${videoPath} ${ffmpegOptions.join(
-        " "
-      )} ${tempPath}`;
-      await new Promise((resolve) => {
-        exec(commnad, (err, stdout, stderr) => {
-          resolve(true);
-        });
-      });
-      resolve(true);
-    });
+    await new Promise((resolve, reject) => {
+      const command = "ffmpeg";
+      const args = [
+        "-i",
+        `"${videoPath}"`,
+        ...ffmpegOptions,
+        `"public/temp/${videoId}.mp4"`,
+      ];
 
+      console.log("FFmpeg 실행:", command, args.join(" "));
+
+      const process = spawn(command, args, { shell: true });
+
+      process.stdout.on("data", (data) => {
+        console.log(`FFmpeg 출력: ${data}`);
+      });
+
+      process.stderr.on("data", (data) => {
+        console.log(`FFmpeg 출력: ${data}`);
+      });
+
+      process.on("close", (code) => {
+        if (code === 0) {
+          console.log("FFmpeg 변환 완료");
+          resolve(true);
+        } else {
+          reject(new Error(`FFmpeg 실패 (코드: ${code})`));
+        }
+      });
+
+      process.on("error", (err) => {
+        console.error("FFmpeg 실행 중 오류 발생:", err);
+        reject(err);
+      });
+
+      console.log("끝 (프로세스 시작됨)");
+    });
     fs.renameSync(tempPath, outputPath);
   } catch (error) {
     console.error("Error in processVideo:", error);
@@ -140,17 +227,15 @@ export async function processVideo(videoPath: string, ffmpegOptions: string[]) {
 interface Option {
   videoCodec: string;
   audioCodec: string;
+  fileName?: string;
 }
 
 export async function convertToStreamableVideo(
   videoPath: string,
   option?: Option
 ) {
-  const videoCodec = await analyzeVideoCodec(
-    videoPath,
-    option?.videoCodec,
-    option?.audioCodec
-  );
+  console.log(videoPath, option);
+  const videoCodec = await analyzeVideoCodec(videoPath);
   const ffmpegOptions = generateFfmpegOptions(videoCodec);
   const videoId = await processVideo(videoPath, ffmpegOptions);
   return videoId;

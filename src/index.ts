@@ -39,7 +39,11 @@ import { convertToStreamableVideo } from "@services/streaming";
 
 const app = express();
 app.use(helmet());
-app.use(cors());
+app.use(
+  cors({
+    origin: "*",
+  })
+);
 app.use(express.json({ limit: "10mb" }));
 
 app.get("/", (_, res) => {
@@ -75,6 +79,18 @@ async function startServer() {
 
 async function main() {
   await startServer();
+  /* let files = fs.readdirSync("public/temp/uma_movie.mkv");
+
+  files = files.map(f => parseInt(f, 10)).sort((a, b) => a - b);
+  const missing = [];
+  
+  for (let i = 0; i <= 1329; i++) {
+      if (!files.includes(i)) {
+          missing.push(i);
+      }
+  }
+  
+  console.log("누락된 파일 번호:", missing); */
 }
 
 setInterval(async () => {

@@ -8,6 +8,7 @@ const fileUploadRouter = Router();
 
 const fileUpload = multer({
   dest: path.join("public", "temp"),
+
 });
 
 fileUploadRouter.post(
@@ -44,27 +45,30 @@ fileUploadRouter.post(
       fs.renameSync(file.path, tempPath);
 
       const files = fs.readdirSync(tempDir);
+      console.log(files.length, chunks);
       if (files.length === +chunks) {
         // 0 , 1 , 10 <- 이렇게 나오는 문제가 있어서..
         const sortedFiles = files
           .map(Number)
           .sort((a, b) => a - b)
           .map(String);
+
         for (const file of sortedFiles) {
           const fileData = fs.readFileSync(path.join(tempDir, file));
           fs.appendFileSync(path.join("public", mediaType, fileName), fileData);
+          console.log(new Date().getTime());
         }
-        let newFileName = "";
+        const newFileName = new Date().getTime().toString();
         if (mediaType === "video") {
-          newFileName = await convertToStreamableVideo(
+          await convertToStreamableVideo(
             path.join("public", "video", fileName),
             {
               audioCodec: "flac",
               videoCodec: "hevc",
+              fileName: newFileName
             }
           );
         } else {
-          newFileName = new Date().getTime().toString();
           const tempPath = path.join("public", "image", fileName);
           const newPath = path.join("public", "image", newFileName);
           fs.renameSync(tempPath, newPath);
