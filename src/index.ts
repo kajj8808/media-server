@@ -2,30 +2,17 @@ import express from "express";
 import helmet from "helmet";
 import cors from "cors";
 
-import bcrypt from "bcrypt";
-import zod from "zod";
-
 import https from "https";
 import http from "http";
-import path from "path";
 import fs from "fs";
 
 import "@services/torrent";
 import "@services/streaming";
 import "@services/tmdb";
 import db, {
-  checkMagnetsExist,
   updateEpisodesWithKoreanDescriptions,
-  updateSeason,
   updateSeasonsWithEpisodes,
-  upsertEpisode,
-  upsertGenres,
-  upsertSeasons,
-  upsertSeries,
 } from "@services/database";
-import { getEpisodeDetail, getSeries } from "@services/tmdb";
-import { downloadVideoFileFormTorrent } from "@services/torrent";
-import { getNyaaMagnets } from "@services/web-scraper";
 import videoRouter from "@routes/video";
 import seasonRouter from "@routes/season";
 import seriesRouter from "@routes/series";
@@ -35,7 +22,6 @@ import episodeRouter from "@routes/episode";
 import imageRouter from "@routes/image";
 import fileUploadRouter from "@routes/fileUpload";
 import movieRouter from "@routes/movie";
-import { convertToStreamableVideo } from "@services/streaming";
 
 const app = express();
 app.use(helmet());
@@ -77,25 +63,18 @@ async function startServer() {
   }
 }
 
+async function updateEpisode() {
+  updateSeasonsWithEpisodes();
+  updateEpisodesWithKoreanDescriptions();
+}
+
 async function main() {
   await startServer();
-  /* let files = fs.readdirSync("public/temp/uma_movie.mkv");
-
-  files = files.map(f => parseInt(f, 10)).sort((a, b) => a - b);
-  const missing = [];
-  
-  for (let i = 0; i <= 1329; i++) {
-      if (!files.includes(i)) {
-          missing.push(i);
-      }
-  }
-  
-  console.log("누락된 파일 번호:", missing); */
+  updateEpisode();
 }
 
 setInterval(async () => {
-  updateSeasonsWithEpisodes();
-  updateEpisodesWithKoreanDescriptions();
-}, 6 * 60 * 60 * 1000); // 6시간에 한번 다시 실행.
+  updateEpisode();
+}, 24 * 60 * 60 * 1000); // 24시간에 한번 다시 실행.
 
 main();

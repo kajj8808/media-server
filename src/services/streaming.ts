@@ -55,8 +55,10 @@ async function analyzeVideoCodec(
       const currentAudioStream = streams.find(
         (stream) =>
           stream.codec_type === "audio" &&
-          stream.codec_name === "flac" &&
-          stream.channels === 2
+          ( // ✅ FLAC 또는 AAC 허용 - > AAC의 경우 이 프로그램에서 사용하는 옵션을 사용할 경우 용량만 올라가는 문제가 있어서 여기서 수정.
+            (stream.codec_name === "flac" && stream.channels === 2) ||
+            (stream.codec_name === "aac" && stream.channels === 2)
+          )
       );
 
       if (currentAudioStream) {
@@ -104,7 +106,7 @@ function generateFfmpegOptions(videoCodec: AnalyzeVideoCodecResult): string[] {
 
   // 오디오 옵션 처리 (FLAC, 2채널, 256k, 48kHz)
   // 만약 reEncoding이 필요한 경우에만 옵션을 적용하고,
-  // 이미 FLAC 2채널이면 copy 옵션을 쓸 수도 있음.
+  // 이미 오디오가 2채널이면 copy 옵션을 쓸 수도 있음.
   if (videoCodec.audio.reEncoding) {
     ffmpegOptions.push(
       "-c:a",
