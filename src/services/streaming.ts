@@ -17,7 +17,7 @@ interface AnalyzeVideoCodecResult {
   };
 }
 
-async function analyzeVideoCodec(
+export async function analyzeVideoCodec(
   videoPath: string
 ): Promise<AnalyzeVideoCodecResult> {
   return new Promise((resolve, reject) => {
@@ -54,16 +54,22 @@ async function analyzeVideoCodec(
       // ✅ FLAC (2채널) 오디오 스트림 찾기
       const currentAudioStream = streams.find(
         (stream) =>
-          stream.codec_type === "audio" &&
-          ( // ✅ FLAC 또는 AAC 허용 - > AAC의 경우 이 프로그램에서 사용하는 옵션을 사용할 경우 용량만 올라가는 문제가 있어서 여기서 수정.
-            (stream.codec_name === "flac" && stream.channels === 2) ||
-            (stream.codec_name === "aac" && stream.channels === 2)
-          )
+          stream.codec_type === "audio" && // ✅ FLAC 또는 AAC 허용 - > AAC의 경우 이 프로그램에서 사용하는 옵션을 사용할 경우 용량만 올라가는 문제가 있어서 여기서 수정.
+          ((stream.codec_name === "flac" &&
+            stream.channels === 2 &&
+            stream.sample_fmt === "s24") ||
+            stream.sample_fmt === "s16" ||
+            (stream.codec_name === "aac" && stream.channels === 2))
       );
 
       if (currentAudioStream) {
+        const videos = streams.filter(
+          (stream) => stream.codec_type === "video"
+        );
+
         result.audio.reEncoding = false;
-        result.audio.streamIndex = currentAudioStream.index; // 🔹 오디오 스트림 index 저장
+        result.audio.streamIndex = currentAudioStream.index - videos.length; // 🔹 오디오 스트림 index 저장
+        console.log(streams);
       }
 
       // ✅ 오디오 언어 설정 (FLAC 스트림 기준)
@@ -77,7 +83,9 @@ async function analyzeVideoCodec(
 }
 
 // ffmpeg 옵션을 생성하는 함수 s16!!
-function generateFfmpegOptions(videoCodec: AnalyzeVideoCodecResult): string[] {
+export function generateFfmpegOptions(
+  videoCodec: AnalyzeVideoCodecResult
+): string[] {
   const ffmpegOptions: string[] = [];
 
   // 비디오 옵션 처리
@@ -144,8 +152,8 @@ function generateFfmpegOptions(videoCodec: AnalyzeVideoCodecResult): string[] {
     ffmpegOptions.push("-map", "0:v:0");
   }
 
-  // 비디오 태그 설정 (예: hvc1)
-  ffmpegOptions.push("-tag:v", "hvc1");
+  // 비디오 태그 설정 ( hvc1 )
+  ffmpegOptions.push("-tag:v", "hvc1" , "-strict -2");
 
   return ffmpegOptions;
 }

@@ -196,13 +196,29 @@ export async function updateEpisodesWithKoreanDescriptions() {
 
   for (let episode of episodes) {
     if (episode.season) {
-      const episodeData = await getEpisodeDetail(
+      const episodeDetail = await getEpisodeDetail(
         episode.series_id,
         episode.season.number,
         episode.number
       );
 
-      if (episodeData?.overview) {
+      if (!episodeDetail) {
+        continue;
+      }
+
+      const episodeData = {
+        id: +episodeDetail.id,
+        number: episodeDetail.episode_number,
+        season_id: +episode.season.id,
+        series_id: +episode.series_id,
+        title: episodeDetail.name,
+        description: episodeDetail.overview,
+        kr_description: episodeDetail.overview !== "",
+        thumbnail: createTmdbImageUrl(episodeDetail.still_path),
+        running_time: episodeDetail.runtime,
+      };
+
+      if (episodeData?.description) {
         const updatedEpisode = await db.episode.update({
           data: episodeData,
           where: { id: +episodeData.id },

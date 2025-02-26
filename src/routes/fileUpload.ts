@@ -8,7 +8,6 @@ const fileUploadRouter = Router();
 
 const fileUpload = multer({
   dest: path.join("public", "temp"),
-
 });
 
 fileUploadRouter.post(
@@ -28,6 +27,14 @@ fileUploadRouter.post(
       res.status(400).json({
         ok: false,
         error: "Bad Request",
+      });
+      return;
+    }
+
+    if (!fs.existsSync(file.path)) {
+      res.status(400).json({
+        ok: false,
+        error: "File does not exist",
       });
       return;
     }
@@ -65,7 +72,7 @@ fileUploadRouter.post(
             {
               audioCodec: "flac",
               videoCodec: "hevc",
-              fileName: newFileName
+              fileName: newFileName,
             }
           );
         } else {

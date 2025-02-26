@@ -28,9 +28,13 @@ app.use(helmet());
 app.use(
   cors({
     origin: "*",
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    allowedHeaders: ["Content-Type"],
   })
 );
+
 app.use(express.json({ limit: "10mb" }));
+app.options("*", cors());
 
 app.get("/", (_, res) => {
   res.send("animation server home...");
