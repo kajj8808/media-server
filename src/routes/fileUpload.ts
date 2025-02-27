@@ -31,13 +31,7 @@ fileUploadRouter.post(
       return;
     }
 
-    if (!fs.existsSync(file.path)) {
-      res.status(400).json({
-        ok: false,
-        error: "File does not exist",
-      });
-      return;
-    }
+  
 
     if (mediaType === "video" || mediaType === "image") {
       const tempDir = path.join("public", "temp", fileName);
@@ -54,6 +48,10 @@ fileUploadRouter.post(
       const files = fs.readdirSync(tempDir);
       console.log(files.length, chunks);
       if (files.length === +chunks) {
+        const newFileName = new Date().getTime().toString();
+
+        res.json({ ok: true, fileName: newFileName });
+
         // 0 , 1 , 10 <- 이렇게 나오는 문제가 있어서..
         const sortedFiles = files
           .map(Number)
@@ -63,9 +61,7 @@ fileUploadRouter.post(
         for (const file of sortedFiles) {
           const fileData = fs.readFileSync(path.join(tempDir, file));
           fs.appendFileSync(path.join("public", mediaType, fileName), fileData);
-          console.log(new Date().getTime());
         }
-        const newFileName = new Date().getTime().toString();
         if (mediaType === "video") {
           await convertToStreamableVideo(
             path.join("public", "video", fileName),
@@ -83,7 +79,6 @@ fileUploadRouter.post(
         fs.rmSync(path.join("public", "temp", fileName), {
           recursive: true,
         });
-        res.json({ ok: true, fileName: newFileName });
       } else {
         res.json({ ok: true, len: files.length, chunks: chunks });
       }

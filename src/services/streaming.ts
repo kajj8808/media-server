@@ -247,7 +247,7 @@ export async function convertToStreamableVideo(
   console.log(videoPath, option);
   const videoCodec = await analyzeVideoCodec(videoPath);
   const ffmpegOptions = generateFfmpegOptions(videoCodec);
-  const videoId = await processVideo(videoPath, ffmpegOptions);
+  const videoId = await processVideo(videoPath, ffmpegOptions , option?.fileName);
   return videoId;
 }
 
