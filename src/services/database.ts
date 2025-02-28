@@ -251,24 +251,20 @@ export async function addEpisodes(seasonId: number, nyaaQuery: string) {
     const nyaaMagnets = await getNyaaMagnets(nyaaQuery);
     const magnets = await checkMagnetsExist(nyaaMagnets);
 
-    const videoInfos = await Promise.all(
-      magnets.map(async (magnetUrl) => {
-        return await downloadVideoFileFormTorrent(magnetUrl);
-      })
-    );
+    -magnets.forEach(async (magnetUrl) => {
+      downloadVideoFileFormTorrent(magnetUrl).then((videoInfo) =>
+        videoInfo.forEach(async (info) => {
+          await upsertEpisode({
+            episodeNumber: info.episodeNumber,
+            magnetUrl: info.magnetUrl,
+            seasonId: seasonId,
+            videoId: info.videoId,
+          });
+          console.log(`${info.videoId} 비디오가 성공적으로 처리 되었습니다.`);
+        })
+      );
+    });
 
-    for (let videoInfo of videoInfos) {
-      for (let info of videoInfo) {
-        await upsertEpisode({
-          episodeNumber: info.episodeNumber,
-          magnetUrl: info.magnetUrl,
-          seasonId: seasonId,
-          videoId: info.videoId,
-        });
-      }
-    }
-
-    console.log("에피소드가 성공적으로 추가되었습니다.");
   } catch (error) {
     console.error(error);
   }
