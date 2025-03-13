@@ -59,3 +59,12 @@ export async function readSubtitleFileData(filePath: string) {
 
   return decodeData;
 }
+
+import crypto from "crypto";
+export function convertPlaintextToCipherText(plaintext : string) {
+  const cipherText = crypto
+    .createHash("md5")
+    .update(plaintext )
+    .digest("base64");
+  return cipherText
+}

@@ -1,9 +1,9 @@
 import { PrismaClient } from "@prisma/client";
 import { createTmdbImageUrl, getEpisodeDetail, getSeries } from "./tmdb";
 import type { Season, TMDBSeries } from "types/tmdb";
-import crypto from "crypto";
 import { getNyaaMagnets } from "./web-scraper";
 import { downloadVideoFileFormTorrent } from "./torrent";
+import { convertPlaintextToCipherText } from "utils/lib";
 
 const db = new PrismaClient();
 
@@ -94,13 +94,12 @@ export async function upsertEpisode({
   videoId,
 }: UpsertEpisodeProps) {
   try {
-    const cipherMagnet = crypto
-      .createHash("md5")
-      .update(magnetUrl)
-      .digest("base64");
+    const cipherMagnet = convertPlaintextToCipherText(magnetUrl);
 
-    const newMagnet = await db.magnet.create({
-      data: { cipher_magnet: cipherMagnet },
+    const newMagnet = await db.magnet.upsert({
+      create: { cipher_magnet: cipherMagnet },
+      update: { update_at: new Date() },
+      where: { cipher_magnet: cipherMagnet },
     });
 
     const season = await db.season.findUnique({
@@ -109,6 +108,7 @@ export async function upsertEpisode({
         id: true,
         number: true,
         series: { select: { id: true } },
+        excluded_episode_count: true,
       },
     });
     if (!season) return;
@@ -116,7 +116,7 @@ export async function upsertEpisode({
     const episodeDetail = await getEpisodeDetail(
       season.series.id,
       season.number,
-      episodeNumber
+      season.excluded_episode_count ? season.excluded_episode_count + episodeNumber : episodeNumber
     );
 
     if (!episodeDetail) return;
@@ -148,7 +148,7 @@ export async function upsertEpisode({
 
 export async function checkMagnetsExist(magnets: string[]) {
   const magnetInfos = magnets.map((magnet) => ({
-    cipherMagnet: crypto.createHash("md5").update(magnet).digest("base64"),
+    cipherMagnet: convertPlaintextToCipherText(magnet),
     magnet,
   }));
 
@@ -167,21 +167,24 @@ export async function checkMagnetsExist(magnets: string[]) {
 
 interface UpdateData {
   seasonId: number;
-  nyaa_query: string;
+  nyaa_query?: string;
+  magnet_url?: string;
   auto_upload: boolean;
   is_4k: boolean;
   is_db: boolean;
 }
 
 export async function updateSeason(updateData: UpdateData) {
-  await db.season.update({
+  const newData = {
+    auto_upload: true,
+    is_4k: updateData.is_4k,
+    is_db: updateData.is_db,
+    nyaa_query: updateData.nyaa_query,
+  };
+
+  const updatedData = await db.season.update({
     where: { id: +updateData.seasonId },
-    data: {
-      nyaa_query: updateData.nyaa_query,
-      auto_upload: true,
-      is_4k: updateData.is_4k,
-      is_db: updateData.is_db,
-    },
+    data: newData,
   });
 }
 export async function updateEpisodesWithKoreanDescriptions() {
@@ -242,16 +245,43 @@ export async function updateSeasonsWithEpisodes() {
   });
 
   for (let season of seasons) {
-    addEpisodes(season.id, season.nyaa_query!);
+    addEpisodes({
+      seasonId: season.id,
+      nyaaQuery: season.nyaa_query,
+    });
   }
 }
 
-export async function addEpisodes(seasonId: number, nyaaQuery: string) {
+interface AddEpisodesProps {
+  seasonId: number;
+  nyaaQuery?: string | null;
+  magnetUrl?: string | null;
+}
+export async function addEpisodes({
+  magnetUrl,
+  nyaaQuery,
+  seasonId,
+}: AddEpisodesProps) {
   try {
-    const nyaaMagnets = await getNyaaMagnets(nyaaQuery);
-    const magnets = await checkMagnetsExist(nyaaMagnets);
+    if (nyaaQuery) {
+      const nyaaMagnets = await getNyaaMagnets(nyaaQuery);
+      const magnets = await checkMagnetsExist(nyaaMagnets);
 
-    -magnets.forEach(async (magnetUrl) => {
+      magnets.forEach(async (magnetUrl) => {
+        downloadVideoFileFormTorrent(magnetUrl).then((videoInfo) =>
+          videoInfo.forEach(async (info) => {
+            await upsertEpisode({
+              episodeNumber: info.episodeNumber,
+              magnetUrl: info.magnetUrl,
+              seasonId: seasonId,
+              videoId: info.videoId,
+            });
+            console.log(`${info.videoId} 비디오가 성공적으로 처리 되었습니다.`);
+          })
+        );
+      });
+    }
+    if (magnetUrl) {
       downloadVideoFileFormTorrent(magnetUrl).then((videoInfo) =>
         videoInfo.forEach(async (info) => {
           await upsertEpisode({
@@ -263,8 +293,7 @@ export async function addEpisodes(seasonId: number, nyaaQuery: string) {
           console.log(`${info.videoId} 비디오가 성공적으로 처리 되었습니다.`);
         })
       );
-    });
-
+    }
   } catch (error) {
     console.error(error);
   }

@@ -1,5 +1,6 @@
 import db, { addEpisodes, updateSeason } from "@services/database";
 import { Router } from "express";
+import { convertPlaintextToCipherText } from "utils/lib";
 
 const seasonRouter = Router();
 
@@ -65,8 +66,27 @@ seasonRouter.post("/add_nyaa", async (req, res) => {
     nyaa_query: nyaaQuery,
     seasonId,
   });
-  addEpisodes(seasonId, nyaaQuery);
+  addEpisodes({ seasonId, nyaaQuery });
 
+  res.status(200).json({ message: "에피소드 추가 작업이 시작되었습니다." });
+});
+
+seasonRouter.post("/add_magnet", async (req, res) => {
+  const { seasonId, magnetUrl, is_4k, is_db } = req.body;
+
+  if (!seasonId || !magnetUrl) {
+    res.status(400).send({ error: "seasonId와 magnetUrl는 필수입니다." });
+    return;
+  }
+  await updateSeason({
+    auto_upload: true,
+    is_4k,
+    is_db,
+    seasonId,
+  });
+
+  addEpisodes({ seasonId, magnetUrl });
+  
   res.status(200).json({ message: "에피소드 추가 작업이 시작되었습니다." });
 });
 

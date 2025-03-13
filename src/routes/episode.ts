@@ -5,11 +5,14 @@ const episodeRouter = Router();
 
 episodeRouter.get("/new", async (_, res) => {
   const episodes = await db.episode.findMany({
-    take: 10,
+    take: 20,
     include: {
       season: true,
       series: true,
     },
+    orderBy: {
+      update_at: "desc"
+    }
   });
 
   res.json({
