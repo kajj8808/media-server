@@ -23,7 +23,6 @@ bun run index.ts
 - [x] express (helmet, cors)
 - [x] bcrypt
 - [x] zod
-- [] iconv-lite (srt 변환에 사용, 한국어 인식 문제 있음)
 - [x] puppeteer (크롤링 용도)
 - [x] discord.js (discord 채널로 업데이트 알림 전송)
 - [x] https, http
