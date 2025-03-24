@@ -94,14 +94,6 @@ export async function upsertEpisode({
   videoId,
 }: UpsertEpisodeProps) {
   try {
-    const cipherMagnet = convertPlaintextToCipherText(magnetUrl);
-
-    const newMagnet = await db.magnet.upsert({
-      create: { cipher_magnet: cipherMagnet },
-      update: { update_at: new Date() },
-      where: { cipher_magnet: cipherMagnet },
-    });
-
     const season = await db.season.findUnique({
       where: { id: +seasonId },
       select: {
@@ -116,14 +108,17 @@ export async function upsertEpisode({
     const episodeDetail = await getEpisodeDetail(
       season.series.id,
       season.number,
-      season.excluded_episode_count ? season.excluded_episode_count + episodeNumber : episodeNumber
+      season.excluded_episode_count
+        ? season.excluded_episode_count + episodeNumber
+        : episodeNumber
     );
 
     if (!episodeDetail) return;
 
+    const cipherMagnet = convertPlaintextToCipherText(magnetUrl);
+
     const episodeData = {
       id: +episodeDetail.id,
-      magnet_id: newMagnet.id,
       number: episodeDetail.episode_number,
       season_id: +season.id,
       series_id: +season.series.id,
@@ -135,11 +130,36 @@ export async function upsertEpisode({
       running_time: episodeDetail.runtime,
     };
 
-    const updatedEpisode = await db.episode.upsert({
-      create: episodeData,
-      update: episodeData,
-      where: { id: +episodeDetail.id },
-    });
+    let updatedEpisode;
+    try {
+      const newMagnet = await db.magnet.create({
+        data: {
+          cipher_magnet: cipherMagnet,
+        },
+      });
+
+      if (newMagnet && newMagnet.id) {
+        updatedEpisode = await db.episode.upsert({
+          create: {
+            ...episodeData,
+            magnet_id: newMagnet.id,
+          },
+          update: {
+            ...episodeData,
+            magnet_id: newMagnet.id,
+          },
+          where: { id: +episodeDetail.id },
+        });
+      }
+    } catch (error) {
+      // pass
+      updatedEpisode = await db.episode.upsert({
+        create: episodeData,
+        update: episodeData,
+        where: { id: +episodeDetail.id },
+      });
+    }
+
     return updatedEpisode;
   } catch (error) {
     console.error(`upsertEpisode error: ${error}`);

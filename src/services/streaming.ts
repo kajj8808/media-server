@@ -153,7 +153,7 @@ export function generateFfmpegOptions(
   }
 
   // 비디오 태그 설정 ( hvc1 )
-  ffmpegOptions.push("-tag:v", "hvc1" , "-strict -2");
+  ffmpegOptions.push("-tag:v", "hvc1", "-strict -2");
 
   return ffmpegOptions;
 }
@@ -247,7 +247,11 @@ export async function convertToStreamableVideo(
   console.log(videoPath, option);
   const videoCodec = await analyzeVideoCodec(videoPath);
   const ffmpegOptions = generateFfmpegOptions(videoCodec);
-  const videoId = await processVideo(videoPath, ffmpegOptions , option?.fileName);
+  const videoId = await processVideo(
+    videoPath,
+    ffmpegOptions,
+    option?.fileName
+  );
   return videoId;
 }
 
@@ -294,6 +298,7 @@ export async function addAssSubtitleToVideo({
       .run();
   });
 }
+
 /* 
 TEST
 const videoPath = path.join(DIR_NAME, "../../", "public", "temp", "13.mkv");
