@@ -6,7 +6,7 @@ const seriesRouter = Router();
 
 seriesRouter.post("/insert", async (req, res) => {
   const { seriesId } = req.body;
-  console.log(req.body);
+
   const series = await getSeries(seriesId);
   if (!series) {
     res.status(403).json({

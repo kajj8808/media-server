@@ -61,10 +61,22 @@ export async function readSubtitleFileData(filePath: string) {
 }
 
 import crypto from "crypto";
-export function convertPlaintextToCipherText(plaintext : string) {
+import type { SeriesStatus } from "@prisma/client";
+export function convertPlaintextToCipherText(plaintext: string) {
   const cipherText = crypto
     .createHash("md5")
-    .update(plaintext )
+    .update(plaintext)
     .digest("base64");
-  return cipherText
+  return cipherText;
+}
+
+export function convertTmdbStatus(tmdbStatus: string): SeriesStatus {
+  const dic: { [key: string]: SeriesStatus } = {
+    Ended: "COMPLETED",
+    "Returning Series": "ONGOING",
+    "In Production": "UPCOMING",
+  };
+
+  // TMDB 상태를 변환된 상태로 반환, 변환되지 않은 상태는 "UPCOMING"으로 처리
+  return dic[tmdbStatus] || "UPCOMING";
 }

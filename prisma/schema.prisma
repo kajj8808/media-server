@@ -21,33 +21,45 @@ enum WatcWatchStatus {
   DROPPED // 보다 만 경우 
 }
 
-model User {
-  id       Int     @id @default(autoincrement())
-  email    String
-  password String?
+model UserWatchProgress {
+  id               Int @id @default(autoincrement())
+  user_id          Int
+  video_content_id Int
 
-  /**
-   * series_interactions
-   */
+  // 시청 상태
+  status WatcWatchStatus @default(WATCHING)
+
+  series_id       Int?
+  last_episode_id Int?
+  movie_id        Int?
+
+  // 재생 상태
+  current_time   Int  @default(0) // 현재 재생 시간 (초)
+  total_duration Int? // 전체 영상 길이 (초)
+
+  last_watched_at DateTime?
+
+  user          User         @relation(fields: [user_id], references: [id])
+  video_content VideoContent @relation(fields: [video_content_id], references: [id])
+  series        Series?      @relation(fields: [series_id], references: [id])
+  last_episode  Episode?     @relation(fields: [last_episode_id], references: [id]) // 시리즈에서 마지막으로 본 episdoe
+  movie         Movie?       @relation(fields: [movie_id], references: [id])
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt()
+
+  @@unique([user_id, video_content_id])
+}
+
+model User {
+  id    Int    @id @default(autoincrement())
+  email String
+
+  watch_progresses UserWatchProgress[]
 
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt()
 }
-
-/**
- * model SeriesInteraction {
- * id                Int                 @id @default(autoincrement())
- * user_id           Int
- * user              User                @relation(fields: [user_id], references: [id])
- * content_id        Int
- * content           Content             @relation(fields: [content_id], references: [id])
- * feeling           UserContentFeeling? // 좋아요, 싫어요, 아주 좋아요
- * status            UserContentStatus   // 시청 상태
- * want_to_watch     Boolean             @default(false) // 보고 싶은 목록
- * created_at         DateTime            @default(now())
- * updated_at         DateTime            @updatedAt()
- * }
- */
 
 enum SeriesOriginal {
   GAME_ORIGINAL
@@ -77,6 +89,8 @@ model Series {
   season  Season[]
   episode Episode[]
 
+  user_watch_progress UserWatchProgress[]
+
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt()
 }
@@ -96,6 +110,8 @@ model Season {
   overview      String?
   poster_path   String?
   air_date      DateTime?
+
+  nyaa_query String? // nyaa.si 사이트의 query (크롤링)
 
   episodes Episode[]
 
@@ -117,9 +133,14 @@ model Episode {
   still_path     String?
   runtime        Int?
 
+  // TMDB에서 한국어로 안되어 있는 경우가 있어 기본을 false로 하고 업데이트 하는 방식으로...
+  is_korean_translated Boolean @default(false)
+
   season        Season?      @relation(fields: [season_id], references: [id])
   series        Series?      @relation(fields: [series_id], references: [id])
   video_content VideoContent @relation(fields: [video_content_id], references: [id])
+
+  user_watch_progress UserWatchProgress[]
 
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt()
@@ -138,6 +159,8 @@ model Movie {
   release_date  DateTime?
 
   video_content VideoContent @relation(fields: [video_content_id], references: [id])
+
+  user_watch_progress UserWatchProgress[]
 
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt()
@@ -160,10 +183,18 @@ model VideoContent {
   subtitle_id String
   type        VideoContentType
 
+  // 재생 에 관련된 정보
+  opening_start Int? // 오프닝 시작 시간 (초)
+  opening_end   Int? // 오프닝 종료 시간 (초)
+  ending_start  Int? // 엔딩 시작 시간 (초)
+  ending_end    Int? // 엔딩 종료 시간 (초)
+
   // Episode, Movie, magnet...
   episode Episode?
   movie   Movie?
   magnet  Magnet?
+
+  user_watch_progress UserWatchProgress[]
 
   // 날짜 정보.
   created_at DateTime @default(now())

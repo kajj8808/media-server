@@ -3,7 +3,7 @@ import { createTmdbImageUrl, getEpisodeDetail, getSeries } from "./tmdb";
 import type { Season, TMDBSeries } from "types/tmdb";
 import { getNyaaMagnets } from "./web-scraper";
 import { downloadVideoFileFormTorrent } from "./torrent";
-import { convertPlaintextToCipherText } from "utils/lib";
+import { convertPlaintextToCipherText, convertTmdbStatus } from "utils/lib";
 
 const db = new PrismaClient();
 
@@ -31,27 +31,22 @@ export async function upsertSeries(
   genres: Genre[]
 ) {
   const seriesData = {
+    id: seriesId,
     title: series.name,
-    cover_image: createTmdbImageUrl(series.backdrop_path),
     overview: series.overview,
+    backdrop_path: series.backdrop_path,
+    poster_path: series.poster_path,
+    status: convertTmdbStatus(series.status),
     genres: {
       connect: genres,
     },
-    poster: createTmdbImageUrl(series.poster_path),
-    homepage: series.homepage,
-    next_episode_to_air: series.next_episode_to_air
-      ? new Date(series.next_episode_to_air.air_date)
-      : null,
   };
 
   return await db.series.upsert({
-    create: {
-      ...seriesData,
-      id: +seriesId,
-    },
+    create: seriesData,
     update: seriesData,
     where: {
-      id: +seriesId,
+      id: seriesId,
     },
   });
 }
@@ -60,15 +55,16 @@ export async function upsertSeasons(seriesId: number, seasons: Season[]) {
   return await Promise.all(
     seasons.map((season) => {
       const seasonData = {
+        id: +season.id,
+        series_id: seriesId,
+        season_number: season.season_number,
         name: season.name,
-        number: season.season_number,
+        overview: season.overview,
+        poster_path: season.poster_path,
         air_date: new Date(season.air_date),
-        series_id: +seriesId,
-        poster: createTmdbImageUrl(season.poster_path),
       };
       return db.season.upsert({
         create: {
-          id: +season.id,
           ...seasonData,
         },
         update: {
