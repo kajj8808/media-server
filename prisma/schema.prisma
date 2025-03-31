@@ -172,12 +172,14 @@ model Movie {
 }
 
 model Magnet {
-  id               Int @id @default(autoincrement())
-  video_content_id Int @unique
+  id Int @id @default(autoincrement())
 
   chiper_link String @unique
 
-  video_content VideoContent @relation(fields: [video_content_id], references: [id])
+  video_contents VideoContent[]
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt()
 }
 
 model VideoContent {
@@ -185,7 +187,7 @@ model VideoContent {
 
   // Video Content 재생 정보.
   watch_id    String
-  subtitle_id String
+  subtitle_id String?
   type        VideoContentType
 
   // 재생 에 관련된 정보
@@ -197,7 +199,10 @@ model VideoContent {
   // Episode, Movie, magnet...
   episode Episode?
   movie   Movie?
-  magnet  Magnet?
+
+  // magnet 
+  magnet    Magnet? @relation(fields: [magnet_id], references: [id])
+  magnet_id Int?
 
   user_watch_progress UserWatchProgress[]
 

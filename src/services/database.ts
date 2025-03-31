@@ -34,8 +34,8 @@ export async function upsertSeries(
     id: seriesId,
     title: series.name,
     overview: series.overview,
-    backdrop_path: series.backdrop_path,
-    poster_path: series.poster_path,
+    backdrop_path: createTmdbImageUrl(series.backdrop_path),
+    poster_path: createTmdbImageUrl(series.poster_path),
     status: convertTmdbStatus(series.status),
     genres: {
       connect: genres,
@@ -58,9 +58,10 @@ export async function upsertSeasons(seriesId: number, seasons: Season[]) {
         id: +season.id,
         series_id: seriesId,
         season_number: season.season_number,
+        tmdb_season_number: season.season_number,
         name: season.name,
         overview: season.overview,
-        poster_path: season.poster_path,
+        poster_path: createTmdbImageUrl(season.poster_path),
         air_date: new Date(season.air_date),
       };
       return db.season.upsert({
