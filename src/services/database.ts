@@ -81,87 +81,15 @@ interface UpsertEpisodeProps {
   seasonId: number;
   episodeNumber: number;
   magnetUrl: string;
-  videoId: string;
+  watchId: string;
 }
 
 export async function upsertEpisode({
   seasonId,
   episodeNumber,
   magnetUrl,
-  videoId,
-}: UpsertEpisodeProps) {
-  try {
-    const season = await db.season.findUnique({
-      where: { id: +seasonId },
-      select: {
-        id: true,
-        number: true,
-        series: { select: { id: true } },
-        excluded_episode_count: true,
-      },
-    });
-    if (!season) return;
-
-    const episodeDetail = await getEpisodeDetail(
-      season.series.id,
-      season.number,
-      season.excluded_episode_count
-        ? season.excluded_episode_count + episodeNumber
-        : episodeNumber
-    );
-
-    if (!episodeDetail) return;
-
-    const cipherMagnet = convertPlaintextToCipherText(magnetUrl);
-
-    const episodeData = {
-      id: +episodeDetail.id,
-      number: episodeDetail.episode_number,
-      season_id: +season.id,
-      series_id: +season.series.id,
-      title: episodeDetail.name,
-      video_id: videoId,
-      description: episodeDetail.overview,
-      kr_description: episodeDetail.overview !== "",
-      thumbnail: createTmdbImageUrl(episodeDetail.still_path),
-      running_time: episodeDetail.runtime,
-    };
-
-    let updatedEpisode;
-    try {
-      const newMagnet = await db.magnet.create({
-        data: {
-          cipher_magnet: cipherMagnet,
-        },
-      });
-
-      if (newMagnet && newMagnet.id) {
-        updatedEpisode = await db.episode.upsert({
-          create: {
-            ...episodeData,
-            magnet_id: newMagnet.id,
-          },
-          update: {
-            ...episodeData,
-            magnet_id: newMagnet.id,
-          },
-          where: { id: +episodeDetail.id },
-        });
-      }
-    } catch (error) {
-      // pass
-      updatedEpisode = await db.episode.upsert({
-        create: episodeData,
-        update: episodeData,
-        where: { id: +episodeDetail.id },
-      });
-    }
-
-    return updatedEpisode;
-  } catch (error) {
-    console.error(`upsertEpisode error: ${error}`);
-  }
-}
+  watchId,
+}: UpsertEpisodeProps) {}
 
 export async function checkMagnetsExist(magnets: string[]) {
   const magnetInfos = magnets.map((magnet) => ({
@@ -172,7 +100,7 @@ export async function checkMagnetsExist(magnets: string[]) {
   const existChecks = magnetInfos.map(async (magnetInfo) => {
     const exist = await db.magnet.findFirst({
       where: {
-        cipher_magnet: magnetInfo.cipherMagnet,
+        chiper_link: magnetInfo.cipherMagnet,
       },
     });
     return exist ? null : magnetInfo.magnet;
@@ -207,7 +135,7 @@ export async function updateSeason(updateData: UpdateData) {
 export async function updateEpisodesWithKoreanDescriptions() {
   const episodes = await db.episode.findMany({
     where: {
-      kr_description: false,
+      is_korean_translated: false,
     },
     include: {
       season: true,
@@ -218,8 +146,8 @@ export async function updateEpisodesWithKoreanDescriptions() {
     if (episode.season) {
       const episodeDetail = await getEpisodeDetail(
         episode.series_id,
-        episode.season.number,
-        episode.number
+        episode.season.season_number,
+        episode.episode_number
       );
 
       if (!episodeDetail) {
@@ -256,28 +184,106 @@ export async function updateSeasonsWithEpisodes() {
         NOT: {
           nyaa_query: null,
         },
-        auto_upload: true,
+        should_download: true,
       },
+    },
+    include: {
+      series: true,
     },
   });
 
   for (let season of seasons) {
-    addEpisodes({
+    handleEpisodeTorrents({
       seasonId: season.id,
+      seriesId: season.series?.id!,
       nyaaQuery: season.nyaa_query,
     });
   }
 }
 
+async function createNewMagnet(magnetUrl: string) {
+  return await db.magnet.create({
+    data: {
+      chiper_link: convertPlaintextToCipherText(magnetUrl),
+    },
+  });
+}
+
+async function createNewVideoContent(videoId: string, newMagnet: any) {
+  return await db.videoContent.create({
+    data: {
+      type: "EPISODE",
+      watch_id: videoId,
+      magnet: {
+        connect: newMagnet,
+      },
+    },
+  });
+}
+
+async function createNewEpisode(
+  info: any,
+  episodeDetail: any,
+  seriesId: number,
+  seasonId: number,
+  newVideoContent: any
+) {
+  return await db.episode.create({
+    data: {
+      name: episodeDetail.name,
+      overview: episodeDetail.overview,
+      episode_number: +info.episodeNumber,
+      video_content: {
+        connect: newVideoContent,
+      },
+      series: {
+        connect: {
+          id: seriesId,
+        },
+      },
+      season: {
+        connect: {
+          id: seasonId,
+        },
+      },
+      still_path: episodeDetail.still_path,
+      is_korean_translated: episodeDetail.overview !== "",
+      runtime: +episodeDetail.runtime,
+    },
+  });
+}
+
+async function fetchEpisodeDetail(
+  seriesId: number,
+  seasonId: number,
+  episodeNumber: number
+) {
+  const episodeDetail = await getEpisodeDetail(
+    seriesId,
+    seasonId,
+    episodeNumber
+  );
+  if (!episodeDetail) {
+    console.error(
+      `Episode Detail Error\nseries Id:${seriesId} season Id:${seasonId} episode number:${episodeNumber}`
+    );
+    return null;
+  }
+  return episodeDetail;
+}
+
 interface AddEpisodesProps {
   seasonId: number;
+  seriesId: number;
   nyaaQuery?: string | null;
   magnetUrl?: string | null;
 }
-export async function addEpisodes({
+
+export async function handleEpisodeTorrents({
   magnetUrl,
   nyaaQuery,
   seasonId,
+  seriesId,
 }: AddEpisodesProps) {
   try {
     if (nyaaQuery) {
@@ -287,12 +293,26 @@ export async function addEpisodes({
       magnets.forEach(async (magnetUrl) => {
         downloadVideoFileFormTorrent(magnetUrl).then((videoInfo) =>
           videoInfo.forEach(async (info) => {
-            await upsertEpisode({
-              episodeNumber: info.episodeNumber,
-              magnetUrl: info.magnetUrl,
-              seasonId: seasonId,
-              videoId: info.videoId,
-            });
+            const episodeDetail = await fetchEpisodeDetail(
+              seriesId,
+              seasonId,
+              info.episodeNumber
+            );
+            if (!episodeDetail) return;
+
+            const newMagnet = await createNewMagnet(info.magnetUrl);
+            const newVideoContent = await createNewVideoContent(
+              info.videoId,
+              newMagnet
+            );
+            await createNewEpisode(
+              info,
+              episodeDetail,
+              seriesId,
+              seasonId,
+              newVideoContent
+            );
+
             console.log(`${info.videoId} 비디오가 성공적으로 처리 되었습니다.`);
           })
         );
@@ -301,12 +321,26 @@ export async function addEpisodes({
     if (magnetUrl) {
       downloadVideoFileFormTorrent(magnetUrl).then((videoInfo) =>
         videoInfo.forEach(async (info) => {
-          await upsertEpisode({
-            episodeNumber: info.episodeNumber,
-            magnetUrl: info.magnetUrl,
-            seasonId: seasonId,
-            videoId: info.videoId,
-          });
+          const episodeDetail = await fetchEpisodeDetail(
+            seriesId,
+            seasonId,
+            info.episodeNumber
+          );
+          if (!episodeDetail) return;
+
+          const newMagnet = await createNewMagnet(info.magnetUrl);
+          const newVideoContent = await createNewVideoContent(
+            info.videoId,
+            newMagnet
+          );
+
+          await createNewEpisode(
+            info,
+            episodeDetail,
+            seriesId,
+            seasonId,
+            newVideoContent
+          );
           console.log(`${info.videoId} 비디오가 성공적으로 처리 되었습니다.`);
         })
       );
@@ -314,4 +348,16 @@ export async function addEpisodes({
   } catch (error) {
     console.error(error);
   }
+}
+
+export async function addSubtitle(videoContentId: number, subtitleId: string) {
+  const videoContet = await db.videoContent.update({
+    where: {
+      id: videoContentId,
+    },
+    data: {
+      subtitle_id: subtitleId,
+    },
+  });
+  return videoContet;
 }
