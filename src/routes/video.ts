@@ -6,6 +6,7 @@ import { DIR_NAME } from "utils/constants";
 import multer from "multer";
 import { number } from "zod";
 import { convertToStreamableVideo } from "@services/streaming";
+import db from "@services/database";
 
 const videoRouter = Router();
 
@@ -13,6 +14,51 @@ interface VideoStremInfoOption {
   start?: number;
   end?: number;
 }
+
+videoRouter.get("/video-content/no-subtitles", async (_, res) => {
+  const episodes = await db.videoContent.findMany({
+    where: { AND: [{ subtitle_id: null }] },
+    include: {
+      episode: true,
+      movie: true,
+      season: true,
+      series: true,
+    },
+    orderBy: {
+      updated_at: "desc",
+    },
+  });
+  res.json({ episodes });
+});
+
+videoRouter.get("/video-content/:id", async (req, res) => {
+  const { id } = req.params;
+  console.log("id?");
+  try {
+    const videoContent = await db.videoContent.findUnique({
+      where: { id: +id },
+      include: {
+        episode: true,
+        movie: true,
+      },
+    });
+
+    if (!videoContent) {
+      res
+        .status(404)
+        .json({ ok: false, error: "비디오 콘텐츠를 찾을 수 없습니다." });
+    }
+
+    res.json({
+      ok: true,
+      result: videoContent,
+      type: videoContent?.movie ? "MOVIE" : "EPISODE",
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ ok: false, error: "서버 오류가 발생했습니다." });
+  }
+});
 
 videoRouter.get("/:id", async (req, res) => {
   const id = req.params.id; //or use req.param('id')

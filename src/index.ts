@@ -86,3 +86,26 @@ setInterval(async () => {
 
 main();
  */
+startServer();
+
+/* (async () => {
+  const episodes = await db.episode.findMany({
+    include: {
+      season: true,
+      series: true,
+    },
+  });
+  episodes.map(async (episode) => {
+    await db.videoContent.update({
+      where: {
+        id: episode.video_content_id,
+      },
+      data: {
+        series_id: episode.series_id,
+        season_id: episode.season?.id,
+      },
+    });
+  });
+  console.log(episodes);
+})();
+ */

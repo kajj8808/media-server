@@ -1,4 +1,4 @@
-import db, { addEpisodes, updateSeason } from "@services/database";
+import db, { handleEpisodeTorrents, updateSeason } from "@services/database";
 import { Router } from "express";
 import { convertPlaintextToCipherText } from "utils/lib";
 
@@ -11,7 +11,7 @@ seasonRouter.get("/list/not-nyaa", async (req, res) => {
       select: {
         id: true,
         name: true,
-        number: true,
+        season_number: true,
         series: {
           select: {
             id: true,
@@ -19,7 +19,7 @@ seasonRouter.get("/list/not-nyaa", async (req, res) => {
           },
         },
       },
-      orderBy: { update_at: "desc" },
+      orderBy: { updated_at: "desc" },
     });
     res.json({ seasons });
   } catch (error) {
@@ -34,7 +34,7 @@ seasonRouter.get("/list", async (req, res) => {
       select: {
         id: true,
         name: true,
-        number: true,
+        season_number: true,
         series: {
           select: {
             id: true,
@@ -42,7 +42,7 @@ seasonRouter.get("/list", async (req, res) => {
           },
         },
       },
-      orderBy: { update_at: "desc" },
+      orderBy: { updated_at: "desc" },
     });
     res.json({ seasons });
   } catch (error) {
@@ -52,21 +52,24 @@ seasonRouter.get("/list", async (req, res) => {
 });
 
 seasonRouter.post("/add_nyaa", async (req, res) => {
-  const { seasonId, nyaaQuery, is_4k, is_db } = req.body;
+  const { seasonId, nyaaQuery } = req.body;
 
   if (!seasonId || !nyaaQuery) {
     res.status(400).send({ error: "seasonId와 nyaaQuery는 필수입니다." });
     return;
   }
 
-  await updateSeason({
+  const newSeason = await updateSeason({
     auto_upload: true,
-    is_4k,
-    is_db,
     nyaa_query: nyaaQuery,
     seasonId,
   });
-  addEpisodes({ seasonId, nyaaQuery });
+
+  handleEpisodeTorrents({
+    seasonId: newSeason.id,
+    seriesId: newSeason.series_id!,
+    nyaaQuery: nyaaQuery,
+  });
 
   res.status(200).json({ message: "에피소드 추가 작업이 시작되었습니다." });
 });
@@ -86,7 +89,7 @@ seasonRouter.post("/add_magnet", async (req, res) => {
   });
 
   addEpisodes({ seasonId, magnetUrl });
-  
+
   res.status(200).json({ message: "에피소드 추가 작업이 시작되었습니다." });
 });
 

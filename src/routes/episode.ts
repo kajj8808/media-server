@@ -11,37 +11,14 @@ episodeRouter.get("/new", async (_, res) => {
       series: true,
     },
     orderBy: {
-      update_at: "desc"
-    }
+      updated_at: "desc",
+    },
   });
 
   res.json({
     ok: true,
     result: episodes,
   });
-});
-
-episodeRouter.get("/no-subtitles", async (_, res) => {
-  const episodes = await db.episode.findMany({
-    where: { subtitle_id: null },
-    select: {
-      id: true,
-      title: true,
-      number: true,
-      video_id: true,
-      series: {
-        select: {
-          title: true,
-        },
-      },
-      season: {
-        select: {
-          name: true,
-        },
-      },
-    },
-  });
-  res.json({ episodes });
 });
 
 interface InsertBody {

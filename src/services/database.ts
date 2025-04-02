@@ -31,7 +31,7 @@ export async function upsertSeries(
   genres: Genre[]
 ) {
   const seriesData = {
-    id: seriesId,
+    id: +seriesId,
     title: series.name,
     overview: series.overview,
     backdrop_path: createTmdbImageUrl(series.backdrop_path),
@@ -46,7 +46,7 @@ export async function upsertSeries(
     create: seriesData,
     update: seriesData,
     where: {
-      id: seriesId,
+      id: +seriesId,
     },
   });
 }
@@ -56,9 +56,9 @@ export async function upsertSeasons(seriesId: number, seasons: Season[]) {
     seasons.map((season) => {
       const seasonData = {
         id: +season.id,
-        series_id: seriesId,
-        season_number: season.season_number,
-        tmdb_season_number: season.season_number,
+        series_id: +seriesId,
+        season_number: +season.season_number,
+        tmdb_season_number: +season.season_number,
         name: season.name,
         overview: season.overview,
         poster_path: createTmdbImageUrl(season.poster_path),
@@ -113,24 +113,25 @@ export async function checkMagnetsExist(magnets: string[]) {
 interface UpdateData {
   seasonId: number;
   nyaa_query?: string;
-  magnet_url?: string;
   auto_upload: boolean;
-  is_4k: boolean;
-  is_db: boolean;
 }
 
 export async function updateSeason(updateData: UpdateData) {
-  const newData = {
-    auto_upload: true,
-    is_4k: updateData.is_4k,
-    is_db: updateData.is_db,
-    nyaa_query: updateData.nyaa_query,
-  };
-
-  const updatedData = await db.season.update({
+  const updatedSeason = await db.season.update({
     where: { id: +updateData.seasonId },
-    data: newData,
+    data: {
+      should_download: updateData.auto_upload,
+      nyaa_query: updateData.nyaa_query,
+    },
+    include: {
+      series: {
+        select: {
+          id: true,
+        },
+      },
+    },
   });
+  return updatedSeason;
 }
 export async function updateEpisodesWithKoreanDescriptions() {
   const episodes = await db.episode.findMany({
