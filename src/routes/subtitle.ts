@@ -14,17 +14,26 @@ const subtitleRouter = Router();
 const subtitleUpload = multer({
   dest: path.join(DIR_NAME, "../../", "public", "temp"),
 });
-
 subtitleRouter.post(
   "/upload",
   subtitleUpload.single("subtitle"),
   async (req, res) => {
     const file = req.file;
-    const videoContentId = req.body.episode_id as number;
+    const videoContentId = req.body.video_content_id as string;
     const isOverlap = req.body.is_overlap as string;
-
     if (file && videoContentId) {
       const newFileName = new Date().getTime().toString();
+      const videoContet = await addSubtitle(videoContentId, newFileName);
+
+      if (isOverlap === "on") {
+        addAssSubtitleToVideo({
+          videoId: videoContet.watch_id,
+          assPath: file.path,
+        });
+        res.json({ ok: true });
+        return;
+      }
+
       const newFilePath = path.join(
         DIR_NAME,
         "../../",
@@ -32,6 +41,7 @@ subtitleRouter.post(
         "subtitle",
         newFileName
       );
+
       const fileData = await readSubtitleFileData(file.path);
       if (file.originalname.includes(".ass")) {
         fs.writeFileSync(path.join(newFilePath), convertAssToVtt(fileData));
@@ -40,14 +50,13 @@ subtitleRouter.post(
       }
       fs.rmSync(file.path);
 
-      const videoContet = await addSubtitle(videoContentId, newFileName);
-
       if (isOverlap === "on") {
         addAssSubtitleToVideo({
           videoId: videoContet.watch_id,
           assPath: newFilePath,
         });
       }
+      res.json({ ok: true });
     } else {
       res.json({ ok: false });
     }

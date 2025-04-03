@@ -351,10 +351,13 @@ export async function handleEpisodeTorrents({
   }
 }
 
-export async function addSubtitle(videoContentId: number, subtitleId: string) {
+export async function addSubtitle(
+  videoContentId: string,
+  subtitleId: string | null
+) {
   const videoContet = await db.videoContent.update({
     where: {
-      id: videoContentId,
+      id: +videoContentId,
     },
     data: {
       subtitle_id: subtitleId,

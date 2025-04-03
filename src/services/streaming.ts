@@ -217,20 +217,21 @@ export async function processVideo(
 
       console.log("끝 (프로세스 시작됨)");
     });
-    fs.renameSync(tempPath, outputPath);
   } catch (error) {
     console.error("Error in processVideo:", error);
   } finally {
-    // 임시 파일 삭제
-    if (fs.existsSync(tempPath)) {
-      fs.rmSync(tempPath);
-    }
     // 원본 비디오 파일 삭제
     if (fs.existsSync(videoPath)) {
       fs.rmSync(videoPath);
       console.log(`Original video file deleted: ${videoPath}`);
     }
 
+    fs.renameSync(tempPath, outputPath);
+
+    // 임시 파일 삭제
+    if (fs.existsSync(tempPath)) {
+      fs.rmSync(tempPath);
+    }
     return videoId;
   }
 }
@@ -264,39 +265,31 @@ export async function addAssSubtitleToVideo({
   assPath,
 }: AddAssSubtitleToVideoProps) {
   const videoPath = path.join("public", "video", videoId);
-  const tempPath = path.join("public", "temp", videoId);
-  // 기본 코덱으로 hevc사용.
-  return new Promise((resolve, reject) => {
-    ffmpeg(videoPath)
-      .inputOptions([`-i ${assPath}`])
-      .videoFilters([{ filter: "ass", options: assPath }])
-      .output(tempPath)
-      .outputOptions([
-        "-c:v hevc",
-        "-c:a copy",
-        "-strict -2",
-        "-tag:v hvc1",
-        "-crf 23",
-        "-threads 0",
-      ])
-      .on("end", async () => {
-        fs.rmSync(videoPath);
-        fs.renameSync(tempPath, videoPath);
-        console.log("자막 추가 완료");
-        resolve(null);
-      })
-      .on("progress", (progress) => {
-        console.log(progress);
-      })
-      .on("error", (error) => {
-        console.error(error);
-        reject(error);
-      })
-      .on("stderr", (stderrLine) => {
-        console.log("FFmpeg stderr:", stderrLine);
-      })
-      .run();
-  });
+  const tempPath = path.join("public", "temp", `${videoId}.mp4`);
+  // 임시 디렉토리 존재 확인 및 생성
+  const tempDir = path.join("public", "temp");
+  if (!fs.existsSync(tempDir)) {
+    fs.mkdirSync(tempDir, { recursive: true });
+  }
+  const ffmpegOption = [
+    "-vf",
+    `"ass=${assPath}"`,
+    "-c:v",
+    "hevc",
+    "-crf",
+    "23",
+    "-preset",
+    "fast",
+    "-tag:v",
+    "hvc1",
+    "-c:a",
+    "copy",
+    "-strict",
+    "-2",
+    "-threads",
+    "0",
+  ];
+  return await processVideo(videoPath, ffmpegOption, videoId);
 }
 
 /* 

@@ -31,8 +31,6 @@ fileUploadRouter.post(
       return;
     }
 
-  
-
     if (mediaType === "video" || mediaType === "image") {
       const tempDir = path.join("public", "temp", fileName);
       const tempPath = path.join(tempDir, fileIndex);
