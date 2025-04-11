@@ -192,7 +192,6 @@ export async function updateSeasonsWithEpisodes() {
       series: true,
     },
   });
-
   for (let season of seasons) {
     handleEpisodeTorrents({
       seasonId: season.id,

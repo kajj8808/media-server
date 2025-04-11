@@ -16,18 +16,21 @@ interface InsertBody {
 movieRouter.post("/insert", async (req, res) => {
   const data = req.body as InsertBody;
 
-  await db.movie.create({
+  /* const videoConent = await db.videoContent.create({
     data: {
-      title: data.title,
-      description: data.description,
-      poster: data.poster,
-      thumbnail: data.thumbnail,
-      running_time: +data.runningTime,
-      video_id: data.videoId,
-      series_id: data.seriesId ? +data.seriesId : null,
-      kr_description: true,
+      type: "MOVIE",
+      watch_id: data.videoId,
     },
-  });
+  }); */
+
+  console.log(data);
+
+  /*   await db.movie.create({
+    data: {
+      title: DATA
+      video_content_id: videoConent.id,
+    },
+  }); */
 
   res.status(200).json({
     ok: true,

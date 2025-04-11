@@ -75,7 +75,7 @@ async function updateEpisode() {
   updateEpisodesWithKoreanDescriptions();
 }
 
-/* async function main() {
+async function main() {
   await startServer();
   updateEpisode();
 }
@@ -85,8 +85,6 @@ setInterval(async () => {
 }, 24 * 60 * 60 * 1000); // 24시간에 한번 다시 실행.
 
 main();
- */
-startServer();
 
 /* (async () => {
   const episodes = await db.episode.findMany({
