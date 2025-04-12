@@ -195,6 +195,7 @@ export async function updateSeasonsWithEpisodes() {
   for (let season of seasons) {
     handleEpisodeTorrents({
       seasonId: season.id,
+      seasonNumber: season.season_number,
       seriesId: season.series?.id!,
       nyaaQuery: season.nyaa_query,
     });
@@ -255,17 +256,17 @@ async function createNewEpisode(
 
 async function fetchEpisodeDetail(
   seriesId: number,
-  seasonId: number,
+  seasonNumber: number,
   episodeNumber: number
 ) {
   const episodeDetail = await getEpisodeDetail(
     seriesId,
-    seasonId,
+    seasonNumber,
     episodeNumber
   );
   if (!episodeDetail) {
     console.error(
-      `Episode Detail Error\nseries Id:${seriesId} season Id:${seasonId} episode number:${episodeNumber}`
+      `Episode Detail Error\nseries Id:${seriesId} season Id:${seasonNumber} episode number:${episodeNumber}`
     );
     return null;
   }
@@ -274,6 +275,7 @@ async function fetchEpisodeDetail(
 
 interface AddEpisodesProps {
   seasonId: number;
+  seasonNumber: number;
   seriesId: number;
   nyaaQuery?: string | null;
   magnetUrl?: string | null;
@@ -283,6 +285,7 @@ export async function handleEpisodeTorrents({
   magnetUrl,
   nyaaQuery,
   seasonId,
+  seasonNumber,
   seriesId,
 }: AddEpisodesProps) {
   try {
@@ -295,7 +298,7 @@ export async function handleEpisodeTorrents({
           videoInfo.forEach(async (info) => {
             const episodeDetail = await fetchEpisodeDetail(
               seriesId,
-              seasonId,
+              seasonNumber,
               info.episodeNumber
             );
             if (!episodeDetail) return;
