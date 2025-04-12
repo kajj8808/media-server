@@ -68,6 +68,7 @@ seasonRouter.post("/add_nyaa", async (req, res) => {
   handleEpisodeTorrents({
     seasonId: newSeason.id,
     seriesId: newSeason.series_id!,
+    seasonNumber: newSeason.season_number,
     nyaaQuery: nyaaQuery,
   });
 
