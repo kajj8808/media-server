@@ -247,7 +247,7 @@ async function createNewEpisode(
           id: seasonId,
         },
       },
-      still_path: episodeDetail.still_path,
+      still_path: createTmdbImageUrl(episodeDetail.still_path),
       is_korean_translated: episodeDetail.overview !== "",
       runtime: +episodeDetail.runtime,
     },
