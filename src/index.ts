@@ -84,7 +84,8 @@ setInterval(async () => {
   updateEpisode();
 }, 24 * 60 * 60 * 1000); // 24시간에 한번 다시 실행.
 
-main();
+// main();
+import "./services/discord";
 
 /* (async () => {
   const episodes = await db.episode.findMany({
