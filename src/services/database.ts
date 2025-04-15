@@ -135,6 +135,7 @@ export async function updateSeason(updateData: UpdateData) {
   return updatedSeason;
 }
 export async function updateEpisodesWithKoreanDescriptions() {
+  console.log("???");
   const episodes = await db.episode.findMany({
     where: {
       is_korean_translated: false,
@@ -156,20 +157,16 @@ export async function updateEpisodesWithKoreanDescriptions() {
         continue;
       }
 
-      const episodeData = {
-        number: episodeDetail.episode_number,
-        season_id: +episode.season.id,
-        series_id: +episode.series_id,
-        title: episodeDetail.name,
-        description: episodeDetail.overview,
-        kr_description: episodeDetail.overview !== "",
-        thumbnail: createTmdbImageUrl(episodeDetail.still_path),
-        running_time: episodeDetail.runtime,
-      };
-
-      if (episodeData?.description) {
+      if (episodeDetail.overview) {
         const updatedEpisode = await db.episode.update({
-          data: episodeData,
+          data: {
+            episode_number: episodeDetail.episode_number,
+            name: episodeDetail.name,
+            overview: episodeDetail.overview,
+            still_path: createTmdbImageUrl(episodeDetail.still_path),
+            runtime: episodeDetail.runtime,
+            is_korean_translated: true,
+          },
           where: { id: +episode.id },
         });
         console.log(`Episode ${updatedEpisode.id}에 한국어 설명 추가됨.`);
