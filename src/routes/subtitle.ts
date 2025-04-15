@@ -6,7 +6,7 @@ import { DIR_NAME } from "utils/constants";
 import { readSubtitleFileData } from "utils/lib";
 import { convertAssToVtt } from "utils/subtitle/assToVtt";
 import { convertSmiToVtt } from "utils/subtitle/smiToVtt";
-import db, { addSubtitle } from "@services/database";
+import { addSubtitle } from "@services/database";
 import { addAssSubtitleToVideo } from "@services/streaming";
 
 const subtitleRouter = Router();

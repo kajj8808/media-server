@@ -1,27 +1,35 @@
-import { EmbedBuilder, WebhookClient } from "discord.js";
+import { EmbedBuilder, WebhookClient, type ColorResolvable } from "discord.js";
+import { Vibrant } from "node-vibrant/node";
 
 const webhookClient = new WebhookClient({
   url: "https://discord.com/api/webhooks/869305319384293456/iCxdyMvKJl4-7kKf6Kybjd63JC1O3ENuQCnhTluWCShf2OlpAWwbSsT680LObMD6huV-",
 });
 
-/* const embed = new EmbedBuilder()
-  .setDescription(
-    `-# ott \n### [series_name season_number episode_number episode_name](https://www.youtube.com/watch?v=lTNsFt31u30)\n`
-  )
-  .setImage(
-    "https://image.tmdb.org/t/p/original/aYoKoKN0EYO9pNm0GNHqHtcZfqw.jpg"
-  )
-  .setColor("Random")
-  .setTimestamp();
+interface SnedMessageAnimationProps {
+  seriesName: string;
+  seasonNumber: number;
+  episodeNumber: number;
+  episodeName: string;
+  imageUrl: string;
+}
 
-webhookClient.send({
-  embeds: [embed],
-});
- */
+export async function sendAnimationMessage(props: SnedMessageAnimationProps) {
+  const { seriesName, seasonNumber, episodeNumber, episodeName, imageUrl } =
+    props;
 
-import { Vibrant } from "node-vibrant/node";
+  const result = await Vibrant.from(imageUrl).getPalette();
 
-const imageUrl =
-  "https://image.tmdb.org/t/p/original/aYoKoKN0EYO9pNm0GNHqHtcZfqw.jpg";
+  const embed = new EmbedBuilder()
+    .setDescription(
+      `-# ${seriesName}  \n### [${seasonNumber} ${episodeNumber} ${episodeName}](https://www.youtube.com/watch?v=lTNsFt31u30)\n`
+    )
+    .setImage(imageUrl)
+    .setColor((result.Vibrant?.hex as ColorResolvable) ?? "Blue")
+    .setTimestamp();
 
-(async () => {})();
+  webhookClient.send({
+    embeds: [embed],
+  });
+}
+{
+}

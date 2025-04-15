@@ -9,12 +9,9 @@ import fs from "fs";
 import "@services/torrent";
 import "@services/streaming";
 import "@services/tmdb";
-import db, {
+import {
   updateEpisodesWithKoreanDescriptions,
   updateSeasonsWithEpisodes,
-  upsertGenres,
-  upsertSeasons,
-  upsertSeries,
 } from "@services/database";
 import videoRouter from "@routes/video";
 import seasonRouter from "@routes/season";
@@ -84,27 +81,4 @@ setInterval(async () => {
   updateEpisode();
 }, 24 * 60 * 60 * 1000); // 24시간에 한번 다시 실행.
 
-// main();
-import "./services/discord";
-
-/* (async () => {
-  const episodes = await db.episode.findMany({
-    include: {
-      season: true,
-      series: true,
-    },
-  });
-  episodes.map(async (episode) => {
-    await db.videoContent.update({
-      where: {
-        id: episode.video_content_id,
-      },
-      data: {
-        series_id: episode.series_id,
-        season_id: episode.season?.id,
-      },
-    });
-  });
-  console.log(episodes);
-})();
- */
+main();

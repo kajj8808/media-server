@@ -4,6 +4,7 @@ import type { Season, TMDBSeries } from "types/tmdb";
 import { getNyaaMagnets } from "./web-scraper";
 import { downloadVideoFileFormTorrent } from "./torrent";
 import { convertPlaintextToCipherText, convertTmdbStatus } from "utils/lib";
+import { sendAnimationMessage } from "./discord";
 
 const db = new PrismaClient();
 
@@ -251,6 +252,10 @@ async function createNewEpisode(
       is_korean_translated: episodeDetail.overview !== "",
       runtime: +episodeDetail.runtime,
     },
+    include: {
+      season: true,
+      series: true,
+    },
   });
 }
 
@@ -308,13 +313,21 @@ export async function handleEpisodeTorrents({
               info.videoId,
               newMagnet
             );
-            await createNewEpisode(
+            const newEpisode = await createNewEpisode(
               info,
               episodeDetail,
               seriesId,
               seasonId,
               newVideoContent
             );
+
+            await sendAnimationMessage({
+              episodeName: newEpisode.name!,
+              episodeNumber: newEpisode.episode_number,
+              imageUrl: newEpisode.still_path!,
+              seasonNumber: newEpisode.season?.season_number!,
+              seriesName: newEpisode.series?.title!,
+            });
 
             console.log(`${info.videoId} 비디오가 성공적으로 처리 되었습니다.`);
           })
