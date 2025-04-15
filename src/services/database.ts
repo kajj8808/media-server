@@ -157,7 +157,6 @@ export async function updateEpisodesWithKoreanDescriptions() {
       }
 
       const episodeData = {
-        id: +episodeDetail.id,
         number: episodeDetail.episode_number,
         season_id: +episode.season.id,
         series_id: +episode.series_id,
@@ -171,7 +170,7 @@ export async function updateEpisodesWithKoreanDescriptions() {
       if (episodeData?.description) {
         const updatedEpisode = await db.episode.update({
           data: episodeData,
-          where: { id: +episodeData.id },
+          where: { id: +episode.id },
         });
         console.log(`Episode ${updatedEpisode.id}에 한국어 설명 추가됨.`);
       }
