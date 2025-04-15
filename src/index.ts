@@ -73,7 +73,7 @@ async function updateEpisode() {
 }
 
 async function main() {
-  // await startServer();
+  await startServer();
   updateEpisode();
 }
 
