@@ -2,7 +2,7 @@ import { EmbedBuilder, WebhookClient, type ColorResolvable } from "discord.js";
 import { Vibrant } from "node-vibrant/node";
 
 const webhookClient = new WebhookClient({
-  url: "https://discord.com/api/webhooks/869305319384293456/iCxdyMvKJl4-7kKf6Kybjd63JC1O3ENuQCnhTluWCShf2OlpAWwbSsT680LObMD6huV-",
+  url: process.env.DISCORD_CHANNEL_URL ?? "",
 });
 
 interface SnedMessageAnimationProps {
