@@ -7,29 +7,34 @@ const webhookClient = new WebhookClient({
 
 interface SnedMessageAnimationProps {
   seriesName: string;
-  seasonNumber: number;
+  seasonName: string;
   episodeNumber: number;
   episodeName: string;
   imageUrl: string;
+  watchId: string;
 }
 
 export async function sendAnimationMessage(props: SnedMessageAnimationProps) {
-  const { seriesName, seasonNumber, episodeNumber, episodeName, imageUrl } =
-    props;
+  const {
+    seriesName,
+    seasonName,
+    episodeNumber,
+    episodeName,
+    imageUrl,
+    watchId,
+  } = props;
 
   const result = await Vibrant.from(imageUrl).getPalette();
 
   const embed = new EmbedBuilder()
     .setDescription(
-      `-# ${seriesName}  \n### [${seasonNumber} ${episodeNumber} ${episodeName}](https://www.youtube.com/watch?v=lTNsFt31u30)\n`
+      `-# ${seriesName}  \n### [${seasonName} ${episodeNumber}화 ${episodeName}](${process.env.FRONT_URL}/watch/${watchId})\n`
     )
     .setImage(imageUrl)
-    .setColor((result.Vibrant?.hex as ColorResolvable) ?? "Blue")
+    .setColor((result.DarkMuted?.hex as ColorResolvable) ?? "Blue")
     .setTimestamp();
 
   webhookClient.send({
     embeds: [embed],
   });
-}
-{
 }
