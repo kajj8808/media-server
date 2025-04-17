@@ -45,7 +45,7 @@ app.use("/api/videos", videosRouter);
 app.use("/api/season", seasonRouter);
 app.use("/api/series", seriesRouter);
 app.use("/api/subtitle", subtitleRouter);
-app.use("/api/episode", episodeRouter);
+app.use("/api/episodes", episodeRouter);
 app.use("/api/file-upload", fileUploadRouter);
 app.use("/api/movie", movieRouter);
 
