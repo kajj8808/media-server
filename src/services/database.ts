@@ -135,7 +135,6 @@ export async function updateSeason(updateData: UpdateData) {
   return updatedSeason;
 }
 export async function updateEpisodesWithKoreanDescriptions() {
-  console.log("???");
   const episodes = await db.episode.findMany({
     where: {
       is_korean_translated: false,

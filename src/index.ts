@@ -13,15 +13,16 @@ import {
   updateEpisodesWithKoreanDescriptions,
   updateSeasonsWithEpisodes,
 } from "@services/database";
-import videoRouter from "@routes/video";
-import seasonRouter from "@routes/season";
-import seriesRouter from "@routes/series";
-import subtitleRouter from "@routes/subtitle";
-import episodeRouter from "@routes/episode";
+import videosRouter from "@routes/api/videos";
+import seasonRouter from "@routes/api/season";
+import seriesRouter from "@routes/api/series";
+import subtitleRouter from "@routes/api/subtitle";
+import episodeRouter from "@routes/api/episode";
 
-import imageRouter from "@routes/image";
-import fileUploadRouter from "@routes/fileUpload";
-import movieRouter from "@routes/movie";
+import imageRouter from "@routes/media/image";
+import videoRouter from "@routes/media/video";
+import fileUploadRouter from "@routes/api/fileUpload";
+import movieRouter from "@routes/api/movie";
 
 const app = express();
 app.use(helmet());
@@ -40,14 +41,16 @@ app.get("/", (_, res) => {
   res.send("animation server home...");
 });
 
-app.use("/video", videoRouter);
-app.use("/season", seasonRouter);
-app.use("/series", seriesRouter);
-app.use("/subtitle", subtitleRouter);
-app.use("/episode", episodeRouter);
-app.use("/image", imageRouter);
-app.use("/file-upload", fileUploadRouter);
-app.use("/movie", movieRouter);
+app.use("/api/videos", videosRouter);
+app.use("/api/season", seasonRouter);
+app.use("/api/series", seriesRouter);
+app.use("/api/subtitle", subtitleRouter);
+app.use("/api/episode", episodeRouter);
+app.use("/api/file-upload", fileUploadRouter);
+app.use("/api/movie", movieRouter);
+
+app.use("/media/image", imageRouter);
+app.use("/media/video", videoRouter);
 
 async function startServer() {
   try {
