@@ -1,4 +1,4 @@
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient, type Magnet } from "@prisma/client";
 import { createTmdbImageUrl, getEpisodeDetail, getSeries } from "./tmdb";
 import type { Season, TMDBSeries } from "types/tmdb";
 import { getNyaaMagnets } from "./web-scraper";
@@ -206,13 +206,35 @@ async function createNewMagnet(magnetUrl: string) {
   });
 }
 
-async function createNewVideoContent(videoId: string, newMagnet: any) {
+interface CreateEpisodeVideoContentProps {
+  watchId: string;
+  seriesId: number;
+  seasonId: number;
+  newMagnet: Magnet;
+}
+
+async function createEpisodeVideoContent({
+  watchId,
+  seasonId,
+  seriesId,
+  newMagnet,
+}: CreateEpisodeVideoContentProps) {
   return await db.videoContent.create({
     data: {
       type: "EPISODE",
-      watch_id: videoId,
+      watch_id: watchId,
       magnet: {
         connect: newMagnet,
+      },
+      series: {
+        connect: {
+          id: seriesId,
+        },
+      },
+      season: {
+        connect: {
+          id: seasonId,
+        },
       },
     },
   });
@@ -304,10 +326,12 @@ export async function handleEpisodeTorrents({
             if (!episodeDetail) return;
 
             const newMagnet = await createNewMagnet(info.magnetUrl);
-            const newVideoContent = await createNewVideoContent(
-              info.videoId,
-              newMagnet
-            );
+            const newVideoContent = await createEpisodeVideoContent({
+              newMagnet: newMagnet,
+              seasonId: seasonId,
+              seriesId: seriesId,
+              watchId: info.videoId,
+            });
             const newEpisode = await createNewEpisode(
               info,
               episodeDetail,
@@ -341,10 +365,12 @@ export async function handleEpisodeTorrents({
           if (!episodeDetail) return;
 
           const newMagnet = await createNewMagnet(info.magnetUrl);
-          const newVideoContent = await createNewVideoContent(
-            info.videoId,
-            newMagnet
-          );
+          const newVideoContent = await createEpisodeVideoContent({
+            newMagnet: newMagnet,
+            seasonId: seasonId,
+            seriesId: seriesId,
+            watchId: info.videoId,
+          });
 
           const newEpisode = await createNewEpisode(
             info,
