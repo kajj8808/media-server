@@ -31,6 +31,8 @@ videoRouter.get("/:id", async (req, res) => {
     const videoContent = await db.videoContent.findUnique({
       where: { id: +id },
       include: {
+        season: true,
+        series: true,
         episode: true,
         movie: true,
       },
