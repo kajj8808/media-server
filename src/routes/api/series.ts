@@ -23,7 +23,7 @@ seriesRouter.post("/insert", async (req, res) => {
   const updatedSeries = await upsertSeries(seriesId, series, updatedGenres);
   const updatedSeasons = await upsertSeasons(seriesId, series.seasons);
 
-  res.json({
+  res.status(200).json({
     ok: true,
   });
 });
@@ -37,10 +37,30 @@ seriesRouter.get("/now_playing", async (_, res) => {
     },
   });
 
-  res.json({
+  res.status(200).json({
     ok: true,
     result: series,
     tip: "최근 2주 이내에 업데이트 된 series 들을 가져옴.",
+  });
+});
+
+seriesRouter.get("/:id", async (req, res) => {
+  const { id } = req.params;
+
+  if (isNaN(+id)) {
+    res.json({
+      ok: false,
+    });
+    return undefined;
+  }
+
+  const series = await db.series.findUnique({
+    where: { id: +id },
+  });
+  res.status(200).json({
+    ok: true,
+    series,
+    tip: "series의 상세정보 를 가져오고 있음.",
   });
 });
 
