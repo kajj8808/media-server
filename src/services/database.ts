@@ -346,7 +346,7 @@ export async function handleEpisodeTorrents({
               imageUrl: newEpisode.still_path!,
               seasonName: newEpisode.season?.name!,
               seriesName: newEpisode.series?.title!,
-              watchId: newVideoContent.watch_id,
+              videoContentId: newVideoContent.id,
             });
 
             console.log(`${info.videoId} 비디오가 성공적으로 처리 되었습니다.`);
@@ -386,7 +386,7 @@ export async function handleEpisodeTorrents({
             imageUrl: newEpisode.still_path!,
             seasonName: newEpisode.season?.name!,
             seriesName: newEpisode.series?.title!,
-            watchId: newVideoContent.watch_id,
+            videoContentId: newVideoContent.id,
           });
           console.log(`${info.videoId} 비디오가 성공적으로 처리 되었습니다.`);
         })

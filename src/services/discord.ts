@@ -11,7 +11,7 @@ interface SnedMessageAnimationProps {
   episodeNumber: number;
   episodeName: string;
   imageUrl: string;
-  watchId: string;
+  videoContentId: number;
 }
 
 export async function sendAnimationMessage(props: SnedMessageAnimationProps) {
@@ -21,14 +21,14 @@ export async function sendAnimationMessage(props: SnedMessageAnimationProps) {
     episodeNumber,
     episodeName,
     imageUrl,
-    watchId,
+    videoContentId,
   } = props;
 
   const result = await Vibrant.from(imageUrl).getPalette();
 
   const embed = new EmbedBuilder()
     .setDescription(
-      `-# ${seriesName}  \n### [${seasonName} ${episodeNumber}화 ${episodeName}](${process.env.FRONT_URL}/watch/${watchId})\n`
+      `-# ${seriesName}  \n### [${seasonName} ${episodeNumber}화 ${episodeName}](${process.env.FRONT_URL}/watch/${videoContentId})\n`
     )
     .setImage(imageUrl)
     .setColor((result.DarkMuted?.hex as ColorResolvable) ?? "Blue")
