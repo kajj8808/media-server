@@ -28,7 +28,7 @@ seriesRouter.post("/insert", async (req, res) => {
   });
 });
 
-seriesRouter.get("/series/now_playing", async (_, res) => {
+seriesRouter.get("/now_playing", async (_, res) => {
   const series = await db.series.findMany({
     where: {
       updated_at: {
