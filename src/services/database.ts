@@ -340,6 +340,8 @@ export async function handleEpisodeTorrents({
               newVideoContent
             );
 
+            await updateRelatedSeriesAndSeason(newVideoContent.id);
+
             await sendAnimationMessage({
               episodeName: newEpisode.name!,
               episodeNumber: newEpisode.episode_number,
@@ -380,6 +382,8 @@ export async function handleEpisodeTorrents({
             newVideoContent
           );
 
+          await updateRelatedSeriesAndSeason(newVideoContent.id);
+
           await sendAnimationMessage({
             episodeName: newEpisode.name!,
             episodeNumber: newEpisode.episode_number,
@@ -388,6 +392,7 @@ export async function handleEpisodeTorrents({
             seriesName: newEpisode.series?.title!,
             videoContentId: newVideoContent.id,
           });
+
           console.log(`${info.videoId} 비디오가 성공적으로 처리 되었습니다.`);
         })
       );
@@ -410,4 +415,51 @@ export async function addSubtitle(
     },
   });
   return videoContet;
+}
+
+export async function updateRelatedSeriesAndSeason(videoContentId: number) {
+  console.log(
+    `video content ${videoContentId}와 관련된 season, series의 updateAt를 갱신 중입니다...`
+  );
+  const series = await db.series.findFirst({
+    where: {
+      video_content: {
+        some: {
+          id: videoContentId,
+        },
+      },
+    },
+  });
+  if (series) {
+    await db.series.update({
+      where: {
+        id: series.id,
+      },
+      data: {
+        updated_at: new Date(),
+      },
+    });
+  }
+  const season = await db.season.findFirst({
+    where: {
+      video_content: {
+        some: {
+          id: videoContentId,
+        },
+      },
+    },
+  });
+  if (season) {
+    await db.season.update({
+      where: {
+        id: season.id,
+      },
+      data: {
+        updated_at: new Date(),
+      },
+    });
+  }
+  console.log(
+    `video content ${videoContentId}와 관련된 season, series의 updateAt이 갱신 완료 되었습니다.`
+  );
 }
