@@ -56,11 +56,20 @@ seriesRouter.get("/:id", async (req, res) => {
 
   const series = await db.series.findUnique({
     where: { id: +id },
+    include: {
+      season: {
+        include: {
+          episodes: true,
+        },
+      },
+      movies: true,
+    },
   });
+
   res.status(200).json({
     ok: true,
     series,
-    tip: "series의 상세정보 를 가져오고 있음.",
+    tip: "series의 상세정보를 가져옴. 상세정보 : series, series에 연결된 season, episode, movie를 가져옴.",
   });
 });
 

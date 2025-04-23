@@ -85,9 +85,11 @@ model Series {
   original      SeriesOriginal?
   status        SeriesStatus
 
-  genres        Genres[]
-  season        Season[]
-  episode       Episode[]
+  genres   Genres[]
+  season   Season[]
+  episodes Episode[]
+  movies   Movie[]
+
   video_content VideoContent[]
 
   user_watch_progress UserWatchProgress[]
@@ -156,7 +158,8 @@ model Episode {
 model Movie {
   id Int @id @default(autoincrement())
 
-  video_content_id Int @unique
+  video_content_id Int  @unique
+  series_id        Int?
 
   title         String
   overview      String
@@ -166,6 +169,7 @@ model Movie {
   release_date  DateTime?
 
   video_content VideoContent @relation(fields: [video_content_id], references: [id])
+  series        Series?      @relation(fields: [series_id], references: [id])
 
   user_watch_progress UserWatchProgress[]
 
