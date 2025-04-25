@@ -105,6 +105,11 @@ model Genres {
   series   Series? @relation(fields: [seriesId], references: [id])
 }
 
+enum SourceType {
+  TVA // TV 애니메이션
+  BD // DB 애니메이션
+}
+
 model Season {
   id            Int       @id @default(autoincrement())
   series_id     Int?
@@ -120,6 +125,9 @@ model Season {
   // TMDB 
   tmdb_season_number Int
   episode_offset     Int? // season이 이상하게 나눠져 있을 경우 앞의 episode를 무시하고 ~~ 화부터 시작하기 위해 사용 ) 시즌3 1화 -> 시즌1 51화의 경우
+
+  // Season Type
+  source_type SourceType @default(TVA)
 
   episodes      Episode[]
   video_content VideoContent[]
