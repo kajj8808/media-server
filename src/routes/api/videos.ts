@@ -61,7 +61,9 @@ videoRouter.get("/:id", async (req, res) => {
 
     res.json({
       ok: true,
-      result: nextEpisode ? { ...videoContent, nextEpisode } : videoContent,
+      result: nextEpisode
+        ? { ...videoContent, next_episode: nextEpisode }
+        : videoContent,
       type: videoContent?.movie ? "MOVIE" : "EPISODE",
     });
   } catch (error) {
