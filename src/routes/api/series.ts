@@ -84,6 +84,8 @@ seriesRouter.get("/:id", async (req, res) => {
           episodes: true,
         },
       },
+      genres: true,
+      user_watch_progress: true,
       movies: true,
     },
   });
