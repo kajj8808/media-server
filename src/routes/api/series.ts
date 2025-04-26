@@ -44,7 +44,7 @@ seriesRouter.get("/now_playing", async (_, res) => {
   });
 });
 
-seriesRouter.get("/db", async (_, res) => {
+seriesRouter.get("/bd", async (_, res) => {
   const series = await db.series.findMany({
     where: {
       season: {
@@ -54,6 +54,9 @@ seriesRouter.get("/db", async (_, res) => {
       },
     },
     distinct: ["id"],
+    orderBy: {
+      id: "desc",
+    },
   });
 
   res.status(200).json({
