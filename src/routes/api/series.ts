@@ -44,6 +44,25 @@ seriesRouter.get("/now_playing", async (_, res) => {
   });
 });
 
+seriesRouter.get("/db", async (_, res) => {
+  const series = await db.series.findMany({
+    where: {
+      season: {
+        some: {
+          source_type: "BD",
+        },
+      },
+    },
+    distinct: ["id"],
+  });
+
+  res.status(200).json({
+    ok: true,
+    result: series,
+    tip: "DB series 들을 가져옴.",
+  });
+});
+
 seriesRouter.get("/:id", async (req, res) => {
   const { id } = req.params;
 
