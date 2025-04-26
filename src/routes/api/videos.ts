@@ -27,6 +27,11 @@ videoRouter.get("/no-subtitle", async (_, res) => {
 
 videoRouter.get("/:id", async (req, res) => {
   const { id } = req.params;
+  if (!id || isNaN(+id)) {
+    res.status(400).json({ error: "유효한 id가 필요합니다." });
+    return;
+  }
+
   try {
     const videoContent = await db.videoContent.findUnique({
       where: { id: +id },
@@ -56,7 +61,7 @@ videoRouter.get("/:id", async (req, res) => {
 
     res.json({
       ok: true,
-      result: nextEpisode ? {...videoContent , nextEpisode} :videoContent,
+      result: nextEpisode ? { ...videoContent, nextEpisode } : videoContent,
       type: videoContent?.movie ? "MOVIE" : "EPISODE",
     });
   } catch (error) {
