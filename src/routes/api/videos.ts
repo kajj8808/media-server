@@ -38,6 +38,16 @@ videoRouter.get("/:id", async (req, res) => {
       },
     });
 
+    let nextEpisode;
+    if (videoContent?.episode && videoContent.season) {
+      nextEpisode = await db.episode.findFirst({
+        where: {
+          season_id: videoContent?.season?.id,
+          episode_number: videoContent?.episode?.episode_number + 1,
+        },
+      });
+    }
+
     if (!videoContent) {
       res
         .status(404)
@@ -46,7 +56,7 @@ videoRouter.get("/:id", async (req, res) => {
 
     res.json({
       ok: true,
-      result: videoContent,
+      result: nextEpisode ? {...videoContent , nextEpisode} :videoContent,
       type: videoContent?.movie ? "MOVIE" : "EPISODE",
     });
   } catch (error) {
