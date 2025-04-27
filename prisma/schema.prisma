@@ -23,7 +23,7 @@ enum WatcWatchStatus {
 
 model User {
   id    Int    @id @default(autoincrement())
-  email String
+  email String @unique
 
   watch_progresses UserWatchProgress[]
 
