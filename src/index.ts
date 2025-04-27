@@ -23,6 +23,7 @@ import imageRouter from "@routes/media/image";
 import videoRouter from "@routes/media/video";
 import fileUploadRouter from "@routes/api/fileUpload";
 import movieRouter from "@routes/api/movie";
+import userRouter from "@routes/api/user";
 
 const app = express();
 app.use(helmet());
@@ -48,6 +49,7 @@ app.use("/api/subtitle", subtitleRouter);
 app.use("/api/episodes", episodeRouter);
 app.use("/api/file-upload", fileUploadRouter);
 app.use("/api/movie", movieRouter);
+app.use("/api/user", userRouter);
 
 app.use("/media/image", imageRouter);
 app.use("/media/video", videoRouter);
