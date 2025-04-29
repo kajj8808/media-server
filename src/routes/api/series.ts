@@ -28,6 +28,16 @@ seriesRouter.post("/insert", async (req, res) => {
   });
 });
 
+seriesRouter.get("/all", async (_, res) => {
+  const series = await db.series.findMany({});
+
+  res.status(200).json({
+    ok: true,
+    result: series,
+    tip: "모든 series 들을 가져옴.",
+  });
+});
+
 seriesRouter.get("/now_playing", async (_, res) => {
   const series = await db.series.findMany({
     where: {
