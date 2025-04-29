@@ -29,12 +29,18 @@ seriesRouter.post("/insert", async (req, res) => {
 });
 
 seriesRouter.get("/all", async (_, res) => {
-  const series = await db.series.findMany({});
+  const series = await db.series.findMany({
+    where: {
+      video_content: {
+        some: {},
+      },
+    },
+  });
 
   res.status(200).json({
     ok: true,
     result: series,
-    tip: "모든 series 들을 가져옴.",
+    tip: "모든 video content가 있는 series 들을 가져옴.",
   });
 });
 
