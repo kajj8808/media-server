@@ -8,6 +8,7 @@ import { convertAssToVtt } from "utils/subtitle/assToVtt";
 import { convertSmiToVtt } from "utils/subtitle/smiToVtt";
 import { addSubtitle } from "@services/database";
 import { addAssSubtitleToVideo } from "@services/streaming";
+import { convertSrtToVtt } from "utils/subtitle/srtToVtt";
 
 const subtitleRouter = Router();
 
@@ -45,9 +46,14 @@ subtitleRouter.post(
       const fileData = await readSubtitleFileData(file.path);
       if (file.originalname.includes(".ass")) {
         fs.writeFileSync(path.join(newFilePath), convertAssToVtt(fileData));
-      } else {
+      } else if (file.originalname.includes(".smi")) {
         fs.writeFileSync(path.join(newFilePath), convertSmiToVtt(fileData));
+      } else if (file.originalname.includes(".srt")) {
+        fs.writeFileSync(path.join(newFilePath), convertSrtToVtt(fileData));
+      } else {
+        fs.writeFileSync(path.join(newFilePath), fileData);
       }
+
       fs.rmSync(file.path);
 
       if (isOverlap === "on") {
