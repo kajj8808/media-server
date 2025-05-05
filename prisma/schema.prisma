@@ -21,11 +21,52 @@ enum WatcWatchStatus {
   DROPPED // 보다 만 경우 
 }
 
+enum UserRole {
+  USER
+  ADMIN
+}
+
+enum MembershipType {
+  BASIC
+  STANDARD
+  PREMIUM
+}
+
 model User {
-  id    Int    @id @default(autoincrement())
-  email String @unique
+  id        Int      @id @default(autoincrement())
+  email     String?  @unique
+  password  String?
+  phone     String?  @unique
+  github_id String?  @unique
+  avatar    String?
+  role      UserRole @default(USER)
+
+  membership_id Int?        @unique
+  membership    Membership? @relation(fields: [membership_id], references: [id])
 
   watch_progresses UserWatchProgress[]
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt()
+
+  token Token[]
+}
+
+model Membership {
+  id         Int            @id @default(autoincrement())
+  type       MembershipType @default(PREMIUM)
+  started_at DateTime       @default(now())
+  expires_at DateTime?
+
+  user User? @relation
+}
+
+model Token {
+  id      Int    @id @default(autoincrement())
+  token   String @unique
+  user_id Int?
+
+  user User? @relation(fields: [user_id], references: [id])
 
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt()
