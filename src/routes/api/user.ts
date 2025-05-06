@@ -10,9 +10,9 @@ interface LoginBody {
 userRouter.post("/log-in", async (req, res) => {
   const { email } = req.body as LoginBody;
 
-  const user = await db.user.findUnique({
+  const user = await db.user.findFirst({
     where: {
-      email: email,
+      AND: [{ email: email }, { membership: { expires_at: null } }],
     },
     include: {
       membership: true,
