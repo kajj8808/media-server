@@ -14,6 +14,9 @@ userRouter.post("/log-in", async (req, res) => {
     where: {
       email: email,
     },
+    include: {
+      membership: true,
+    },
   });
 
   if (user) {
