@@ -6,7 +6,13 @@ import { downloadVideoFileFormTorrent } from "./torrent";
 import { convertPlaintextToCipherText, convertTmdbStatus } from "utils/lib";
 import { sendAnimationMessage } from "./discord";
 
-const db = new PrismaClient();
+declare global {
+  var db: PrismaClient | undefined;
+}
+
+const db = global.db || new PrismaClient();
+
+if (process.env.NODE_ENV === "development") global.db = db;
 
 export default db;
 
