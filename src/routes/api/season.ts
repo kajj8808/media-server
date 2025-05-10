@@ -1,4 +1,5 @@
 import db, { handleEpisodeTorrents, updateSeason } from "@services/database";
+import { getMovieDetail } from "@services/tmdb";
 import { Router } from "express";
 import { convertPlaintextToCipherText } from "utils/lib";
 
@@ -76,21 +77,24 @@ seasonRouter.post("/add_nyaa", async (req, res) => {
 });
 
 seasonRouter.post("/add_magnet", async (req, res) => {
-  const { seasonId, magnetUrl, is_4k, is_db } = req.body;
+  const { seasonId, magnetUrl } = req.body;
 
+  // TODO: EPISODE, MOIVE 다르게 처리.
   if (!seasonId || !magnetUrl) {
     res.status(400).send({ error: "seasonId와 magnetUrl는 필수입니다." });
     return;
   }
-  await updateSeason({
-    auto_upload: true,
-    is_4k,
-    is_db,
-    seasonId,
+
+  const season = await updateSeason({
+    auto_upload: false,
+    seasonId: seasonId,
   });
-
-  addEpisodes({ seasonId, magnetUrl });
-
+  handleEpisodeTorrents({
+    magnetUrl,
+    seasonId,
+    seasonNumber: season.season_number,
+    seriesId: season.series_id!,
+  });
   res.status(200).json({ message: "에피소드 추가 작업이 시작되었습니다." });
 });
 

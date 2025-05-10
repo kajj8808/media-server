@@ -113,4 +113,13 @@ seriesRouter.get("/:id", async (req, res) => {
   });
 });
 
+seriesRouter.get("/list", async (req, res) => {
+  const series = await db.series.findMany();
+  res.status(200).json({
+    ok: true,
+    series,
+    tip: "DB에 있는 series들을 모두 가져옴.",
+  });
+});
+
 export default seriesRouter;
