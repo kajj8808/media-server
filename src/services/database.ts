@@ -199,11 +199,21 @@ export async function updateSeasonsWithEpisodes() {
 }
 
 export async function createNewMagnet(magnetUrl: string) {
-  return await db.magnet.create({
-    data: {
-      chiper_link: convertPlaintextToCipherText(magnetUrl),
-    },
-  });
+  let newMagnet;
+  try {
+    newMagnet = await db.magnet.create({
+      data: {
+        chiper_link: convertPlaintextToCipherText(magnetUrl),
+      },
+    });
+  } catch (error) {
+    newMagnet = await db.magnet.findFirst({
+      where: {
+        chiper_link: convertPlaintextToCipherText(magnetUrl),
+      },
+    });
+  }
+  return newMagnet;
 }
 
 interface CreateVideoContentProps {
@@ -328,8 +338,9 @@ export async function handleEpisodeTorrents({
             if (!episodeDetail) return;
 
             const newMagnet = await createNewMagnet(info.magnetUrl);
+
             const newVideoContent = await createVideoContent({
-              newMagnet: newMagnet,
+              newMagnet: newMagnet!,
               seasonId: seasonId,
               seriesId: seriesId,
               watchId: info.videoId,
@@ -371,7 +382,7 @@ export async function handleEpisodeTorrents({
 
           const newMagnet = await createNewMagnet(info.magnetUrl);
           const newVideoContent = await createVideoContent({
-            newMagnet: newMagnet,
+            newMagnet: newMagnet!,
             seasonId: seasonId,
             seriesId: seriesId,
             watchId: info.videoId,

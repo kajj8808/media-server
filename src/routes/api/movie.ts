@@ -53,7 +53,7 @@ movieRouter.post("/add_magnet", async (req, res) => {
 
         const newMagnet = await createNewMagnet(info.magnetUrl);
         const newVideoContent = await createVideoContent({
-          newMagnet: newMagnet,
+          newMagnet: newMagnet!,
           seriesId: seriesId,
           watchId: info.videoId,
           type: "MOVIE",
