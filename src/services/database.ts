@@ -1,6 +1,6 @@
 import { PrismaClient, type Magnet } from "@prisma/client";
 import { createTmdbImageUrl, getEpisodeDetail, getSeries } from "./tmdb";
-import type { Season, TMDBSeries } from "types/tmdb";
+import type { Season, TMDBMovieDetail, TMDBSeries } from "types/tmdb";
 import { getNyaaMagnets } from "./web-scraper";
 import { downloadVideoFileFormTorrent } from "./torrent";
 import { convertPlaintextToCipherText, convertTmdbStatus } from "utils/lib";
@@ -198,7 +198,7 @@ export async function updateSeasonsWithEpisodes() {
   }
 }
 
-async function createNewMagnet(magnetUrl: string) {
+export async function createNewMagnet(magnetUrl: string) {
   return await db.magnet.create({
     data: {
       chiper_link: convertPlaintextToCipherText(magnetUrl),
@@ -206,22 +206,24 @@ async function createNewMagnet(magnetUrl: string) {
   });
 }
 
-interface CreateEpisodeVideoContentProps {
+interface CreateVideoContentProps {
   watchId: string;
   seriesId: number;
-  seasonId: number;
+  seasonId?: number;
   newMagnet: Magnet;
+  type: "EPISODE" | "MOVIE";
 }
 
-async function createEpisodeVideoContent({
+export async function createVideoContent({
   watchId,
   seasonId,
   seriesId,
   newMagnet,
-}: CreateEpisodeVideoContentProps) {
+  type,
+}: CreateVideoContentProps) {
   return await db.videoContent.create({
     data: {
-      type: "EPISODE",
+      type: type,
       watch_id: watchId,
       magnet: {
         connect: newMagnet,
@@ -326,11 +328,12 @@ export async function handleEpisodeTorrents({
             if (!episodeDetail) return;
 
             const newMagnet = await createNewMagnet(info.magnetUrl);
-            const newVideoContent = await createEpisodeVideoContent({
+            const newVideoContent = await createVideoContent({
               newMagnet: newMagnet,
               seasonId: seasonId,
               seriesId: seriesId,
               watchId: info.videoId,
+              type: "EPISODE",
             });
             const newEpisode = await createNewEpisode(
               info,
@@ -367,11 +370,12 @@ export async function handleEpisodeTorrents({
           if (!episodeDetail) return;
 
           const newMagnet = await createNewMagnet(info.magnetUrl);
-          const newVideoContent = await createEpisodeVideoContent({
+          const newVideoContent = await createVideoContent({
             newMagnet: newMagnet,
             seasonId: seasonId,
             seriesId: seriesId,
             watchId: info.videoId,
+            type: "EPISODE",
           });
 
           const newEpisode = await createNewEpisode(
@@ -462,4 +466,37 @@ export async function updateRelatedSeriesAndSeason(videoContentId: number) {
   console.log(
     `video content ${videoContentId}와 관련된 season, series의 updateAt이 갱신 완료 되었습니다.`
   );
+}
+
+export async function createNewMovie({
+  info,
+  newVideoContent,
+  seriesId,
+}: {
+  info: TMDBMovieDetail;
+  seriesId: number;
+  newVideoContent: any;
+}) {
+  return await db.movie.create({
+    data: {
+      title: info.title,
+      overview: info.overview,
+      backdrop_path: info.backdrop_path,
+      poster_path: info.poster_path,
+      release_date: info.release_date,
+      created_at: new Date(),
+      runtime: +info.runtime,
+      video_content: {
+        connect: newVideoContent,
+      },
+      series: {
+        connect: {
+          id: seriesId,
+        },
+      },
+    },
+    include: {
+      series: true,
+    },
+  });
 }
