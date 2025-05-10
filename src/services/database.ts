@@ -199,21 +199,11 @@ export async function updateSeasonsWithEpisodes() {
 }
 
 export async function createNewMagnet(magnetUrl: string) {
-  let newMagnet;
-  try {
-    newMagnet = await db.magnet.create({
-      data: {
-        chiper_link: convertPlaintextToCipherText(magnetUrl),
-      },
-    });
-  } catch (error) {
-    newMagnet = await db.magnet.findFirst({
-      where: {
-        chiper_link: convertPlaintextToCipherText(magnetUrl),
-      },
-    });
-  }
-  return newMagnet;
+  return await db.magnet.create({
+    data: {
+      chiper_link: convertPlaintextToCipherText(magnetUrl),
+    },
+  });
 }
 
 interface CreateVideoContentProps {
@@ -328,7 +318,10 @@ export async function handleEpisodeTorrents({
       const magnets = await checkMagnetsExist(nyaaMagnets);
 
       magnets.forEach(async (magnetUrl) => {
-        downloadVideoFileFormTorrent(magnetUrl).then((videoInfo) =>
+        downloadVideoFileFormTorrent(magnetUrl).then(async (videoInfo) => {
+          const magnetUrl = videoInfo[0].magnetUrl;
+          const newMagnet = await createNewMagnet(magnetUrl);
+
           videoInfo.forEach(async (info) => {
             const episodeDetail = await fetchEpisodeDetail(
               seriesId,
@@ -337,15 +330,14 @@ export async function handleEpisodeTorrents({
             );
             if (!episodeDetail) return;
 
-            const newMagnet = await createNewMagnet(info.magnetUrl);
-
             const newVideoContent = await createVideoContent({
-              newMagnet: newMagnet!,
+              newMagnet: newMagnet,
               seasonId: seasonId,
               seriesId: seriesId,
               watchId: info.videoId,
               type: "EPISODE",
             });
+
             const newEpisode = await createNewEpisode(
               info,
               episodeDetail,
@@ -366,8 +358,8 @@ export async function handleEpisodeTorrents({
             });
 
             console.log(`${info.videoId} 비디오가 성공적으로 처리 되었습니다.`);
-          })
-        );
+          });
+        });
       });
     }
     if (magnetUrl) {
@@ -382,7 +374,7 @@ export async function handleEpisodeTorrents({
 
           const newMagnet = await createNewMagnet(info.magnetUrl);
           const newVideoContent = await createVideoContent({
-            newMagnet: newMagnet!,
+            newMagnet: newMagnet,
             seasonId: seasonId,
             seriesId: seriesId,
             watchId: info.videoId,
