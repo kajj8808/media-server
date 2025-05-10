@@ -322,7 +322,7 @@ export async function handleEpisodeTorrents({
           const magnetUrl = videoInfo[0].magnetUrl;
           const newMagnet = await createNewMagnet(magnetUrl);
 
-          videoInfo.forEach(async (info) => {
+          videoInfo.forEach(async (info, index) => {
             const episodeDetail = await fetchEpisodeDetail(
               seriesId,
               seasonNumber,
@@ -358,6 +358,11 @@ export async function handleEpisodeTorrents({
             });
 
             console.log(`${info.videoId} 비디오가 성공적으로 처리 되었습니다.`);
+            await new Promise((resolve) => {
+              setTimeout(() => {
+                resolve(true);
+              }, index * 500);
+            });
           });
         });
       });
