@@ -82,6 +82,15 @@ seriesRouter.get("/bd", async (_, res) => {
   });
 });
 
+seriesRouter.get("/list", async (req, res) => {
+  const series = await db.series.findMany();
+  res.status(200).json({
+    ok: true,
+    series,
+    tip: "DB에 있는 series들을 모두 가져옴.",
+  });
+});
+
 seriesRouter.get("/:id", async (req, res) => {
   const { id } = req.params;
 
@@ -110,15 +119,6 @@ seriesRouter.get("/:id", async (req, res) => {
     ok: true,
     series,
     tip: "series의 상세정보를 가져옴. 상세정보 : series, series에 연결된 season, episode, movie를 가져옴.",
-  });
-});
-
-seriesRouter.get("/list", async (req, res) => {
-  const series = await db.series.findMany();
-  res.status(200).json({
-    ok: true,
-    series,
-    tip: "DB에 있는 series들을 모두 가져옴.",
   });
 });
 
