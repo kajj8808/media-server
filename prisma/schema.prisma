@@ -80,21 +80,22 @@ model UserWatchProgress {
   // 시청 상태
   status WatcWatchStatus @default(WATCHING)
 
-  series_id       Int?
-  last_episode_id Int?
-  movie_id        Int?
+  series_id  Int?
+  episode_id Int?
+  movie_id   Int?
+  season_id  Int?
 
   // 재생 상태
   current_time   Int  @default(0) // 현재 재생 시간 (초)
   total_duration Int? // 전체 영상 길이 (초)
 
-  last_watched_at DateTime?
-
   user          User         @relation(fields: [user_id], references: [id])
   video_content VideoContent @relation(fields: [video_content_id], references: [id])
   series        Series?      @relation(fields: [series_id], references: [id])
-  last_episode  Episode?     @relation(fields: [last_episode_id], references: [id]) // 시리즈에서 마지막으로 본 episdoe
-  movie         Movie?       @relation(fields: [movie_id], references: [id])
+  season        Season?      @relation(fields: [season_id], references: [id])
+
+  movie   Movie?   @relation(fields: [movie_id], references: [id])
+  episode Episode? @relation(fields: [episode_id], references: [id])
 
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt()
@@ -175,8 +176,9 @@ model Season {
 
   series Series? @relation(fields: [series_id], references: [id])
 
-  created_at DateTime @default(now())
-  updated_at DateTime @updatedAt()
+  created_at        DateTime            @default(now())
+  updated_at        DateTime            @updatedAt()
+  UserWatchProgress UserWatchProgress[]
 }
 
 model Episode {

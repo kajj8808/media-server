@@ -32,4 +32,11 @@ userRouter.post("/log-in", async (req, res) => {
   }
 });
 
+userRouter.post("/watch-record", async (req, res) => {
+  const { watchId, duration, currentTime } = req.body;
+  console.log(watchId, duration, currentTime);
+
+  res.send("ok");
+});
+
 export default userRouter;
