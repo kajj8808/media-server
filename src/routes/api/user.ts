@@ -35,6 +35,14 @@ userRouter.post("/log-in", async (req, res) => {
 userRouter.post("/watch-record", async (req, res) => {
   const { watchId, duration, currentTime, userId } = req.body;
 
+  if (!duration || currentTime === 0) {
+    res.json({
+      ok: false,
+      message: "duration or current time is null or 0",
+    });
+    return;
+  }
+
   const videoContet = await db.videoContent.findFirst({
     where: {
       watch_id: watchId,
@@ -51,9 +59,9 @@ userRouter.post("/watch-record", async (req, res) => {
     });
     return;
   }
-  // 95퍼센트 이상 보았다면 completed상태로 저장.
+  // 80퍼센트 이상 보았다면 completed상태로 저장.
   const watchStatus =
-    (currentTime / duration) * 100 > 95 ? "COMPLETED" : "WATCHING";
+    (currentTime / duration) * 100 > 80 ? "COMPLETED" : "WATCHING";
   const episodeId = videoContet.episode?.id;
   const movieId = videoContet.movie?.id;
   const seasonId = videoContet.season_id;
