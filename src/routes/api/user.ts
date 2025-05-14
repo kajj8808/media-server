@@ -33,8 +33,8 @@ userRouter.post("/log-in", async (req, res) => {
 });
 
 userRouter.get("/watch-progress", async (req, res) => {
-  //const { userId } = req.body;
-  const userId = 2;
+  const { userId } = req.query;
+
   if (!userId) {
     res.json({ ok: false, message: "bad request" });
     return;
