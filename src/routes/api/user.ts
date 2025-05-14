@@ -70,7 +70,7 @@ userRouter.get("/watch-progress", authenticateToken, async (req, res) => {
   }
 
   const seriesProgress = await db.userWatchProgress.groupBy({
-    by: ["series_id", "updated_at"],
+    by: ["series_id"],
     where: {
       user_id: +user.userId,
       movie_id: null,
@@ -79,7 +79,9 @@ userRouter.get("/watch-progress", authenticateToken, async (req, res) => {
       },
     },
     orderBy: {
-      updated_at: "desc",
+      _max: {
+        updated_at: "desc",
+      },
     },
     take: 3,
   });
@@ -213,9 +215,10 @@ userRouter.get("/watch-progress", authenticateToken, async (req, res) => {
   });
 });
 
-userRouter.post("/watch-record", async (req, res) => {
+userRouter.post("/watch-record", authenticateToken, async (req, res) => {
   const { watchId, duration, currentTime } = req.body;
   const user = req.user;
+
   if (!duration || currentTime === 0 || !user) {
     res.json({
       ok: false,
