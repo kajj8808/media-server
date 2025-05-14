@@ -48,15 +48,26 @@ seriesRouter.get("/now_playing", async (_, res) => {
   const series = await db.series.findMany({
     where: {
       updated_at: {
-        gte: new Date(Date.now() - 1000 * 60 * 60 * 24 * 12), // 2주 이내.
+        gte: new Date(Date.now() - 1000 * 60 * 60 * 24 * 6), // 1주 이내.
       },
+    },
+    select: {
+      id: true,
+      title: true,
+      overview: true,
+      logo: true,
+      backdrop_path: true,
+      updated_at: true,
+    },
+    orderBy: {
+      updated_at: "desc",
     },
   });
 
   res.status(200).json({
     ok: true,
     result: series,
-    tip: "최근 2주 이내에 업데이트 된 series 들을 가져옴.",
+    tip: "최근 1주 이내에 업데이트 된 series 들을 가져옴.",
   });
 });
 
@@ -70,8 +81,16 @@ seriesRouter.get("/bd", async (_, res) => {
       },
     },
     distinct: ["id"],
+    select: {
+      id: true,
+      title: true,
+      overview: true,
+      logo: true,
+      backdrop_path: true,
+      updated_at: true,
+    },
     orderBy: {
-      id: "desc",
+      updated_at: "desc",
     },
   });
 
@@ -83,7 +102,19 @@ seriesRouter.get("/bd", async (_, res) => {
 });
 
 seriesRouter.get("/list", async (req, res) => {
-  const series = await db.series.findMany();
+  const series = await db.series.findMany({
+    select: {
+      id: true,
+      title: true,
+      overview: true,
+      logo: true,
+      backdrop_path: true,
+      updated_at: true,
+    },
+    orderBy: {
+      updated_at: "desc",
+    },
+  });
   res.status(200).json({
     ok: true,
     series,
