@@ -214,9 +214,9 @@ userRouter.get("/watch-progress", authenticateToken, async (req, res) => {
 });
 
 userRouter.post("/watch-record", async (req, res) => {
-  const { watchId, duration, currentTime, userId } = req.body;
-
-  if (!duration || currentTime === 0) {
+  const { watchId, duration, currentTime } = req.body;
+  const user = req.user;
+  if (!duration || currentTime === 0 || !user) {
     res.json({
       ok: false,
       message: "duration or current time is null or 0",
@@ -251,7 +251,7 @@ userRouter.post("/watch-record", async (req, res) => {
   await db.userWatchProgress.upsert({
     create: {
       video_content_id: videoContet.id,
-      user_id: userId,
+      user_id: user.userId,
       current_time: currentTime,
       total_duration: duration,
       status: watchStatus,
@@ -266,7 +266,7 @@ userRouter.post("/watch-record", async (req, res) => {
     },
     where: {
       user_id_video_content_id: {
-        user_id: userId,
+        user_id: user.userId,
         video_content_id: videoContet.id,
       },
     },
