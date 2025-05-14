@@ -80,10 +80,10 @@ userRouter.get("/watch-progress", authenticateToken, async (req, res) => {
     },
     orderBy: {
       _max: {
-        updated_at: "desc",
+        updated_at: "asc",
       },
     },
-    take: 3,
+    take: 5,
   });
 
   const episodes = [];
