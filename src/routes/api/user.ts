@@ -1,5 +1,7 @@
 import db from "@services/database";
+import jwt from "jsonwebtoken";
 import { Router } from "express";
+import { authenticateToken } from "middleware/auth";
 
 const userRouter = Router();
 
@@ -14,15 +16,38 @@ userRouter.post("/log-in", async (req, res) => {
     where: {
       AND: [{ email: email }, { membership: { expires_at: null } }],
     },
-    include: {
-      membership: true,
+    select: {
+      email: true,
+      avatar: true,
+      membership: {
+        select: {
+          id: true,
+          type: true,
+          started_at: true,
+          expires_at: true,
+        },
+      },
+      id: true,
     },
   });
 
   if (user) {
+    const token = jwt.sign(
+      { userId: user.id },
+      process.env.SERVER_SECRET_KEY!,
+      {
+        expiresIn: "30d",
+      }
+    );
+
     res.json({
       ok: true,
-      user: user,
+      user: {
+        email: user.email,
+        avatar: user.avatar,
+        membership: user.membership,
+        token,
+      },
     });
   } else {
     res.json({
@@ -32,10 +57,14 @@ userRouter.post("/log-in", async (req, res) => {
   }
 });
 
-userRouter.get("/watch-progress", async (req, res) => {
-  const { userId } = req.query;
+userRouter.post("/refresh-token", (req, res) => {
+  // TODO: 나중에 완성..
+});
 
-  if (!userId) {
+userRouter.get("/watch-progress", authenticateToken, async (req, res) => {
+  const user = req.user;
+
+  if (!user?.userId) {
     res.json({ ok: false, message: "bad request" });
     return;
   }
@@ -43,7 +72,7 @@ userRouter.get("/watch-progress", async (req, res) => {
   const seriesProgress = await db.userWatchProgress.groupBy({
     by: ["series_id", "updated_at"],
     where: {
-      user_id: +userId,
+      user_id: +user.userId,
       movie_id: null,
       status: {
         not: "COMPLETED",
@@ -59,7 +88,7 @@ userRouter.get("/watch-progress", async (req, res) => {
   for (const series of seriesProgress) {
     const videoContentProgress = await db.userWatchProgress.findFirst({
       where: {
-        user_id: +userId,
+        user_id: +user.userId,
         series_id: series.series_id,
       },
       orderBy: {

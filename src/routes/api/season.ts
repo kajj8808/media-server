@@ -3,7 +3,7 @@ import { Router } from "express";
 
 const seasonRouter = Router();
 
-seasonRouter.get("/list/not-nyaa", async (req, res) => {
+seasonRouter.get("/list/not-nyaa", async (_, res) => {
   try {
     const seasons = await db.season.findMany({
       where: { nyaa_query: null },

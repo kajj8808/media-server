@@ -5,6 +5,7 @@ import db, {
 } from "@services/database";
 import { getSeries } from "@services/tmdb";
 import { Router } from "express";
+import { authenticateToken } from "middleware/auth";
 
 const seriesRouter = Router();
 
@@ -122,10 +123,11 @@ seriesRouter.get("/list", async (_, res) => {
   });
 });
 
-seriesRouter.get("/:id", async (req, res) => {
+seriesRouter.get("/:id", authenticateToken, async (req, res) => {
   const { id } = req.params;
+  const user = req.user;
 
-  if (isNaN(+id)) {
+  if (isNaN(+id) || !user?.userId) {
     res.json({
       ok: false,
     });
@@ -137,11 +139,19 @@ seriesRouter.get("/:id", async (req, res) => {
     include: {
       season: {
         include: {
-          episodes: true,
+          episodes: {
+            include: {
+              user_watch_progress: {
+                where: {
+                  user_id: user.userId,
+                },
+              },
+            },
+          },
         },
       },
       genres: true,
-      user_watch_progress: true,
+
       movies: true,
     },
   });
