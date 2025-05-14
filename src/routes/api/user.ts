@@ -80,6 +80,7 @@ userRouter.get("/watch-progress", async (req, res) => {
         still_path: true,
         series_id: true,
         episode_number: true,
+        overview: true,
         season: {
           select: {
             name: true,
@@ -118,6 +119,7 @@ userRouter.get("/watch-progress", async (req, res) => {
         title: true,
         id: true,
         series_id: true,
+        overview: true,
       },
     });
 
@@ -128,23 +130,30 @@ userRouter.get("/watch-progress", async (req, res) => {
     return {
       title: `시즌 ${episode.season?.season_number}.${episode.episode_number}화${episode?.name}`,
       backdrop_path: episode.still_path,
+      overview: episode.overview,
       watched_at: episode.watched_at,
       series_id: episode.series_id,
       movie_id: null,
       type: "EPISODE",
     };
   });
-  let cleanMovies = movies.map((moive) => {
+  let cleanMovies = movies.map((movie) => {
     return {
-      title: moive.title,
-      backdrop_path: moive.backdrop_path,
-      watched_at: moive.watched_at,
-      series_id: moive.series_id,
-      movie_id: moive.id,
+      title: movie.title,
+      backdrop_path: movie.backdrop_path,
+      overview: movie.overview,
+      watched_at: movie.watched_at,
+      series_id: movie.series_id,
+      movie_id: movie.id,
       type: "MOVIE",
     };
   });
-  const result = [...cleanMovies, ...cleanEpisodes];
+
+  const result = [...cleanMovies, ...cleanEpisodes].sort((a, b) => {
+    const aTime = a.watched_at ? new Date(a.watched_at).getTime() : 0;
+    const bTime = b.watched_at ? new Date(b.watched_at).getTime() : 0;
+    return aTime - bTime;
+  });
 
   res.json({
     ok: true,
