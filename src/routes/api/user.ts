@@ -32,6 +32,127 @@ userRouter.post("/log-in", async (req, res) => {
   }
 });
 
+userRouter.get("/watch-progress", async (req, res) => {
+  //const { userId } = req.body;
+  const userId = 2;
+  if (!userId) {
+    res.json({ ok: false, message: "bad request" });
+    return;
+  }
+
+  const seriesProgress = await db.userWatchProgress.groupBy({
+    by: ["series_id", "updated_at"],
+    where: {
+      user_id: +userId,
+      movie_id: null,
+      status: {
+        not: "COMPLETED",
+      },
+    },
+    orderBy: {
+      updated_at: "desc",
+    },
+    take: 3,
+  });
+
+  const episodes = [];
+  for (const series of seriesProgress) {
+    const videoContentProgress = await db.userWatchProgress.findFirst({
+      where: {
+        user_id: +userId,
+        series_id: series.series_id,
+      },
+      orderBy: {
+        updated_at: "desc",
+      },
+      select: {
+        video_content_id: true,
+        updated_at: true,
+      },
+      take: 1,
+    });
+    const episode = await db.episode.findFirst({
+      where: {
+        video_content_id: videoContentProgress?.video_content_id,
+      },
+      select: {
+        name: true,
+        still_path: true,
+        series_id: true,
+        episode_number: true,
+        season: {
+          select: {
+            name: true,
+            season_number: true,
+          },
+        },
+      },
+    });
+    episodes.push({ ...episode, watched_at: videoContentProgress?.updated_at });
+  }
+
+  const moviesProgress = await db.userWatchProgress.findMany({
+    where: {
+      status: {
+        not: "COMPLETED",
+      },
+      movie_id: {
+        not: null,
+      },
+    },
+    take: 2,
+    select: {
+      movie_id: true,
+      updated_at: true,
+    },
+  });
+
+  const movies = [];
+  for (const movieProgress of moviesProgress) {
+    const movie = await db.movie.findUnique({
+      where: {
+        id: movieProgress.movie_id!,
+      },
+      select: {
+        backdrop_path: true,
+        title: true,
+        id: true,
+        series_id: true,
+      },
+    });
+
+    movies.push({ ...movie, watched_at: movieProgress.updated_at });
+  }
+
+  let cleanEpisodes = episodes.map((episode) => {
+    return {
+      title: `시즌 ${episode.season?.season_number}.${episode.episode_number}화${episode?.name}`,
+      backdrop_path: episode.still_path,
+      watched_at: episode.watched_at,
+      series_id: episode.series_id,
+      movie_id: null,
+      type: "EPISODE",
+    };
+  });
+  let cleanMovies = movies.map((moive) => {
+    return {
+      title: moive.title,
+      backdrop_path: moive.backdrop_path,
+      watched_at: moive.watched_at,
+      series_id: moive.series_id,
+      movie_id: moive.id,
+      type: "MOVIE",
+    };
+  });
+  const result = [...cleanMovies, ...cleanEpisodes];
+
+  res.json({
+    ok: true,
+    contents: result,
+    tip: "user watching contents",
+  });
+});
+
 userRouter.post("/watch-record", async (req, res) => {
   const { watchId, duration, currentTime, userId } = req.body;
 
@@ -59,13 +180,14 @@ userRouter.post("/watch-record", async (req, res) => {
     });
     return;
   }
-  // 80퍼센트 이상 보았다면 completed상태로 저장.
+  // 85퍼센트 이상 보았다면 completed상태로 저장.
   const watchStatus =
-    (currentTime / duration) * 100 > 80 ? "COMPLETED" : "WATCHING";
+    (currentTime / duration) * 100 > 85 ? "COMPLETED" : "WATCHING";
   const episodeId = videoContet.episode?.id;
   const movieId = videoContet.movie?.id;
   const seasonId = videoContet.season_id;
   const seriesId = videoContet.series_id;
+
   await db.userWatchProgress.upsert({
     create: {
       video_content_id: videoContet.id,
@@ -80,6 +202,7 @@ userRouter.post("/watch-record", async (req, res) => {
     },
     update: {
       current_time: currentTime,
+      status: watchStatus,
     },
     where: {
       user_id_video_content_id: {

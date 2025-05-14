@@ -1,7 +1,5 @@
 import db, { handleEpisodeTorrents, updateSeason } from "@services/database";
-import { getMovieDetail } from "@services/tmdb";
 import { Router } from "express";
-import { convertPlaintextToCipherText } from "utils/lib";
 
 const seasonRouter = Router();
 
