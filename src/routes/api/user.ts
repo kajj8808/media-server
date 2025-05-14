@@ -68,6 +68,8 @@ userRouter.get("/watch-progress", async (req, res) => {
       select: {
         video_content_id: true,
         updated_at: true,
+        total_duration: true,
+        current_time: true,
       },
       take: 1,
     });
@@ -90,7 +92,12 @@ userRouter.get("/watch-progress", async (req, res) => {
         },
       },
     });
-    episodes.push({ ...episode, watched_at: videoContentProgress?.updated_at });
+    episodes.push({
+      ...episode,
+      watched_at: videoContentProgress?.updated_at,
+      total_duration: videoContentProgress?.total_duration,
+      current_time: videoContentProgress?.current_time,
+    });
   }
 
   const moviesProgress = await db.userWatchProgress.findMany({
@@ -106,6 +113,8 @@ userRouter.get("/watch-progress", async (req, res) => {
     select: {
       movie_id: true,
       updated_at: true,
+      total_duration: true,
+      current_time: true,
     },
   });
 
@@ -125,7 +134,12 @@ userRouter.get("/watch-progress", async (req, res) => {
       },
     });
 
-    movies.push({ ...movie, watched_at: movieProgress.updated_at });
+    movies.push({
+      ...movie,
+      watched_at: movieProgress.updated_at,
+      total_duration: movieProgress.total_duration,
+      current_time: movieProgress.current_time,
+    });
   }
 
   let cleanEpisodes = episodes.map((episode) => {
@@ -137,6 +151,8 @@ userRouter.get("/watch-progress", async (req, res) => {
       watched_at: episode.watched_at,
       series_id: episode.series_id,
       movie_id: null,
+      total_duration: episode.total_duration,
+      current_time: episode.current_time,
       type: "EPISODE",
     };
   });
@@ -149,6 +165,8 @@ userRouter.get("/watch-progress", async (req, res) => {
       watched_at: movie.watched_at,
       series_id: movie.series_id,
       movie_id: movie.id,
+      total_duration: movie.total_duration,
+      current_time: movie.current_time,
       type: "MOVIE",
     };
   });
