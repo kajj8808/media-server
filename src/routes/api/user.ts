@@ -76,12 +76,12 @@ userRouter.get("/watch-progress", async (req, res) => {
         video_content_id: videoContentProgress?.video_content_id,
       },
       select: {
-        id: true,
         name: true,
         still_path: true,
         series_id: true,
         episode_number: true,
         overview: true,
+        video_content_id: true,
         season: {
           select: {
             name: true,
@@ -116,9 +116,10 @@ userRouter.get("/watch-progress", async (req, res) => {
         id: movieProgress.movie_id!,
       },
       select: {
-        backdrop_path: true,
-        title: true,
         id: true,
+        video_content_id: true,
+        title: true,
+        backdrop_path: true,
         series_id: true,
         overview: true,
       },
@@ -129,7 +130,7 @@ userRouter.get("/watch-progress", async (req, res) => {
 
   let cleanEpisodes = episodes.map((episode) => {
     return {
-      id: episode.series_id,
+      id: episode.video_content_id,
       title: `시즌 ${episode.season?.season_number}.${episode.episode_number}화${episode?.name}`,
       backdrop_path: episode.still_path,
       overview: episode.overview,
@@ -141,7 +142,7 @@ userRouter.get("/watch-progress", async (req, res) => {
   });
   let cleanMovies = movies.map((movie) => {
     return {
-      id: movie.id,
+      id: movie.video_content_id,
       title: movie.title,
       backdrop_path: movie.backdrop_path,
       overview: movie.overview,
