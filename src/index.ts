@@ -79,7 +79,7 @@ async function updateEpisode() {
 
 async function main() {
   await startServer();
-  updateEpisode();
+  // updateEpisode();
 }
 
 setInterval(async () => {

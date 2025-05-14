@@ -30,6 +30,7 @@
     "http": "^0.0.1-security",
     "https": "^1.0.0",
     "iconv-lite": "^0.6.3",
+    "jsonwebtoken": "^9.0.2",
     "multer": "^1.4.5-lts.1",
     "node-datachannel": "^0.24.0",
     "node-vibrant": "^4.0.3",

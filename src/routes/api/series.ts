@@ -101,7 +101,7 @@ seriesRouter.get("/bd", async (_, res) => {
   });
 });
 
-seriesRouter.get("/list", async (req, res) => {
+seriesRouter.get("/list", async (_, res) => {
   const series = await db.series.findMany({
     select: {
       id: true,
