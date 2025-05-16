@@ -80,10 +80,10 @@ userRouter.get("/watch-progress", authenticateToken, async (req, res) => {
     },
     orderBy: {
       _max: {
-        updated_at: "asc",
+        updated_at: "desc",
       },
     },
-    take: 5,
+    take: 4,
   });
 
   const episodes = [];
@@ -92,6 +92,9 @@ userRouter.get("/watch-progress", authenticateToken, async (req, res) => {
       where: {
         user_id: +user.userId,
         series_id: series.series_id,
+        status: {
+          not: "COMPLETED",
+        },
       },
       orderBy: {
         updated_at: "desc",
@@ -205,7 +208,7 @@ userRouter.get("/watch-progress", authenticateToken, async (req, res) => {
   const result = [...cleanMovies, ...cleanEpisodes].sort((a, b) => {
     const aTime = a.watched_at ? new Date(a.watched_at).getTime() : 0;
     const bTime = b.watched_at ? new Date(b.watched_at).getTime() : 0;
-    return aTime - bTime;
+    return bTime - aTime;
   });
 
   res.json({

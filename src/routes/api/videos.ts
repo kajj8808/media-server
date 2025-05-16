@@ -6,6 +6,7 @@ import multer from "multer";
 
 import { convertToStreamableVideo } from "@services/streaming";
 import db from "@services/database";
+import { authenticateToken } from "middleware/auth";
 
 const videoRouter = Router();
 
@@ -25,21 +26,94 @@ videoRouter.get("/no-subtitle", async (_, res) => {
   res.json({ episodes });
 });
 
-videoRouter.get("/:id", async (req, res) => {
+videoRouter.get("/:id", authenticateToken, async (req, res) => {
   const { id } = req.params;
-  if (!id || isNaN(+id)) {
-    res.status(400).json({ error: "유효한 id가 필요합니다." });
+  const user = req.user;
+  if (!id || isNaN(+id) || !user) {
+    res.status(400).json({ error: "유효한 요청이 아닙니다." });
     return;
   }
 
   try {
     const videoContent = await db.videoContent.findUnique({
       where: { id: +id },
-      include: {
-        season: true,
-        series: true,
-        episode: true,
+      select: {
+        id: true,
+        opening_start: true,
+        opening_end: true,
+        ending_start: true,
+        ending_end: true,
+        watch_id: true,
+        subtitle_id: true,
+        episode: {
+          select: {
+            episode_number: true,
+            name: true,
+          },
+        },
+        season: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+        series: {
+          select: {
+            id: true,
+            title: true,
+            status: true,
+            season: {
+              select: {
+                id: true,
+                name: true,
+                season_number: true,
+                updated_at: true,
+                episodes: {
+                  select: {
+                    id: true,
+                    name: true,
+                    overview: true,
+                    runtime: true,
+                    updated_at: true,
+                    still_path: true,
+                    user_watch_progress: {
+                      where: {
+                        user_id: user.userId,
+                      },
+                      select: {
+                        total_duration: true,
+                        current_time: true,
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+
         movie: true,
+      },
+    });
+
+    if (!videoContent) {
+      res.json({
+        ok: false,
+        message: "video content not found...",
+      });
+      return;
+    }
+
+    const userWatchProgress = await db?.userWatchProgress.findFirst({
+      where: {
+        AND: {
+          user_id: 2,
+          video_content_id: videoContent.id,
+        },
+      },
+      select: {
+        current_time: true,
+        total_duration: true,
       },
     });
 
@@ -50,20 +124,21 @@ videoRouter.get("/:id", async (req, res) => {
           season_id: videoContent?.season?.id,
           episode_number: videoContent?.episode?.episode_number + 1,
         },
+        select: {
+          id: true,
+        },
       });
-    }
-
-    if (!videoContent) {
-      res
-        .status(404)
-        .json({ ok: false, error: "비디오 콘텐츠를 찾을 수 없습니다." });
     }
 
     res.json({
       ok: true,
       result: nextEpisode
-        ? { ...videoContent, next_episode: nextEpisode }
-        : videoContent,
+        ? {
+            ...videoContent,
+            next_episode: nextEpisode,
+            user_progress: userWatchProgress,
+          }
+        : { ...videoContent, user_progress: userWatchProgress },
       type: videoContent?.movie ? "MOVIE" : "EPISODE",
     });
   } catch (error) {

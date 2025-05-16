@@ -35,6 +35,9 @@ seriesRouter.get("/all", async (_, res) => {
       video_content: {
         some: {},
       },
+      status: {
+        not: "CANCELLED",
+      },
     },
   });
 
@@ -50,6 +53,9 @@ seriesRouter.get("/now_playing", async (_, res) => {
     where: {
       updated_at: {
         gte: new Date(Date.now() - 1000 * 60 * 60 * 24 * 6), // 1주 이내.
+      },
+      status: {
+        not: "CANCELLED",
       },
     },
     select: {
@@ -79,6 +85,9 @@ seriesRouter.get("/bd", async (_, res) => {
         some: {
           source_type: "BD",
         },
+      },
+      status: {
+        not: "CANCELLED",
       },
     },
     distinct: ["id"],
