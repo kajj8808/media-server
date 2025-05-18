@@ -3,7 +3,11 @@ import { createTmdbImageUrl, getEpisodeDetail, getSeries } from "./tmdb";
 import type { Season, TMDBMovieDetail, TMDBSeries } from "types/tmdb";
 import { getNyaaMagnets } from "./web-scraper";
 import { downloadVideoFileFormTorrent } from "./torrent";
-import { convertPlaintextToCipherText, convertTmdbStatus } from "utils/lib";
+import {
+  convertPlaintextToCipherText,
+  convertTmdbStatus,
+  sleep,
+} from "utils/lib";
 import { sendAnimationMessage } from "./discord";
 
 declare global {
@@ -103,13 +107,13 @@ export async function checkMagnetsExist(magnets: string[]) {
     cipherMagnet: convertPlaintextToCipherText(magnet),
     magnet,
   }));
-
   const existChecks = magnetInfos.map(async (magnetInfo) => {
-    const exist = await db.magnet.findFirst({
+    const exist = await db.magnet.findUnique({
       where: {
         chiper_link: magnetInfo.cipherMagnet,
       },
     });
+
     return exist ? null : magnetInfo.magnet;
   });
 
@@ -194,14 +198,16 @@ export async function updateSeasonsWithEpisodes() {
       series: true,
     },
   });
-  for (let season of seasons) {
+  seasons.map(async (season, index) => {
+    await sleep(1000 * 2 * index);
     handleEpisodeTorrents({
       seasonId: season.id,
-      seasonNumber: season.season_number,
+      seasonNumber: season.tmdb_season_number,
       seriesId: season.series?.id!,
       nyaaQuery: season.nyaa_query,
+      episodeOffset: season.episode_offset
     });
-  }
+  });
 }
 
 export async function createNewMagnet(magnetUrl: string) {
@@ -296,7 +302,7 @@ async function fetchEpisodeDetail(
   );
   if (!episodeDetail) {
     console.error(
-      `Episode Detail Error\nseries Id:${seriesId} season Id:${seasonNumber} episode number:${episodeNumber}`
+      `Episode Detail Error\nseries Id:${seriesId} season number:${seasonNumber} episode number:${episodeNumber}`
     );
     return null;
   }
@@ -309,6 +315,7 @@ interface AddEpisodesProps {
   seriesId: number;
   nyaaQuery?: string | null;
   magnetUrl?: string | null;
+  episodeOffset? :  number | null
 }
 
 export async function handleEpisodeTorrents({
@@ -317,12 +324,13 @@ export async function handleEpisodeTorrents({
   seasonId,
   seasonNumber,
   seriesId,
+  episodeOffset
 }: AddEpisodesProps) {
   try {
     if (nyaaQuery) {
       const nyaaMagnets = await getNyaaMagnets(nyaaQuery);
+      console.log(nyaaMagnets.length, nyaaQuery);
       const magnets = await checkMagnetsExist(nyaaMagnets);
-
       magnets.forEach(async (magnetUrl) => {
         downloadVideoFileFormTorrent(magnetUrl).then(async (videoInfo) => {
           const magnetUrl = videoInfo[0].magnetUrl;
@@ -332,7 +340,7 @@ export async function handleEpisodeTorrents({
             const episodeDetail = await fetchEpisodeDetail(
               seriesId,
               seasonNumber,
-              info.episodeNumber
+              episodeOffset ? info.episodeNumber + episodeOffset : info.episodeNumber
             );
             if (!episodeDetail) return;
 

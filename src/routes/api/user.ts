@@ -83,7 +83,7 @@ userRouter.get("/watch-progress", authenticateToken, async (req, res) => {
         updated_at: "desc",
       },
     },
-    take: 4,
+    take:6,
   });
 
   const episodes = [];

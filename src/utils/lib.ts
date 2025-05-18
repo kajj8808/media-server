@@ -80,3 +80,11 @@ export function convertTmdbStatus(tmdbStatus: string): SeriesStatus {
   // TMDB 상태를 변환된 상태로 반환, 변환되지 않은 상태는 "UPCOMING"으로 처리
   return dic[tmdbStatus] || "UPCOMING";
 }
+
+export async function sleep(ms: number) {
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      resolve(true);
+    }, ms);
+  });
+}

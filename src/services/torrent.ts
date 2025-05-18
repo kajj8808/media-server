@@ -23,12 +23,26 @@ function isVideoFile(fileName: string): boolean {
   );
 }
 
+const trackers = [
+  "udp://open.stealth.si:80/announce",
+  "udp://tracker.opentrackr.org:1337/announce",
+  "udp://tracker.coppersurfer.tk:6969/announce",
+  "udp://tracker.openbittorrent.com:80/announce",
+  "udp://tracker.leechers-paradise.org:6969/announce",
+  "udp://tracker.internetwarriors.net:1337/announce",
+  "wss://tracker.openwebtorrent.com",
+];
+
 export async function downloadVideoFileFormTorrent(magnetURI: string) {
-  const client = new webTorrent();
+  const client = new webTorrent({
+    maxConns: 50,
+  });
+  client.throttleDownload(-1);
+
   const TEMP_DIR = path.join(DIR_NAME, "../../", "public", "temp");
   const videoInfos: VideoInfo[] = [];
   await new Promise((resolve, reject) => {
-    client.add(magnetURI, { path: TEMP_DIR }, (torrent) => {
+    client.add(magnetURI, { path: TEMP_DIR, announce: trackers }, (torrent) => {
       const interval = setInterval(() => {
         console.log(
           torrent.name +

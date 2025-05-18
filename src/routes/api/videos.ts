@@ -76,6 +76,8 @@ videoRouter.get("/:id", authenticateToken, async (req, res) => {
                     runtime: true,
                     updated_at: true,
                     still_path: true,
+                    episode_number: true,
+                    video_content_id: true,
                     user_watch_progress: {
                       where: {
                         user_id: user.userId,
@@ -85,6 +87,9 @@ videoRouter.get("/:id", authenticateToken, async (req, res) => {
                         current_time: true,
                       },
                     },
+                  },
+                  orderBy: {
+                    episode_number: "asc",
                   },
                 },
               },
@@ -126,6 +131,7 @@ videoRouter.get("/:id", authenticateToken, async (req, res) => {
         },
         select: {
           id: true,
+          video_content_id: true,
         },
       });
     }
