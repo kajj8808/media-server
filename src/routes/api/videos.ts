@@ -11,7 +11,7 @@ import { authenticateToken } from "middleware/auth";
 const videoRouter = Router();
 
 videoRouter.get("/no-subtitle", async (_, res) => {
-  const episodes = await db.videoContent.findMany({
+  const videoContents = await db.videoContent.findMany({
     where: { AND: [{ subtitle_id: null }] },
     include: {
       episode: true,
@@ -23,7 +23,7 @@ videoRouter.get("/no-subtitle", async (_, res) => {
       updated_at: "desc",
     },
   });
-  res.json({ episodes });
+  res.json({ videoContents });
 });
 
 videoRouter.get("/:id", authenticateToken, async (req, res) => {
@@ -97,7 +97,12 @@ videoRouter.get("/:id", authenticateToken, async (req, res) => {
           },
         },
 
-        movie: true,
+        movie: {
+          select: {
+            title: true,
+            id: true,
+          },
+        },
       },
     });
 

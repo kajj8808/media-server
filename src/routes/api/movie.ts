@@ -7,6 +7,7 @@ import { sendAnimationMessage } from "@services/discord";
 import { getMovieDetail } from "@services/tmdb";
 import { downloadVideoFileFormTorrent } from "@services/torrent";
 import { Router } from "express";
+import { authenticateToken } from "middleware/auth";
 
 const movieRouter = Router();
 
@@ -80,6 +81,37 @@ movieRouter.post("/add_magnet", async (req, res) => {
   } catch (error) {
     console.error(error);
   }
+});
+
+movieRouter.get("/all", async (req, res) => {
+  const movies = await db.movie.findMany({});
+  res.json({
+    ok: true,
+    movies,
+    tip: "모든 movies를 가져옵니다.",
+  });
+});
+
+movieRouter.get("/:id", authenticateToken, async (req, res) => {
+  const user = req.user;
+  if (!user) {
+    res.json({
+      ok: false,
+      message: "bad request",
+    });
+    return;
+  }
+  const { id } = req.params;
+  const movie = await db.movie.findUnique({
+    where: {
+      id: +id,
+    },
+  });
+  res.json({
+    ok: true,
+    result: movie,
+  });
+  return;
 });
 
 export default movieRouter;

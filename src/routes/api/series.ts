@@ -57,6 +57,11 @@ seriesRouter.get("/now_playing", async (_, res) => {
       status: {
         not: "CANCELLED",
       },
+      season: {
+        some: {
+          source_type: "TVA",
+        },
+      },
     },
     select: {
       id: true,
@@ -160,14 +165,22 @@ seriesRouter.get("/:id", authenticateToken, async (req, res) => {
         },
       },
       genres: true,
-
       movies: true,
+    },
+  });
+  const lastWatchedProgress = await db.userWatchProgress.findFirst({
+    where: {
+      series_id: series?.id,
+    },
+    orderBy: {
+      updated_at: "desc",
     },
   });
 
   res.status(200).json({
     ok: true,
     series,
+    lastWatchedProgress,
     tip: "series의 상세정보를 가져옴. 상세정보 : series, series에 연결된 season, episode, movie를 가져옴.",
   });
 });

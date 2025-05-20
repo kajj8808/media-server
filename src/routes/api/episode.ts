@@ -61,15 +61,12 @@ episodeRouter.post("/insert", async (req, res) => {
 
   await db.episode.create({
     data: {
-      name: data.title,
-      overview: data.description,
-      still_path: data.thumbnail,
-      runtime: +data.running_time,
+      still_path: data.thumbnail ? data.thumbnail : null,
       episode_number: +data.number,
       season_id: season.id,
       series_id: season.series_id!,
       video_content_id: videoContent.id,
-      is_korean_translated: true,
+      is_korean_translated: false,
     },
   });
 
