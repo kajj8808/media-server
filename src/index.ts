@@ -24,6 +24,7 @@ import videoRouter from "@routes/media/video";
 import fileUploadRouter from "@routes/api/fileUpload";
 import movieRouter from "@routes/api/movie";
 import userRouter from "@routes/api/user";
+import { initSocket } from "socket";
 
 const app = express();
 app.use(helmet());
@@ -61,12 +62,16 @@ async function startServer() {
       cert: fs.readFileSync("src/keys/cert.pem"),
     };
     if (httpsOptions.key && httpsOptions.cert) {
-      https.createServer(httpsOptions, app).listen(8443, () => {
-        console.log(`https://localhost:8443`);
+      const server = https.createServer(httpsOptions, app)
+      server.listen(8443, () => {
+        initSocket(server)
+        console.log(`server is ready: https://localhost:8443`);
       });
     }
   } catch (error) {
-    http.createServer(app).listen(3003, () => {
+    const server = http.createServer(app)
+    server.listen(3003, () => {
+      initSocket(server)
       console.log(`http://localhost:3003`);
     });
   }
