@@ -13,6 +13,8 @@ export function initSocket(server: HttpsServer | HttpServer) {
     },
   });
   socketServer.on("connection", (socket) => {
-    console.log(socket.id)
+    socket.on("joinRoom", (roomName) => {
+      console.log(roomName);
+    });
   });
 }

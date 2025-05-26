@@ -62,16 +62,16 @@ async function startServer() {
       cert: fs.readFileSync("src/keys/cert.pem"),
     };
     if (httpsOptions.key && httpsOptions.cert) {
-      const server = https.createServer(httpsOptions, app)
+      const server = https.createServer(httpsOptions, app);
       server.listen(8443, () => {
-        initSocket(server)
+        initSocket(server);
         console.log(`server is ready: https://localhost:8443`);
       });
     }
   } catch (error) {
-    const server = http.createServer(app)
+    const server = http.createServer(app);
     server.listen(3003, () => {
-      initSocket(server)
+      initSocket(server);
       console.log(`http://localhost:3003`);
     });
   }
@@ -84,7 +84,7 @@ async function updateEpisode() {
 
 async function main() {
   await startServer();
-  updateEpisode();
+  // updateEpisode();
 }
 
 setInterval(async () => {
