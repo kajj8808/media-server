@@ -270,3 +270,14 @@ model VideoContent {
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt()
 }
+
+model WatchSession {
+  id Int @id @default(autoincrement())
+
+  video_content_id Int
+  current_time     Int?
+  backdrop_path    String?
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt()
+}

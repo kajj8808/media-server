@@ -117,7 +117,7 @@ videoRouter.get("/:id", authenticateToken, async (req, res) => {
     const userWatchProgress = await db?.userWatchProgress.findFirst({
       where: {
         AND: {
-          user_id: 2,
+          user_id: user.userId,
           video_content_id: videoContent.id,
         },
       },
