@@ -89,6 +89,6 @@ async function main() {
 
 setInterval(async () => {
   updateEpisode();
-}, 24 * 60 * 60 * 1000); // 24시간에 한번 다시 실행.
+}, 12 * 60 * 60 * 1000); // 12시간에 한번 다시 실행.
 
 main();
