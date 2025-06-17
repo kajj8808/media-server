@@ -92,6 +92,24 @@ movieRouter.get("/all", async (req, res) => {
   });
 });
 
+movieRouter.get("/:id/open-graph", async (req, res) => {
+  const { id } = req.params;
+  const movie = await db.movie.findUnique({
+    where: {
+      id: +id,
+    },
+    select: {
+      title: true,
+      backdrop_path: true,
+    },
+  });
+  res.json({
+    ok: true,
+    result: movie,
+  });
+  return;
+});
+
 movieRouter.get("/:id", authenticateToken, async (req, res) => {
   const user = req.user;
   if (!user) {

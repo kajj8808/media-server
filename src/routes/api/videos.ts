@@ -26,6 +26,39 @@ videoRouter.get("/no-subtitle", async (_, res) => {
   res.json({ videoContents });
 });
 
+videoRouter.get("/:id/open-graph", async (req, res) => {
+  const { id } = req.params;
+
+   if (!id || isNaN(+id) ) {
+    res.status(400).json({ error: "유효한 요청이 아닙니다." });
+    return;
+  }
+
+  const videoContent = await db.videoContent.findUnique({
+    where: {
+      id: +id,
+    },
+    select: {
+      episode: {
+        select: {
+          name: true,
+          still_path: true,
+          series: { select: { title: true } },
+          season: { select: { name: true } },
+        },
+      },
+      movie: { select: { title: true, backdrop_path: true } },
+    },
+  });
+
+
+  res.json({
+    ok: true,
+    result: videoContent,
+  });
+  return;
+});
+
 videoRouter.get("/:id", authenticateToken, async (req, res) => {
   const { id } = req.params;
   const user = req.user;

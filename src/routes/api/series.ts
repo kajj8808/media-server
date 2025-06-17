@@ -137,6 +137,36 @@ seriesRouter.get("/list", async (_, res) => {
   });
 });
 
+seriesRouter.get("/:id/open-graph", async (req, res) => {
+  const { id } = req.params;
+  if (isNaN(+id)) {
+    res.json({
+      ok: false,
+      message: "bad request",
+    });
+    return;
+  }
+  const series = await db.series.findFirst({
+    where: {
+      id: +id,
+    },
+    select: {
+      title: true,
+      backdrop_path: true,
+      _count: {
+        select: {
+          episodes: true,
+        },
+      },
+    },
+  });
+  res.json({
+    ok: true,
+    result: series,
+  });
+  return;
+});
+
 seriesRouter.get("/:id", authenticateToken, async (req, res) => {
   const { id } = req.params;
   const user = req.user;

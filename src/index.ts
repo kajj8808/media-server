@@ -25,6 +25,7 @@ import fileUploadRouter from "@routes/api/fileUpload";
 import movieRouter from "@routes/api/movie";
 import userRouter from "@routes/api/user";
 import { initSocket } from "socket";
+import serverRouter from "@routes/api/server";
 
 const app = express();
 app.use(helmet());
@@ -51,6 +52,8 @@ app.use("/api/episodes", episodeRouter);
 app.use("/api/file-upload", fileUploadRouter);
 app.use("/api/movie", movieRouter);
 app.use("/api/user", userRouter);
+app.use("/api/server", serverRouter);
+
 
 app.use("/media/image", imageRouter);
 app.use("/media/video", videoRouter);
