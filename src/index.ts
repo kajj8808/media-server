@@ -1,5 +1,10 @@
-import { test } from "@tests/file.test";
+import {
+  testUnmatchedVideoFiles,
+  testUnmatchedSubtitleFiles,
+} from "@tests/file.test";
 import main from "server";
-// test();
+/* tests */
+// testUnmatchedVideoFiles();
+// testUnmatchedSubtitleFiles();
 
-main();
+// main();

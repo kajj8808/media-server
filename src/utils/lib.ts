@@ -100,3 +100,17 @@ export async function getUnmatchedVideoFiles(
   );
   return notFoundFiles;
 }
+
+export async function getUnmatchedSubtitleFiles(
+  videoContents: { subtitle_id: string }[]
+) {
+  const subTitleFiles = fs.readdirSync("./public/subtitle");
+
+  const notFoundFiles = subTitleFiles.filter(
+    (subTitleFile) =>
+      !videoContents.find(
+        (videoContent) => videoContent.subtitle_id === subTitleFile
+      )
+  );
+  return notFoundFiles;
+}
