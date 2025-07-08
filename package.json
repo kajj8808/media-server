@@ -37,11 +37,12 @@
     "node-vibrant": "^4.0.3",
     "puppeteer": "^24.1.0",
     "socket.io": "^4.8.1",
+    "tsx": "^4.20.3",
     "webtorrent": "^2.5.14",
     "zod": "^3.24.1"
   },
   "scripts": {
     "dev": "tsx --watch src/index.ts",
-    "start" : "tsx src/index.ts"
+    "start": "tsx src/index.ts"
   }
 }

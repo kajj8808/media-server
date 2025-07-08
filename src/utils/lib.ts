@@ -88,3 +88,15 @@ export async function sleep(ms: number) {
     }, ms);
   });
 }
+
+export async function getUnmatchedVideoFiles(
+  videoContents: { watch_id: string }[]
+) {
+  const videoFiles = fs.readdirSync("./public/video");
+
+  const notFoundFiles = videoFiles.filter(
+    (videoFile) =>
+      !videoContents.find((videoContet) => videoContet.watch_id === videoFile)
+  );
+  return notFoundFiles;
+}

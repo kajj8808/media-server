@@ -36,7 +36,10 @@
       ], // models 폴더 접근
       "@routes/*": [
         "routes/*"
-      ] // routes 폴더 접근
+      ], // routes 폴더 접근
+      "@tests/*": [
+        "tests/*"
+      ]
     },
   }
 }

@@ -30,3 +30,10 @@ bun run index.ts
 
 - [] express-rate-limit (요청 속도 제한, Dos 공격 방지 미들웨어 - 기본 기능 후 적용 예정)
 - [] jsonwebtoken (JWT -> JSON Web Token 사용자 인증 및 권한 부여 - 기본 기능 후 적용 예정)
+
+### 이번에 업데이트 해볼거
+
+- socket으로 진행도 공유
+- 데이터 베이스에 없는 데이터를 골라내는 기능 추가
+  DB에서 video conent 와 연결되어 있지 않은 비디오 들을 뽑아내는 함수 작성.
+  수동 삭제.
