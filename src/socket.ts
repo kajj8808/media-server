@@ -5,6 +5,7 @@ import { type Server as HttpsServer } from "https";
 
 interface CustomSocket extends Socket {
   roomName?: string;
+  nickName?: string;
 }
 
 let socketServer: Server;
@@ -17,13 +18,15 @@ export function initSocket(server: HttpsServer | HttpServer) {
     },
   });
   socketServer.on("connection", (socket: CustomSocket) => {
-    socket.on("joinRoom", (roomName) => {
+    socket.on("joinRoom", (roomName, nickName) => {
       socket.join(roomName);
       socket.roomName = roomName;
+      socket.nickName = nickName;
     });
-    socket.on("timeUpdate", (time) => {
+    socket.on("timeUpdate", (time , nickName) => {
+      console.log(nickName)
       if (socket.roomName) {
-        socket.to(socket.roomName).emit("timeUpdate", time);
+        socket.to(socket.roomName).emit("timeUpdate", time , nickName);
       }
     });
     socket.on("pause", () => {
