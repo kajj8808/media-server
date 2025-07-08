@@ -1,3 +1,5 @@
-// main();
 import { test } from "@tests/file.test";
-test();
+import main from "server";
+// test();
+
+main();
