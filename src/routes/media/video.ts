@@ -84,7 +84,9 @@ videoRouter.get("/:id", async (req, res) => {
       }
 
       // Listing 7.
-      const fileStream = fs.createReadStream(filePath, options);
+      const fileStream = fs.createReadStream(filePath, {
+        ...options,
+      });
       fileStream.on("error", (error) => {
         if (!res.headersSent) {
           res.status(500).send("Error while reading the file.");
