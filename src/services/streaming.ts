@@ -4,6 +4,7 @@ import path from "path";
 import fs from "fs";
 
 import { DIR_NAME } from "utils/constants";
+import { getBestStoragePath } from "./storage";
 
 interface AnalyzeVideoCodecResult {
   video: {
@@ -23,7 +24,13 @@ export async function analyzeVideoCodec(
   return new Promise((resolve, reject) => {
     ffmpeg.ffprobe(videoPath, (err, data) => {
       if (err) {
-        return reject(err);
+        console.error('FFprobe error - video will be used as-is:', err.message);
+        // Return default result indicating no re-encoding needed
+        resolve({
+          video: { reEncoding: false, streamIndex: 0 },
+          audio: { reEncoding: false, streamIndex: 0, language: "default" }
+        });
+        return;
       }
 
       const result: AnalyzeVideoCodecResult = {
@@ -171,13 +178,10 @@ export async function processVideo(
     "temp",
     `${videoId}.mp4`
   );
-  const outputPath = path.join(
-    DIR_NAME,
-    "../../",
-    "public",
-    "video",
-    `${videoId}`
-  );
+  
+  // Use new storage system to get best storage path
+  const storagePath = await getBestStoragePath();
+  const outputPath = path.join(storagePath, `${videoId}`);
 
   try {
     await new Promise((resolve, reject) => {
@@ -246,14 +250,34 @@ export async function convertToStreamableVideo(
   option?: Option
 ) {
   console.log(videoPath, option);
-  const videoCodec = await analyzeVideoCodec(videoPath);
-  const ffmpegOptions = generateFfmpegOptions(videoCodec);
-  const videoId = await processVideo(
-    videoPath,
-    ffmpegOptions,
-    option?.fileName
-  );
-  return videoId;
+  
+  try {
+    const videoCodec = await analyzeVideoCodec(videoPath);
+    const ffmpegOptions = generateFfmpegOptions(videoCodec);
+    const videoId = await processVideo(
+      videoPath,
+      ffmpegOptions,
+      option?.fileName
+    );
+    return videoId;
+  } catch (error) {
+    console.error('Video conversion failed, using direct file copy:', error);
+    
+    // Fallback: directly copy file to storage without conversion
+    const videoId = option?.fileName || `video_${new Date().getTime()}`;
+    const storagePath = await getBestStoragePath();
+    const targetPath = path.join(storagePath, videoId);
+    
+    await fs.promises.copyFile(videoPath, targetPath);
+    console.log(`Direct copy completed: ${videoPath} -> ${targetPath}`);
+    
+    // Clean up original file
+    if (fs.existsSync(videoPath)) {
+      await fs.promises.unlink(videoPath);
+    }
+    
+    return videoId;
+  }
 }
 
 interface AddAssSubtitleToVideoProps {

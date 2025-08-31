@@ -1,7 +1,6 @@
 import { Router } from "express";
-import path from "path";
 import fs from "fs";
-import { DIR_NAME } from "utils/constants";
+import { findVideoFile } from "../../services/storage";
 
 interface VideoStremInfoOption {
   start?: number;
@@ -12,7 +11,13 @@ const videoRouter = Router();
 videoRouter.get("/:id", async (req, res) => {
   const id = req.params.id; //or use req.param('id')
 
-  const filePath = path.join(DIR_NAME, "../../", "public", "video", id);
+  // Use new storage system to find video file across drives
+  const filePath = await findVideoFile(id);
+  
+  if (!filePath) {
+    res.status(404).send("Video file not found");
+    return;
+  }
 
   // Listing 3.
   const options: VideoStremInfoOption = {};
@@ -91,7 +96,7 @@ videoRouter.get("/:id", async (req, res) => {
         if (!res.headersSent) {
           res.status(500).send("Error while reading the file.");
         } else {
-          console.error(`Error reading file after headers sent ${filePath}.`);
+          console.error(`Error reading file after headers sent ${filePath}:`, error);
         }
       });
       fileStream.pipe(res);
