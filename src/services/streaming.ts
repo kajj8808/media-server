@@ -224,17 +224,27 @@ export async function processVideo(
   } catch (error) {
     console.error("Error in processVideo:", error);
   } finally {
-    // 원본 비디오 파일 삭제
-    if (fs.existsSync(videoPath)) {
-      fs.rmSync(videoPath);
-      console.log(`Original video file deleted: ${videoPath}`);
-    }
-
-    fs.renameSync(tempPath, outputPath);
-
-    // 임시 파일 삭제
-    if (fs.existsSync(tempPath)) {
-      fs.rmSync(tempPath);
+    try {
+      // 변환된 파일을 WSL 스토리지로 복사 (rename 대신 copy 사용)
+      if (fs.existsSync(tempPath)) {
+        await fs.promises.copyFile(tempPath, outputPath);
+        console.log(`Video file moved to storage: ${outputPath}`);
+        
+        // 복사 성공하면 임시 파일 삭제
+        fs.rmSync(tempPath);
+      }
+      
+      // 원본 비디오 파일 삭제 (복사 성공 후에만)
+      if (fs.existsSync(videoPath)) {
+        fs.rmSync(videoPath);
+        console.log(`Original video file deleted: ${videoPath}`);
+      }
+    } catch (error) {
+      console.error(`Failed to move converted file: ${error}`);
+      // 실패 시 임시 파일이라도 보존
+      if (fs.existsSync(tempPath)) {
+        console.log(`Temporary file preserved: ${tempPath}`);
+      }
     }
     return videoId;
   }
