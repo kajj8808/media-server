@@ -178,3 +178,22 @@ dist
 public/*
 
 src/keys
+
+# Test and utility files
+test-*.js
+*test*.js
+deploy-ready.js
+migrate-storage.js
+safe-migrate.js
+
+# Documentation files
+DEPLOYMENT.md
+
+# Temporary files
+*.tmp
+*.temp
+
+# IDE files
+.vscode/
+*.swp
+*.swo

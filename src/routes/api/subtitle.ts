@@ -9,6 +9,7 @@ import { convertSmiToVtt } from "utils/subtitle/smiToVtt";
 import { addSubtitle } from "@services/database";
 import { addAssSubtitleToVideo } from "@services/streaming";
 import { convertSrtToVtt } from "utils/subtitle/srtToVtt";
+import { saveSubtitleFile, findSubtitleFile } from "@services/storage";
 
 const subtitleRouter = Router();
 
@@ -35,24 +36,20 @@ subtitleRouter.post(
         return;
       }
 
-      const newFilePath = path.join(
-        DIR_NAME,
-        "../../",
-        "public",
-        "subtitle",
-        newFileName
-      );
-
       const fileData = await readSubtitleFileData(file.path);
+      let subtitleContent: string;
+      
       if (file.originalname.includes(".ass")) {
-        fs.writeFileSync(path.join(newFilePath), convertAssToVtt(fileData));
+        subtitleContent = convertAssToVtt(fileData);
       } else if (file.originalname.includes(".smi")) {
-        fs.writeFileSync(path.join(newFilePath), convertSmiToVtt(fileData));
+        subtitleContent = convertSmiToVtt(fileData);
       } else if (file.originalname.includes(".srt")) {
-        fs.writeFileSync(path.join(newFilePath), convertSrtToVtt(fileData));
+        subtitleContent = convertSrtToVtt(fileData);
       } else {
-        fs.writeFileSync(path.join(newFilePath), fileData);
+        subtitleContent = fileData;
       }
+
+      const newFilePath = await saveSubtitleFile(newFileName, subtitleContent);
 
       fs.rmSync(file.path);
 
@@ -69,16 +66,15 @@ subtitleRouter.post(
   }
 );
 
-subtitleRouter.get("/:id", (req, res) => {
-  const filePath = path.join(
-    DIR_NAME,
-    "../../",
-    "public",
-    "subtitle",
-    req.params.id
-  );
-  res.setHeader("Content-Type", "text/vtt");
-  res.sendFile(filePath);
+subtitleRouter.get("/:id", async (req, res) => {
+  const filePath = await findSubtitleFile(req.params.id);
+  
+  if (filePath && fs.existsSync(filePath)) {
+    res.setHeader("Content-Type", "text/vtt");
+    res.sendFile(filePath);
+  } else {
+    res.status(404).json({ error: "Subtitle file not found" });
+  }
 });
 
 export default subtitleRouter;

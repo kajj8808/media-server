@@ -2,7 +2,9 @@ import fs from "fs";
 import path from "path";
 import {
   STORAGE_CONFIG,
+  SUBTITLE_STORAGE_CONFIG,
   getAvailableDrivesSortedByFreeSpace,
+  getAvailableSubtitleDrivesSortedByFreeSpace,
   ensureStorageDirectories,
 } from "../config/storage";
 
@@ -84,4 +86,45 @@ export async function getAllVideoFiles() {
   }
 
   return allFiles;
+}
+
+// Subtitle storage functions
+export async function findSubtitleFile(subtitleId: string) {
+  // 1. First check new WSL subtitle storage locations
+  for (const drive of SUBTITLE_STORAGE_CONFIG.drives) {
+    const filePath = path.join(drive.path, subtitleId);
+    if (fs.existsSync(filePath)) {
+      return filePath;
+    }
+  }
+  
+  // 2. Fallback: check legacy public/subtitle directory
+  const legacyPath = path.join(process.cwd(), "public", "subtitle", subtitleId);
+  if (fs.existsSync(legacyPath)) {
+    console.log(`Found subtitle in legacy location: ${legacyPath}`);
+    return legacyPath;
+  }
+  
+  return null;
+}
+
+export async function getBestSubtitleStoragePath(): Promise<string> {
+  await ensureStorageDirectories();
+  const sortedDrives = await getAvailableSubtitleDrivesSortedByFreeSpace();
+
+  if (sortedDrives.length === 0) {
+    throw new Error("No available subtitle storage drives found");
+  }
+
+  return sortedDrives[0].path;
+}
+
+export async function saveSubtitleFile(subtitleId: string, content: string) {
+  const storagePath = await getBestSubtitleStoragePath();
+  const targetPath = path.join(storagePath, subtitleId);
+
+  await fs.promises.writeFile(targetPath, content, 'utf8');
+  console.log(`Subtitle saved: ${subtitleId} -> ${targetPath}`);
+
+  return targetPath;
 }
