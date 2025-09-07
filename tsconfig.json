@@ -37,6 +37,9 @@
       "@routes/*": [
         "routes/*"
       ], // routes 폴더 접근
+      "@utils/*": [
+        "utils/*"
+      ], // utils 폴더 접근
       "@tests/*": [
         "tests/*"
       ]

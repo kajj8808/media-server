@@ -39,6 +39,16 @@ export async function downloadVideoFileFormTorrent(magnetURI: string) {
   });
   client.throttleDownload(-1);
 
+  client.on('error', (error) => {
+    const errorMsg = error instanceof Error ? error.message : String(error);
+    const errorCode = error instanceof Error ? (error as any).code : undefined;
+    
+    console.error('WebTorrent client error:', errorMsg);
+    if (errorCode === 'EADDRINUSE') {
+      console.error('Port already in use, continuing...');
+    }
+  });
+
   const TEMP_DIR = path.join(DIR_NAME, "../../", "public", "temp");
   const videoInfos: VideoInfo[] = [];
   await new Promise((resolve, reject) => {

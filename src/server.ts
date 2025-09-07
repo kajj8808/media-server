@@ -58,17 +58,14 @@ app.use("/api/server", serverRouter);
 app.use("/media/image", imageRouter);
 app.use("/media/video", videoRouter);
 
-// 글로벌 에러 처리 미들웨어
-app.use((error: Error, req: express.Request, res: express.Response, next: express.NextFunction) => {
+app.use((error: Error, req: express.Request, res: express.Response, _next: express.NextFunction) => {
   logServerError(error, req.path, req.method, req.body?.userId);
-  
   res.status(500).json({
     error: "서버 내부 오류가 발생했습니다.",
     timestamp: new Date().toISOString()
   });
 });
 
-// 404 처리
 app.use((req: express.Request, res: express.Response) => {
   logServerError(new Error(`Not found: ${req.path}`), req.path, req.method);
   res.status(404).json({
@@ -105,12 +102,38 @@ async function updateEpisode() {
 }
 
 async function main() {
+  // await checkSystemRequirements();
   await startServer();
   updateEpisode();
 }
 
-setInterval(async () => {
-  updateEpisode();
-}, 12 * 60 * 60 * 1000); // 12시간에 한번 다시 실행.
+process.on('SIGTERM', () => {
+  console.log('SIGTERM received, graceful shutdown...');
+  setTimeout(() => {
+    console.log('Graceful shutdown completed');
+    process.exit(0);
+  }, 3000);
+});
+
+process.on('SIGINT', () => {
+  console.log('SIGINT received, graceful shutdown...');
+  setTimeout(() => {
+    console.log('Graceful shutdown completed');
+    process.exit(0);
+  }, 3000);
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+});
+
+process.on('uncaughtException', (error) => {
+  console.error('Uncaught Exception:', error);
+  if (error.message.includes('EADDRINUSE')) {
+    console.error('Port conflict error ignored');
+    return;
+  }
+  process.exit(1);
+});
 
 export default main;
