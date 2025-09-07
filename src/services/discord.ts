@@ -24,17 +24,29 @@ export async function sendAnimationMessage(props: SnedMessageAnimationProps) {
     videoContentId,
   } = props;
 
-  const result = await Vibrant.from(imageUrl).getPalette();
+  try {
+    const result = await Vibrant.from(imageUrl).getPalette();
 
-  const embed = new EmbedBuilder()
-    .setDescription(
-      `-# ${seriesName}  \n### [${seasonName} ${episodeNumber}화 ${episodeName}](${process.env.FRONT_URL}/watch/${videoContentId})\n`
-    )
-    .setImage(imageUrl)
-    .setColor((result.DarkMuted?.hex as ColorResolvable) ?? "Blue")
-    .setTimestamp();
+    const embed = new EmbedBuilder()
+      .setDescription(
+        `-# ${seriesName}  \n### [${seasonName} ${episodeNumber}화 ${episodeName}](${process.env.FRONT_URL}/watch/${videoContentId})\n`
+      )
+      .setImage(imageUrl)
+      .setColor((result.DarkMuted?.hex as ColorResolvable) ?? "Blue")
+      .setTimestamp();
 
-  webhookClient.send({
-    embeds: [embed],
-  });
+    await webhookClient.send({
+      embeds: [embed],
+    });
+  } catch (error) {
+    console.error("Discord message send failed:", error);
+    console.error("Failed props:", {
+      seriesName,
+      seasonName,
+      episodeNumber,
+      episodeName,
+      imageUrl,
+      videoContentId,
+    });
+  }
 }

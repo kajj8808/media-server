@@ -197,3 +197,6 @@ DEPLOYMENT.md
 .vscode/
 *.swp
 *.swo
+
+# Error logs and debugging
+error-logs/
