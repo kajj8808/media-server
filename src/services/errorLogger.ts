@@ -138,13 +138,52 @@ export function logServerError(
 export function extractEpisodeNumberWithLogging(filename: string): number | null {
   const debugInfo: any = {};
   
-  // 0. 하이픈 뒤 에피소드 번호 패턴 (최우선)
+  // 0. 하이픈 뒤 에피소드 번호 패턴 (최우선) - Season 패턴 제외
   const episodePatterns = [
-    /-\s*(\d{1,3})\s*(?:\(|\[|$)/,
     /ep?\.?\s*(\d{1,3})\b/i,
     /episode\s*(\d{1,3})\b/i,
   ];
   
+  // 하이픈 뒤 숫자 패턴을 특별히 처리 (Season X 제외)
+  const hyphenMatches = filename.match(/-\s*(\d{1,3})\s*(?:\[|\(|$)/g);
+  if (hyphenMatches) {
+    // 뒤에서부터 검사해서 Season X 패턴을 피함
+    for (let i = hyphenMatches.length - 1; i >= 0; i--) {
+      const match = hyphenMatches[i];
+      const numberMatch = match.match(/-\s*(\d{1,3})/);
+      if (numberMatch) {
+        const num = parseInt(numberMatch[1], 10);
+        // Season 패턴이 아닌지 확인
+        const beforeMatch = filename.substring(0, filename.indexOf(match));
+        if (!beforeMatch.match(/Season\s+\d+\s*$/i) && 
+            num >= ERROR_LOG_CONFIG.MIN_EPISODE_NUMBER && 
+            num <= ERROR_LOG_CONFIG.MAX_EPISODE_NUMBER) {
+          debugInfo.hyphenPattern = num.toString();
+          return num;
+        }
+      }
+    }
+  }
+  
+  // 대안: 브래킷 안의 에피소드 번호 패턴 (예: [ 10 ])
+  const bracketEpisodeMatch = filename.match(/\[\s*(\d{1,3})\s*\]/g);
+  if (bracketEpisodeMatch) {
+    // 마지막 브래킷 패턴부터 검사 (해상도 등이 아닌 에피소드 번호를 찾기 위해)
+    for (let i = bracketEpisodeMatch.length - 1; i >= 0; i--) {
+      const match = bracketEpisodeMatch[i];
+      const numberMatch = match.match(/\[\s*(\d{1,3})\s*\]/);
+      if (numberMatch) {
+        const num = parseInt(numberMatch[1], 10);
+        // 해상도나 연도가 아닌 에피소드 번호인지 확인
+        if (num >= ERROR_LOG_CONFIG.MIN_EPISODE_NUMBER && num <= 50) { // 50화를 넘는 에피소드는 드물어서
+          debugInfo.bracketPattern = num.toString();
+          return num;
+        }
+      }
+    }
+  }
+  
+  // 일반 에피소드 패턴들
   for (const pattern of episodePatterns) {
     const match = filename.match(pattern);
     debugInfo.hyphenPattern = match?.[1] || null;
