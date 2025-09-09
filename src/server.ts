@@ -76,6 +76,8 @@ app.use((req: express.Request, res: express.Response) => {
   });
 });
 
+let server: https.Server | http.Server;
+
 async function startServer() {
   try {
     const httpsOptions = {
@@ -83,14 +85,14 @@ async function startServer() {
       cert: fs.readFileSync("src/keys/cert.pem"),
     };
     if (httpsOptions.key && httpsOptions.cert) {
-      const server = https.createServer(httpsOptions, app);
+      server = https.createServer(httpsOptions, app);
       server.listen(8443, () => {
         initSocket(server);
         console.log(`server is ready: https://localhost:8443`);
       });
     }
   } catch (error) {
-    const server = http.createServer(app);
+    server = http.createServer(app);
     server.listen(3003, () => {
       initSocket(server);
       console.log(`http://localhost:3003`);
@@ -109,21 +111,36 @@ async function main() {
   updateEpisode();
 }
 
-process.on('SIGTERM', () => {
-  console.log('SIGTERM received, graceful shutdown...');
-  setTimeout(() => {
-    console.log('Graceful shutdown completed');
-    process.exit(0);
-  }, 3000);
-});
+async function gracefulShutdown() {
+  console.log('Graceful shutdown initiated...');
+  
+  if (server) {
+    server.close((err) => {
+      if (err) {
+        console.error('Error during server shutdown:', err);
+        process.exit(1);
+      }
+      console.log('Server closed successfully');
+    });
 
-process.on('SIGINT', () => {
-  console.log('SIGINT received, graceful shutdown...');
-  setTimeout(() => {
-    console.log('Graceful shutdown completed');
+    // Force close connections after timeout
+    setTimeout(() => {
+      console.log('Force closing server connections...');
+      server.closeAllConnections?.();
+    }, 2000);
+
+    setTimeout(() => {
+      console.log('Graceful shutdown completed');
+      process.exit(0);
+    }, 5000);
+  } else {
+    console.log('No server to close, exiting...');
     process.exit(0);
-  }, 3000);
-});
+  }
+}
+
+process.on('SIGTERM', gracefulShutdown);
+process.on('SIGINT', gracefulShutdown);
 
 process.on('unhandledRejection', (reason, promise) => {
   console.error('Unhandled Rejection at:', promise, 'reason:', reason);
